@@ -1,18 +1,20 @@
 {
   "dataset_name": "Synthetic PM Decision Tests (10 cases)",
-  "version": "1.0",
+  "version": "1.1",
   "data_status": "SYNTHETIC - every PM identity, evidence rating, stakeholder update, and PM decision is fabricated for software testing.",
   "intended_use": [
     "test weighted ranking arithmetic",
     "test source-specific feedback updates",
     "test accepted decisions remain locked",
-    "test audit display and PM confirmation flow"
+    "test audit display and PM confirmation flow",
+    "test a human-readable priority-change record that states what stays, what moves up next, and what is deferred"
   ],
   "not_for": [
     "claims about actual BMW customer needs",
     "claims about actual PM decisions",
     "training or validating a production ML ranking model",
-    "statistical performance or generalization claims"
+    "statistical performance or generalization claims",
+    "claims that the proposed priority changes are approved vehicle configuration changes"
   ],
   "size": {
     "decision_cases": 10,
@@ -97,7 +99,7 @@
           "SYN-01-R1"
         ],
         "synthetic_pm_selected_next_id": "SYN-01-R2",
-        "synthetic_pm_rationale": "I'd take screen readability next. This commuter uses the display every day; connected services can wait. The scores tie, so I'm choosing the option closer to this brief. Connected services still matter, but they do not solve the display task we're focused on.",
+        "synthetic_pm_rationale": "The follow-up narrowed the menu complaint to one software state. Readability is a separate daily task for this commuter, so I'd use the next slot there; the scores tie, and this is the closer fit to the brief.",
         "expected_top_unaccepted_id": null,
         "decision_rationale": {
           "primary_reason": "I'd take screen readability next. This commuter uses the display every day; connected services can wait. The scores tie, so I'm choosing the option closer to this brief.",
@@ -115,7 +117,8 @@
         "expected_top_unaccepted_ids": [
           "SYN-01-R2",
           "SYN-01-R3"
-        ]
+        ],
+        "synthetic_pm_priority_change": "Keep the accepted menu clarification; prioritize screen readability next; defer connected services."
       },
       "expected_weighted_scores_after_update": {
         "SYN-01-R1": 5.5172,
@@ -194,7 +197,7 @@
           "SYN-02-R2"
         ],
         "synthetic_pm_selected_next_id": "SYN-02-R3",
-        "synthetic_pm_rationale": "I'd put cabin noise ahead of another seat change. For someone spending long hours in the car, it may be the bigger source of fatigue. Let's understand that before committing to more seat work. Seat comfort stays on the list; we just do not know yet that it is the bigger problem.",
+        "synthetic_pm_rationale": "The study update narrowed the display issue to a subgroup, so I wouldn't spend the next comfort slot there. For someone who spends long hours in the car, cabin noise is worth resolving before we decide whether seat changes are needed.",
         "expected_top_unaccepted_id": "SYN-02-R3",
         "decision_rationale": {
           "primary_reason": "I'd put cabin noise ahead of another seat change. For someone spending long hours in the car, it may be the bigger source of fatigue. Let's understand that before committing to more seat work.",
@@ -211,7 +214,8 @@
         "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
         "expected_top_unaccepted_ids": [
           "SYN-02-R3"
-        ]
+        ],
+        "synthetic_pm_priority_change": "Keep driver-display simplification approved; prioritize cabin-noise work next; defer seat-comfort changes."
       },
       "expected_weighted_scores_after_update": {
         "SYN-02-R1": 6.3793,
@@ -290,7 +294,7 @@
           "SYN-03-R3"
         ],
         "synthetic_pm_selected_next_id": "SYN-03-R1",
-        "synthetic_pm_rationale": "I'd put acceleration response first. It is more central to this sportiness brief; charging access is at feature parity, so it can wait. Rear-seat comfort serves a different customer, so I would keep it out of this driver-focused decision.",
+        "synthetic_pm_rationale": "The competitor review puts charging at parity, so I wouldn't lead this sportiness brief with it. Acceleration is a clearer fit for the driver we're targeting; rear-seat comfort belongs to a different use case.",
         "expected_top_unaccepted_id": "SYN-03-R1",
         "decision_rationale": {
           "primary_reason": "I'd put acceleration response first. It is more central to this sportiness brief; charging access is at feature parity, so it can wait.",
@@ -307,7 +311,8 @@
         "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
         "expected_top_unaccepted_ids": [
           "SYN-03-R1"
-        ]
+        ],
+        "synthetic_pm_priority_change": "Keep charging convenience approved; prioritize acceleration response next; defer rear-seat comfort features."
       },
       "expected_weighted_scores_after_update": {
         "SYN-03-R1": 7.3871,
@@ -386,7 +391,7 @@
           "SYN-04-R1"
         ],
         "synthetic_pm_selected_next_id": "SYN-04-R3",
-        "synthetic_pm_rationale": "I'd look at maintenance access next. For a high-mileage fleet, time in the workshop affects availability as well as cost. Cargo access is useful, but it is less directly tied to the cost question in this brief.",
+        "synthetic_pm_rationale": "The revised fleet scenario reduces the number of configurations that benefit from the efficiency package, but it doesn't cancel the accepted work. For high-mileage fleets, workshop time also affects vehicle availability, so maintenance access is the better next cost question.",
         "expected_top_unaccepted_id": "SYN-04-R3",
         "decision_rationale": {
           "primary_reason": "I'd look at maintenance access next. For a high-mileage fleet, time in the workshop affects availability as well as cost.",
@@ -403,7 +408,8 @@
         "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
         "expected_top_unaccepted_ids": [
           "SYN-04-R3"
-        ]
+        ],
+        "synthetic_pm_priority_change": "Keep energy-efficiency work approved; prioritize maintenance access next; defer cargo-access changes."
       },
       "expected_weighted_scores_after_update": {
         "SYN-04-R1": 6.4412,
@@ -482,7 +488,7 @@
           "SYN-05-R2"
         ],
         "synthetic_pm_selected_next_id": "SYN-05-R3",
-        "synthetic_pm_rationale": "I'd take cabin storage into the next comfort review. Seat adjustment stays approved; storage is the more useful addition for an executive who wants an organized cabin. Navigation is a separate usability issue and can stay in that backlog.",
+        "synthetic_pm_rationale": "The owner clinic narrowed the seat issue to one configuration, so I'd keep the accepted work without making it the only comfort priority. Storage is a better next fit for an executive who wants an organized cabin; navigation belongs in the usability backlog.",
         "expected_top_unaccepted_id": "SYN-05-R3",
         "decision_rationale": {
           "primary_reason": "I'd take cabin storage into the next comfort review. Seat adjustment stays approved; storage is the more useful addition for an executive who wants an organized cabin.",
@@ -499,7 +505,8 @@
         "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
         "expected_top_unaccepted_ids": [
           "SYN-05-R3"
-        ]
+        ],
+        "synthetic_pm_priority_change": "Keep seat-adjustment work approved; prioritize cabin storage in the next comfort review; defer navigation clarity."
       },
       "expected_weighted_scores_after_update": {
         "SYN-05-R1": 6.7667,
@@ -578,7 +585,7 @@
           "SYN-06-R3"
         ],
         "synthetic_pm_selected_next_id": "SYN-06-R2",
-        "synthetic_pm_rationale": "I'd focus the next G68 review on ride comfort. This brief is about the rear-seat passenger; screen readability belongs in a driver-focused review. Keep the steering requirement on record, but treat it as a separate driver decision.",
+        "synthetic_pm_rationale": "The study re-tabulation puts the screen issue outside this rear-seat use case. I'd use the next G68 comfort slot on ride comfort and keep steering feel on the approved list.",
         "expected_top_unaccepted_id": "SYN-06-R2",
         "decision_rationale": {
           "primary_reason": "I'd focus the next G68 review on ride comfort. This brief is about the rear-seat passenger; screen readability belongs in a driver-focused review.",
@@ -595,7 +602,8 @@
         "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
         "expected_top_unaccepted_ids": [
           "SYN-06-R2"
-        ]
+        ],
+        "synthetic_pm_priority_change": "Keep the steering-feel requirement; prioritize G68 ride comfort for rear-seat users; defer screen-readability work in this review."
       },
       "expected_weighted_scores_after_update": {
         "SYN-06-R1": 6.4,
@@ -674,7 +682,7 @@
           "SYN-07-R1"
         ],
         "synthetic_pm_selected_next_id": "SYN-07-R2",
-        "synthetic_pm_rationale": "I'd prioritize charging access for this daily-use brief. The earlier decision came from a different market, and I don't want to carry it over without checking the fit. Keep the service-cost work approved; cabin materials are less connected to the daily charging task.",
+        "synthetic_pm_rationale": "The earlier charging decision came from a different market and network, so I wouldn't carry it over as precedent. Charging access still fits this driver's daily-use need, and it edges cabin materials in this case's weighted ranking.",
         "expected_top_unaccepted_id": "SYN-07-R2",
         "decision_rationale": {
           "primary_reason": "I'd prioritize charging access for this daily-use brief. The earlier decision came from a different market, and I don't want to carry it over without checking the fit.",
@@ -691,7 +699,8 @@
         "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
         "expected_top_unaccepted_ids": [
           "SYN-07-R2"
-        ]
+        ],
+        "synthetic_pm_priority_change": "Keep service-cost work approved; prioritize charging access next; defer cabin-material changes."
       },
       "expected_weighted_scores_after_update": {
         "SYN-07-R1": 6.6207,
@@ -770,7 +779,7 @@
           "SYN-08-R2"
         ],
         "synthetic_pm_selected_next_id": "SYN-08-R3",
-        "synthetic_pm_rationale": "I'd prioritize efficiency for this company-car brief. High mileage makes running cost central; handling can wait unless the project focus changes. The projected mix makes efficiency worth a closer look with controlling and powertrain.",
+        "synthetic_pm_rationale": "The updated volume scenario raises the projected mix for efficient variants. With running cost as the focus for these high-mileage company cars, I'd put efficiency ahead of handling and keep comfort settings in the plan.",
         "expected_top_unaccepted_id": "SYN-08-R3",
         "decision_rationale": {
           "primary_reason": "I'd prioritize efficiency for this company-car brief. High mileage makes running cost central; handling can wait unless the project focus changes.",
@@ -787,7 +796,8 @@
         "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
         "expected_top_unaccepted_ids": [
           "SYN-08-R3"
-        ]
+        ],
+        "synthetic_pm_priority_change": "Keep comfort settings approved; prioritize vehicle efficiency for company-car users; defer handling-response work."
       },
       "expected_weighted_scores_after_update": {
         "SYN-08-R1": 7.0,
@@ -866,7 +876,7 @@
           "SYN-09-R3"
         ],
         "synthetic_pm_selected_next_id": "SYN-09-R1",
-        "synthetic_pm_rationale": "I'd put seat comfort first for this G68. It fits the rear-seat passenger we're designing for; connected services can wait until we see a clear gap. Feature parity on its own is not a reason to put connected services ahead of this comfort need.",
+        "synthetic_pm_rationale": "The competitor review makes connected services less urgent, not less useful. For the rear-seat customer in this brief, seat comfort is the better next move.",
         "expected_top_unaccepted_id": "SYN-09-R1",
         "decision_rationale": {
           "primary_reason": "I'd put seat comfort first for this G68. It fits the rear-seat passenger we're designing for; connected services can wait until we see a clear gap.",
@@ -884,7 +894,8 @@
         "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
         "expected_top_unaccepted_ids": [
           "SYN-09-R1"
-        ]
+        ],
+        "synthetic_pm_priority_change": "Keep cargo access approved; prioritize rear-seat comfort next; defer connected-service work."
       },
       "expected_weighted_scores_after_update": {
         "SYN-09-R1": 6.9062,
@@ -963,7 +974,7 @@
           "SYN-10-R1"
         ],
         "synthetic_pm_selected_next_id": "SYN-10-R3",
-        "synthetic_pm_rationale": "I'd look at driver-assistance clarity next. It is closer to this commuter's day-to-day control needs than cabin quietness. Keep the accepted menu work; the older decision does not make it less relevant. Any assistance wording must respect the system's verified limits.",
+        "synthetic_pm_rationale": "The old menu decision came from a different HMI setup, so I wouldn't use it to undo the accepted requirement. I'd keep that work approved and take driver-assistance clarity into the next usability review, ahead of cabin quietness.",
         "expected_top_unaccepted_id": "SYN-10-R3",
         "decision_rationale": {
           "primary_reason": "I'd look at driver-assistance clarity next. It is closer to this commuter's day-to-day control needs than cabin quietness.",
@@ -980,7 +991,8 @@
         "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
         "expected_top_unaccepted_ids": [
           "SYN-10-R3"
-        ]
+        ],
+        "synthetic_pm_priority_change": "Keep the accepted menu requirement; prioritize driver-assistance clarity next; defer cabin-quietness work."
       },
       "expected_weighted_scores_after_update": {
         "SYN-10-R1": 5.5714,
@@ -990,7 +1002,7 @@
     }
   ],
   "rationale_design_basis": {
-    "scope_note": "Cross-domain research informs how the rationales explain customer need, trade-off, change impact and evidence gaps. It does not make synthetic ratings or simulated PM choices real.",
+    "scope_note": "Industry research informs the decision-record structure. Each rationale below uses fabricated case data and records a change in PM priority for testing; it is not a real BMW product configuration change or a real PM statement.",
     "sources": [
       {
         "id": "BMW-INTERVIEW",
@@ -1038,6 +1050,27 @@
         "domain": "cross-market measurement",
         "source": "research/simulation_results.md; supplied BMW study and feedback workbooks",
         "transfer": "Keep market, derivative, source type and denominator visible. Missing respondent counts and confounded market/derivative comparisons stay explicit."
+      },
+      {
+        "id": "BMW-PRODUCT-ROLE",
+        "domain": "BMW product management",
+        "source": "BMW Group Product Management Graduate role description; Rolls-Royce Motor Cars, BMW Group",
+        "url": "https://jobs.bmwgroup.com/job/Product-Management-Graduate/189393-en_US/",
+        "transfer": "Connect client requirements to engineering metrics, product feature/pricing choices, and competitor intelligence; this supports context-aware reasoning but is one BMW Group role description, not proof of a universal BMW process."
+      },
+      {
+        "id": "AIAG-APQP3",
+        "domain": "automotive product development and change governance",
+        "source": "AIAG Advanced Product Quality Planning (APQP), 3rd edition overview",
+        "url": "https://www.aiag.org/training-and-resources/manuals/details/APQP-3",
+        "transfer": "The public overview highlights the why behind what and when, plus change management and risk assessment. It supports making the change and its implications explicit; it does not prescribe a PM prose template."
+      },
+      {
+        "id": "AUTO-RE-EMPIRICAL-2026",
+        "domain": "automotive requirements engineering",
+        "source": "Wang et al., Bridging Stakeholder and Product Requirements: An Empirical Study of Requirement Engineering in the Automotive Industry (ASE 2026 Industry Showcase preprint; Infineon automotive-chip requirements)",
+        "url": "https://arxiv.org/html/2607.05632",
+        "transfer": "The primary study reports that documented rationale practices were project-specific and that scope, feasibility, standards and missing context affect accept/deviate/reject outcomes. Transfer those content checks only; this is automotive semiconductor requirements data, not whole-vehicle PM narrative data."
       }
     ],
     "anti_stereotype_rule": "Market-specific rationales refer to the selected target customer and matched derivative, not assumptions about national character or universal preferences."
