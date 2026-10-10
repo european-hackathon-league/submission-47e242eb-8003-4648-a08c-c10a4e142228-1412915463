@@ -1,0 +1,1045 @@
+{
+  "dataset_name": "Synthetic PM Decision Tests (10 cases)",
+  "version": "1.0",
+  "data_status": "SYNTHETIC - every PM identity, evidence rating, stakeholder update, and PM decision is fabricated for software testing.",
+  "intended_use": [
+    "test weighted ranking arithmetic",
+    "test source-specific feedback updates",
+    "test accepted decisions remain locked",
+    "test audit display and PM confirmation flow"
+  ],
+  "not_for": [
+    "claims about actual BMW customer needs",
+    "claims about actual PM decisions",
+    "training or validating a production ML ranking model",
+    "statistical performance or generalization claims"
+  ],
+  "size": {
+    "decision_cases": 10,
+    "candidate_rows": 30,
+    "synthetic_pm_personas": 10
+  },
+  "scoring_contract": {
+    "formula": "sum(weight[source] * evidence_score[candidate, source]) / sum(available weights)",
+    "ratings_scale": "1-10, synthetic only",
+    "missing_source_policy": "Do not score missing evidence as zero; renormalize over available sources and report coverage. This fixture has no missing scores.",
+    "tie_policy": "Report every unaccepted candidate sharing the maximum score. A synthetic PM choice among tied candidates is a judgment label explained by the rationale, not a result proven by the weighted score."
+  },
+  "cases": [
+    {
+      "case_id": "SYN-01",
+      "synthetic_pm_id": "PM-SIM-01",
+      "upfront_decisions": {
+        "baseline": "BMW 5 Series G60 (US context example only)",
+        "target_market": "United States",
+        "vehicle_category": "premium executive sedan",
+        "target_customer": "commuter who uses menus and the display every day",
+        "strategic_focus": "everyday usability",
+        "evidence_weights_1_to_10": {
+          "customer_feedback": 9,
+          "customer_studies": 8,
+          "competitor_data": 4,
+          "sales_volumes": 3,
+          "decision_memory": 5
+        }
+      },
+      "candidates": [
+        {
+          "requirement_id": "SYN-01-R1",
+          "description": "Clarify infotainment menus",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 4,
+            "customer_studies": 7,
+            "competitor_data": 5,
+            "sales_volumes": 6,
+            "decision_memory": 6
+          }
+        },
+        {
+          "requirement_id": "SYN-01-R2",
+          "description": "Improve screen readability",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 6,
+            "customer_studies": 8,
+            "competitor_data": 7,
+            "sales_volumes": 5,
+            "decision_memory": 4
+          }
+        },
+        {
+          "requirement_id": "SYN-01-R3",
+          "description": "Add connected-service features",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 5,
+            "customer_studies": 6,
+            "competitor_data": 8,
+            "sales_volumes": 7,
+            "decision_memory": 7
+          }
+        }
+      ],
+      "accepted_before_feedback": [
+        "SYN-01-R1"
+      ],
+      "stakeholder_feedback_event": {
+        "event_type": "evidence_score_update",
+        "source": "customer_feedback",
+        "candidate_id": "SYN-01-R1",
+        "old_synthetic_rating": 8,
+        "new_synthetic_rating": 4,
+        "note": "Simulated stakeholder input; PM confirmation is required before applying.",
+        "provider_role": "simulated customer-research lead",
+        "simulated_feedback_summary": "A simulated follow-up usability review finds the menu complaint is concentrated in one software state; the breadth rating for that issue is reduced. The screen-readability issue is tracked separately.",
+        "source_status": "SYNTHETIC; not a BMW quote, study result, or real stakeholder response"
+      },
+      "labels": {
+        "accepted_ids_must_remain": [
+          "SYN-01-R1"
+        ],
+        "synthetic_pm_selected_next_id": "SYN-01-R2",
+        "synthetic_pm_rationale": "Keep the already accepted menu clarification in the approved set. Screen readability and connected-service additions tie on the synthetic weighted score, so the score alone cannot choose between them. Use the next discretionary slot for readability because the stated commuter uses the display every day and this test case prioritizes immediate task completion. Connected services also score well and may matter to ownership experience, but they address a broader capability question rather than the specific display task in this scenario. The PM choice is a judgment under a tie, not a score-proven winner. The 8-to-4 change is a fabricated test input. It does not represent the supplied BMW study or prove that the menu concern is resolved for all users. Run a short task-based test of screen legibility in daylight and at night, then inspect failure and completion rates by task. Reopen the menu item if a representative retest still shows task failures after the relevant software state is controlled.",
+        "expected_top_unaccepted_id": null,
+        "decision_rationale": {
+          "primary_reason": "Keep the already accepted menu clarification in the approved set. Screen readability and connected-service additions tie on the synthetic weighted score, so the score alone cannot choose between them. Use the next discretionary slot for readability because the stated commuter uses the display every day and this test case prioritizes immediate task completion.",
+          "tradeoff": "Connected services also score well and may matter to ownership experience, but they address a broader capability question rather than the specific display task in this scenario. The PM choice is a judgment under a tie, not a score-proven winner.",
+          "uncertainty": "The 8-to-4 change is a fabricated test input. It does not represent the supplied BMW study or prove that the menu concern is resolved for all users.",
+          "next_validation": "Run a short task-based test of screen legibility in daylight and at night, then inspect failure and completion rates by task.",
+          "reopen_condition": "Reopen the menu item if a representative retest still shows task failures after the relevant software state is controlled."
+        },
+        "rationale_source_ids": [
+          "BMW-INTERVIEW",
+          "QFD-CHRYSLER-1995",
+          "NASA-REQ-MGMT"
+        ],
+        "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
+        "expected_top_unaccepted_ids": [
+          "SYN-01-R2",
+          "SYN-01-R3"
+        ]
+      },
+      "expected_weighted_scores_after_update": {
+        "SYN-01-R1": 5.5172,
+        "SYN-01-R2": 6.2414,
+        "SYN-01-R3": 6.2414
+      }
+    },
+    {
+      "case_id": "SYN-02",
+      "synthetic_pm_id": "PM-SIM-02",
+      "upfront_decisions": {
+        "baseline": "BMW 5 Series G60 (EU context example only)",
+        "target_market": "Germany",
+        "vehicle_category": "premium executive sedan",
+        "target_customer": "business executive spending long hours in the car",
+        "strategic_focus": "premium comfort",
+        "evidence_weights_1_to_10": {
+          "customer_feedback": 8,
+          "customer_studies": 9,
+          "competitor_data": 5,
+          "sales_volumes": 4,
+          "decision_memory": 3
+        }
+      },
+      "candidates": [
+        {
+          "requirement_id": "SYN-02-R1",
+          "description": "Improve seat comfort",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 6,
+            "customer_studies": 7,
+            "competitor_data": 6,
+            "sales_volumes": 5,
+            "decision_memory": 8
+          }
+        },
+        {
+          "requirement_id": "SYN-02-R2",
+          "description": "Simplify driver display",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 8,
+            "customer_studies": 4,
+            "competitor_data": 5,
+            "sales_volumes": 6,
+            "decision_memory": 5
+          }
+        },
+        {
+          "requirement_id": "SYN-02-R3",
+          "description": "Reduce cabin noise",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 7,
+            "customer_studies": 6,
+            "competitor_data": 8,
+            "sales_volumes": 7,
+            "decision_memory": 4
+          }
+        }
+      ],
+      "accepted_before_feedback": [
+        "SYN-02-R2"
+      ],
+      "stakeholder_feedback_event": {
+        "event_type": "evidence_score_update",
+        "source": "customer_studies",
+        "candidate_id": "SYN-02-R2",
+        "old_synthetic_rating": 9,
+        "new_synthetic_rating": 4,
+        "note": "Simulated stakeholder input; PM confirmation is required before applying.",
+        "provider_role": "simulated customer-study analyst",
+        "simulated_feedback_summary": "A simulated subgroup review lowers the study signal for driver-display simplification after the analyst separates the target users from a small outlying subgroup.",
+        "source_status": "SYNTHETIC; not a BMW quote, study result, or real stakeholder response"
+      },
+      "labels": {
+        "accepted_ids_must_remain": [
+          "SYN-02-R2"
+        ],
+        "synthetic_pm_selected_next_id": "SYN-02-R3",
+        "synthetic_pm_rationale": "Keep the previously accepted display change visible, but prioritize cabin noise for the next comfort-focused investigation. It addresses the stated long-duration use case rather than assuming every comfort concern is a seat problem. Seat comfort remains a credible alternative. The current simulated evidence does not establish whether seating or cabin noise is the larger source of fatigue. The study update and ratings are fabricated. They contain no respondent counts, acoustic measurements, or verified German-market estimate. Ask NVH engineering for a feasible noise-reduction range and compare it with a blinded comfort clinic on representative road surfaces. Promote seat comfort if the clinic shows a larger, repeatable discomfort gap for the target executive profile.",
+        "expected_top_unaccepted_id": "SYN-02-R3",
+        "decision_rationale": {
+          "primary_reason": "Keep the previously accepted display change visible, but prioritize cabin noise for the next comfort-focused investigation. It addresses the stated long-duration use case rather than assuming every comfort concern is a seat problem.",
+          "tradeoff": "Seat comfort remains a credible alternative. The current simulated evidence does not establish whether seating or cabin noise is the larger source of fatigue.",
+          "uncertainty": "The study update and ratings are fabricated. They contain no respondent counts, acoustic measurements, or verified German-market estimate.",
+          "next_validation": "Ask NVH engineering for a feasible noise-reduction range and compare it with a blinded comfort clinic on representative road surfaces.",
+          "reopen_condition": "Promote seat comfort if the clinic shows a larger, repeatable discomfort gap for the target executive profile."
+        },
+        "rationale_source_ids": [
+          "BMW-INTERVIEW",
+          "VDI-4520-2",
+          "NASA-REQ-MGMT"
+        ],
+        "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
+        "expected_top_unaccepted_ids": [
+          "SYN-02-R3"
+        ]
+      },
+      "expected_weighted_scores_after_update": {
+        "SYN-02-R1": 6.3793,
+        "SYN-02-R2": 5.6552,
+        "SYN-02-R3": 6.5517
+      }
+    },
+    {
+      "case_id": "SYN-03",
+      "synthetic_pm_id": "PM-SIM-03",
+      "upfront_decisions": {
+        "baseline": "BMW 5 Series G68 (China long-wheelbase context example only)",
+        "target_market": "China",
+        "vehicle_category": "premium executive sedan",
+        "target_customer": "driver who prioritizes responsive performance",
+        "strategic_focus": "sportiness",
+        "evidence_weights_1_to_10": {
+          "customer_feedback": 6,
+          "customer_studies": 7,
+          "competitor_data": 9,
+          "sales_volumes": 5,
+          "decision_memory": 4
+        }
+      },
+      "candidates": [
+        {
+          "requirement_id": "SYN-03-R1",
+          "description": "Improve acceleration response",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 7,
+            "customer_studies": 8,
+            "competitor_data": 9,
+            "sales_volumes": 6,
+            "decision_memory": 5
+          }
+        },
+        {
+          "requirement_id": "SYN-03-R2",
+          "description": "Add rear-seat comfort features",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 6,
+            "customer_studies": 7,
+            "competitor_data": 8,
+            "sales_volumes": 8,
+            "decision_memory": 6
+          }
+        },
+        {
+          "requirement_id": "SYN-03-R3",
+          "description": "Improve charging convenience",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 8,
+            "customer_studies": 6,
+            "competitor_data": 3,
+            "sales_volumes": 7,
+            "decision_memory": 9
+          }
+        }
+      ],
+      "accepted_before_feedback": [
+        "SYN-03-R3"
+      ],
+      "stakeholder_feedback_event": {
+        "event_type": "evidence_score_update",
+        "source": "competitor_data",
+        "candidate_id": "SYN-03-R3",
+        "old_synthetic_rating": 5,
+        "new_synthetic_rating": 3,
+        "note": "Simulated stakeholder input; PM confirmation is required before applying.",
+        "provider_role": "simulated competitor-intelligence analyst",
+        "simulated_feedback_summary": "A simulated feature-by-feature comparison finds that charging convenience is at parity across the chosen competitor set, so its competitive-differentiation rating falls.",
+        "source_status": "SYNTHETIC; not a BMW quote, study result, or real stakeholder response"
+      },
+      "labels": {
+        "accepted_ids_must_remain": [
+          "SYN-03-R3"
+        ],
+        "synthetic_pm_selected_next_id": "SYN-03-R1",
+        "synthetic_pm_rationale": "Retain charging convenience as an accepted requirement; parity does not erase customer value. For the next sportiness slot, test acceleration response because it is more directly connected to the selected driver promise. Rear-seat comfort may matter to a different G68 customer profile, but this case deliberately targets the driver and should not mix those use cases. The competitor set, feature coding, and 5-to-3 score change are synthetic; no claim about actual Chinese-market competitors follows from them. Compare dated, like-for-like G68 competitor specifications and commission a controlled drive evaluation with engineering-defined response measures. Reopen charging convenience if a verified competitor gap or target-customer pain appears in market-matched evidence.",
+        "expected_top_unaccepted_id": "SYN-03-R1",
+        "decision_rationale": {
+          "primary_reason": "Retain charging convenience as an accepted requirement; parity does not erase customer value. For the next sportiness slot, test acceleration response because it is more directly connected to the selected driver promise.",
+          "tradeoff": "Rear-seat comfort may matter to a different G68 customer profile, but this case deliberately targets the driver and should not mix those use cases.",
+          "uncertainty": "The competitor set, feature coding, and 5-to-3 score change are synthetic; no claim about actual Chinese-market competitors follows from them.",
+          "next_validation": "Compare dated, like-for-like G68 competitor specifications and commission a controlled drive evaluation with engineering-defined response measures.",
+          "reopen_condition": "Reopen charging convenience if a verified competitor gap or target-customer pain appears in market-matched evidence."
+        },
+        "rationale_source_ids": [
+          "BMW-G68-SPEC",
+          "QFD-CHRYSLER-1995",
+          "BMW-INTERVIEW"
+        ],
+        "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
+        "expected_top_unaccepted_ids": [
+          "SYN-03-R1"
+        ]
+      },
+      "expected_weighted_scores_after_update": {
+        "SYN-03-R1": 7.3871,
+        "SYN-03-R2": 7.129,
+        "SYN-03-R3": 6.0645
+      }
+    },
+    {
+      "case_id": "SYN-04",
+      "synthetic_pm_id": "PM-SIM-04",
+      "upfront_decisions": {
+        "baseline": "BMW 5 Series G60 (US context example only)",
+        "target_market": "United States",
+        "vehicle_category": "premium executive sedan",
+        "target_customer": "high-mileage fleet buyer managing total cost of ownership",
+        "strategic_focus": "cost efficiency",
+        "evidence_weights_1_to_10": {
+          "customer_feedback": 8,
+          "customer_studies": 6,
+          "competitor_data": 4,
+          "sales_volumes": 7,
+          "decision_memory": 9
+        }
+      },
+      "candidates": [
+        {
+          "requirement_id": "SYN-04-R1",
+          "description": "Reduce energy use",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 7,
+            "customer_studies": 6,
+            "competitor_data": 5,
+            "sales_volumes": 5,
+            "decision_memory": 8
+          }
+        },
+        {
+          "requirement_id": "SYN-04-R2",
+          "description": "Improve cargo access",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 8,
+            "customer_studies": 7,
+            "competitor_data": 6,
+            "sales_volumes": 5,
+            "decision_memory": 6
+          }
+        },
+        {
+          "requirement_id": "SYN-04-R3",
+          "description": "Simplify maintenance access",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 7,
+            "customer_studies": 8,
+            "competitor_data": 7,
+            "sales_volumes": 7,
+            "decision_memory": 9
+          }
+        }
+      ],
+      "accepted_before_feedback": [
+        "SYN-04-R1"
+      ],
+      "stakeholder_feedback_event": {
+        "event_type": "evidence_score_update",
+        "source": "sales_volumes",
+        "candidate_id": "SYN-04-R1",
+        "old_synthetic_rating": 9,
+        "new_synthetic_rating": 5,
+        "note": "Simulated stakeholder input; PM confirmation is required before applying.",
+        "provider_role": "simulated sales-planning analyst",
+        "simulated_feedback_summary": "A simulated volume scenario reduces the number of projected US fleet configurations that would use the accepted energy-efficiency package; the market-reach rating is lowered, not the technical value of efficiency.",
+        "source_status": "SYNTHETIC; not a BMW quote, study result, or real stakeholder response"
+      },
+      "labels": {
+        "accepted_ids_must_remain": [
+          "SYN-04-R1"
+        ],
+        "synthetic_pm_selected_next_id": "SYN-04-R3",
+        "synthetic_pm_rationale": "Keep energy efficiency approved. For the next fleet-cost investigation, choose maintenance access: on high-utilization vehicles, service time can affect availability as well as direct cost. Cargo access could improve daily convenience, but this case has no verified evidence that it reduces fleet operating cost more than maintenance access. All scores and the revised volume scenario are fabricated. A volume projection measures potential reach under assumptions; it is not proof of customer willingness to pay or lifetime savings. Have aftersales and controlling estimate service hours, downtime, and cost for representative fleet duty cycles; check the result against the sales mix. Change the order if verified fleet data show cargo handling creates more recurring cost or downtime than maintenance access.",
+        "expected_top_unaccepted_id": "SYN-04-R3",
+        "decision_rationale": {
+          "primary_reason": "Keep energy efficiency approved. For the next fleet-cost investigation, choose maintenance access: on high-utilization vehicles, service time can affect availability as well as direct cost.",
+          "tradeoff": "Cargo access could improve daily convenience, but this case has no verified evidence that it reduces fleet operating cost more than maintenance access.",
+          "uncertainty": "All scores and the revised volume scenario are fabricated. A volume projection measures potential reach under assumptions; it is not proof of customer willingness to pay or lifetime savings.",
+          "next_validation": "Have aftersales and controlling estimate service hours, downtime, and cost for representative fleet duty cycles; check the result against the sales mix.",
+          "reopen_condition": "Change the order if verified fleet data show cargo handling creates more recurring cost or downtime than maintenance access."
+        },
+        "rationale_source_ids": [
+          "BMW-INTERVIEW",
+          "VDI-4520-2",
+          "NASA-REQ-MGMT"
+        ],
+        "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
+        "expected_top_unaccepted_ids": [
+          "SYN-04-R3"
+        ]
+      },
+      "expected_weighted_scores_after_update": {
+        "SYN-04-R1": 6.4412,
+        "SYN-04-R2": 6.4412,
+        "SYN-04-R3": 7.7059
+      }
+    },
+    {
+      "case_id": "SYN-05",
+      "synthetic_pm_id": "PM-SIM-05",
+      "upfront_decisions": {
+        "baseline": "BMW 5 Series G60 (EU context example only)",
+        "target_market": "Germany",
+        "vehicle_category": "premium executive sedan",
+        "target_customer": "executive seeking a comfortable, organized cabin",
+        "strategic_focus": "premium comfort",
+        "evidence_weights_1_to_10": {
+          "customer_feedback": 7,
+          "customer_studies": 8,
+          "competitor_data": 6,
+          "sales_volumes": 4,
+          "decision_memory": 5
+        }
+      },
+      "candidates": [
+        {
+          "requirement_id": "SYN-05-R1",
+          "description": "Improve navigation clarity",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 9,
+            "customer_studies": 8,
+            "competitor_data": 5,
+            "sales_volumes": 4,
+            "decision_memory": 6
+          }
+        },
+        {
+          "requirement_id": "SYN-05-R2",
+          "description": "Improve seat adjustment",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 5,
+            "customer_studies": 9,
+            "competitor_data": 7,
+            "sales_volumes": 6,
+            "decision_memory": 5
+          }
+        },
+        {
+          "requirement_id": "SYN-05-R3",
+          "description": "Add premium cabin storage",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 6,
+            "customer_studies": 7,
+            "competitor_data": 8,
+            "sales_volumes": 9,
+            "decision_memory": 8
+          }
+        }
+      ],
+      "accepted_before_feedback": [
+        "SYN-05-R2"
+      ],
+      "stakeholder_feedback_event": {
+        "event_type": "evidence_score_update",
+        "source": "customer_feedback",
+        "candidate_id": "SYN-05-R2",
+        "old_synthetic_rating": 7,
+        "new_synthetic_rating": 5,
+        "note": "Simulated stakeholder input; PM confirmation is required before applying.",
+        "provider_role": "simulated customer-research lead",
+        "simulated_feedback_summary": "A simulated owner clinic finds the seat-adjustment concern is concentrated in one configuration, lowering its broad customer-feedback rating without deleting the accepted item.",
+        "source_status": "SYNTHETIC; not a BMW quote, study result, or real stakeholder response"
+      },
+      "labels": {
+        "accepted_ids_must_remain": [
+          "SYN-05-R2"
+        ],
+        "synthetic_pm_selected_next_id": "SYN-05-R3",
+        "synthetic_pm_rationale": "Preserve seat adjustment because the PM has already accepted it. Use the next premium-comfort slot for cabin storage: an organized cabin supports the target executive use case alongside seating comfort. Navigation clarity may help everyday tasks, but it answers a different strategic objective and can be evaluated in a separate usability workstream. The 7-to-5 change and evidence scores are fabricated. The case does not claim that German customers prefer storage or that the issue is common across trims. Check storage reach and fit with representative occupants and objects, then review packaging, noise, and cost with interior engineering. Revisit seat adjustment if a broader, configuration-balanced study shows a persistent discomfort problem.",
+        "expected_top_unaccepted_id": "SYN-05-R3",
+        "decision_rationale": {
+          "primary_reason": "Preserve seat adjustment because the PM has already accepted it. Use the next premium-comfort slot for cabin storage: an organized cabin supports the target executive use case alongside seating comfort.",
+          "tradeoff": "Navigation clarity may help everyday tasks, but it answers a different strategic objective and can be evaluated in a separate usability workstream.",
+          "uncertainty": "The 7-to-5 change and evidence scores are fabricated. The case does not claim that German customers prefer storage or that the issue is common across trims.",
+          "next_validation": "Check storage reach and fit with representative occupants and objects, then review packaging, noise, and cost with interior engineering.",
+          "reopen_condition": "Revisit seat adjustment if a broader, configuration-balanced study shows a persistent discomfort problem."
+        },
+        "rationale_source_ids": [
+          "BMW-INTERVIEW",
+          "QFD-CHRYSLER-1995",
+          "VDI-4520-2"
+        ],
+        "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
+        "expected_top_unaccepted_ids": [
+          "SYN-05-R3"
+        ]
+      },
+      "expected_weighted_scores_after_update": {
+        "SYN-05-R1": 6.7667,
+        "SYN-05-R2": 6.6,
+        "SYN-05-R3": 7.4
+      }
+    },
+    {
+      "case_id": "SYN-06",
+      "synthetic_pm_id": "PM-SIM-06",
+      "upfront_decisions": {
+        "baseline": "BMW 5 Series G68 (China long-wheelbase context example only)",
+        "target_market": "China",
+        "vehicle_category": "premium executive sedan",
+        "target_customer": "rear-seat executive passenger on frequent work journeys",
+        "strategic_focus": "premium comfort",
+        "evidence_weights_1_to_10": {
+          "customer_feedback": 9,
+          "customer_studies": 7,
+          "competitor_data": 5,
+          "sales_volumes": 3,
+          "decision_memory": 6
+        }
+      },
+      "candidates": [
+        {
+          "requirement_id": "SYN-06-R1",
+          "description": "Improve screen readability",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 8,
+            "customer_studies": 5,
+            "competitor_data": 5,
+            "sales_volumes": 6,
+            "decision_memory": 7
+          }
+        },
+        {
+          "requirement_id": "SYN-06-R2",
+          "description": "Improve ride comfort",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 6,
+            "customer_studies": 8,
+            "competitor_data": 9,
+            "sales_volumes": 5,
+            "decision_memory": 5
+          }
+        },
+        {
+          "requirement_id": "SYN-06-R3",
+          "description": "Improve sport steering feel",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 7,
+            "customer_studies": 6,
+            "competitor_data": 7,
+            "sales_volumes": 8,
+            "decision_memory": 9
+          }
+        }
+      ],
+      "accepted_before_feedback": [
+        "SYN-06-R3"
+      ],
+      "stakeholder_feedback_event": {
+        "event_type": "evidence_score_update",
+        "source": "customer_studies",
+        "candidate_id": "SYN-06-R1",
+        "old_synthetic_rating": 7,
+        "new_synthetic_rating": 5,
+        "note": "Simulated stakeholder input; PM confirmation is required before applying.",
+        "provider_role": "simulated customer-study analyst",
+        "simulated_feedback_summary": "A simulated study re-tabulation lowers the screen-readability signal because the reported issue belongs to the driver interface, outside this case’s rear-seat comfort use situation.",
+        "source_status": "SYNTHETIC; not a BMW quote, study result, or real stakeholder response"
+      },
+      "labels": {
+        "accepted_ids_must_remain": [
+          "SYN-06-R3"
+        ],
+        "synthetic_pm_selected_next_id": "SYN-06-R2",
+        "synthetic_pm_rationale": "Keep the earlier steering-feel requirement visible as an inherited decision, but select ride comfort for the next G68 investigation. The target customer is explicitly a rear-seat executive passenger, so the new choice follows that use case. Driver screen readability may still matter to the driver and should not be generalized away; it is simply not the strongest next action for this scenario. The score change and all ratings are synthetic. The supplied study distinguishes G68 and G60, but available means alone do not prove a market cause or a specific ride defect. Collect rear-seat ride evaluations across representative urban and highway surfaces, then ask chassis engineering which changes fit the program constraints. Reprioritize the screen if driver-task evidence shows a safety-relevant comprehension issue or a repeated usability failure.",
+        "expected_top_unaccepted_id": "SYN-06-R2",
+        "decision_rationale": {
+          "primary_reason": "Keep the earlier steering-feel requirement visible as an inherited decision, but select ride comfort for the next G68 investigation. The target customer is explicitly a rear-seat executive passenger, so the new choice follows that use case.",
+          "tradeoff": "Driver screen readability may still matter to the driver and should not be generalized away; it is simply not the strongest next action for this scenario.",
+          "uncertainty": "The score change and all ratings are synthetic. The supplied study distinguishes G68 and G60, but available means alone do not prove a market cause or a specific ride defect.",
+          "next_validation": "Collect rear-seat ride evaluations across representative urban and highway surfaces, then ask chassis engineering which changes fit the program constraints.",
+          "reopen_condition": "Reprioritize the screen if driver-task evidence shows a safety-relevant comprehension issue or a repeated usability failure."
+        },
+        "rationale_source_ids": [
+          "BMW-DATA-COVERAGE",
+          "BMW-G68-SPEC",
+          "NASA-REQ-MGMT"
+        ],
+        "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
+        "expected_top_unaccepted_ids": [
+          "SYN-06-R2"
+        ]
+      },
+      "expected_weighted_scores_after_update": {
+        "SYN-06-R1": 6.4,
+        "SYN-06-R2": 6.6667,
+        "SYN-06-R3": 7.2667
+      }
+    },
+    {
+      "case_id": "SYN-07",
+      "synthetic_pm_id": "PM-SIM-07",
+      "upfront_decisions": {
+        "baseline": "BMW 5 Series G60 (US context example only)",
+        "target_market": "United States",
+        "vehicle_category": "premium executive sedan",
+        "target_customer": "EV driver who needs dependable charging in daily travel",
+        "strategic_focus": "everyday usability",
+        "evidence_weights_1_to_10": {
+          "customer_feedback": 8,
+          "customer_studies": 8,
+          "competitor_data": 6,
+          "sales_volumes": 4,
+          "decision_memory": 3
+        }
+      },
+      "candidates": [
+        {
+          "requirement_id": "SYN-07-R1",
+          "description": "Reduce service cost",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 6,
+            "customer_studies": 8,
+            "competitor_data": 8,
+            "sales_volumes": 5,
+            "decision_memory": 4
+          }
+        },
+        {
+          "requirement_id": "SYN-07-R2",
+          "description": "Improve charging access",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 9,
+            "customer_studies": 7,
+            "competitor_data": 6,
+            "sales_volumes": 7,
+            "decision_memory": 3
+          }
+        },
+        {
+          "requirement_id": "SYN-07-R3",
+          "description": "Improve cabin materials",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 7,
+            "customer_studies": 9,
+            "competitor_data": 5,
+            "sales_volumes": 6,
+            "decision_memory": 6
+          }
+        }
+      ],
+      "accepted_before_feedback": [
+        "SYN-07-R1"
+      ],
+      "stakeholder_feedback_event": {
+        "event_type": "evidence_score_update",
+        "source": "decision_memory",
+        "candidate_id": "SYN-07-R2",
+        "old_synthetic_rating": 8,
+        "new_synthetic_rating": 3,
+        "note": "Simulated stakeholder input; PM confirmation is required before applying.",
+        "provider_role": "simulated product historian",
+        "simulated_feedback_summary": "A simulated memory review finds that the earlier charging-access decision came from a different market and charging-network context; its transferability score is reduced, not the current US customer signal.",
+        "source_status": "SYNTHETIC; not a BMW quote, study result, or real stakeholder response"
+      },
+      "labels": {
+        "accepted_ids_must_remain": [
+          "SYN-07-R1"
+        ],
+        "synthetic_pm_selected_next_id": "SYN-07-R2",
+        "synthetic_pm_rationale": "Keep the approved service-cost work. Select charging access next because it is central to the stated daily-use problem and is supported by this case’s current feedback and study inputs, despite weaker historical precedent. Cabin materials score well in the simulated evidence, but they are less directly connected to the daily charging task the project is trying to improve. The prior decision, source ratings, and customer profile are fabricated. Country labels alone do not establish charging behavior or infrastructure needs. Check current US charging coverage and home-charging access for the target group, then test route-planning and charging tasks with users. Reconsider the charging requirement if market-matched research shows the target group has reliable access and little task friction.",
+        "expected_top_unaccepted_id": "SYN-07-R2",
+        "decision_rationale": {
+          "primary_reason": "Keep the approved service-cost work. Select charging access next because it is central to the stated daily-use problem and is supported by this case’s current feedback and study inputs, despite weaker historical precedent.",
+          "tradeoff": "Cabin materials score well in the simulated evidence, but they are less directly connected to the daily charging task the project is trying to improve.",
+          "uncertainty": "The prior decision, source ratings, and customer profile are fabricated. Country labels alone do not establish charging behavior or infrastructure needs.",
+          "next_validation": "Check current US charging coverage and home-charging access for the target group, then test route-planning and charging tasks with users.",
+          "reopen_condition": "Reconsider the charging requirement if market-matched research shows the target group has reliable access and little task friction."
+        },
+        "rationale_source_ids": [
+          "BMW-INTERVIEW",
+          "BMW-DATA-COVERAGE",
+          "NASA-REQ-MGMT"
+        ],
+        "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
+        "expected_top_unaccepted_ids": [
+          "SYN-07-R2"
+        ]
+      },
+      "expected_weighted_scores_after_update": {
+        "SYN-07-R1": 6.6207,
+        "SYN-07-R2": 6.931,
+        "SYN-07-R3": 6.8966
+      }
+    },
+    {
+      "case_id": "SYN-08",
+      "synthetic_pm_id": "PM-SIM-08",
+      "upfront_decisions": {
+        "baseline": "BMW 5 Series G60 (EU context example only)",
+        "target_market": "Germany",
+        "vehicle_category": "premium executive sedan",
+        "target_customer": "high-mileage company-car user focused on running cost",
+        "strategic_focus": "cost efficiency",
+        "evidence_weights_1_to_10": {
+          "customer_feedback": 7,
+          "customer_studies": 6,
+          "competitor_data": 5,
+          "sales_volumes": 9,
+          "decision_memory": 8
+        }
+      },
+      "candidates": [
+        {
+          "requirement_id": "SYN-08-R1",
+          "description": "Improve handling response",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 7,
+            "customer_studies": 6,
+            "competitor_data": 8,
+            "sales_volumes": 8,
+            "decision_memory": 6
+          }
+        },
+        {
+          "requirement_id": "SYN-08-R2",
+          "description": "Add comfort settings",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 8,
+            "customer_studies": 7,
+            "competitor_data": 5,
+            "sales_volumes": 6,
+            "decision_memory": 9
+          }
+        },
+        {
+          "requirement_id": "SYN-08-R3",
+          "description": "Improve vehicle efficiency",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 6,
+            "customer_studies": 9,
+            "competitor_data": 7,
+            "sales_volumes": 9,
+            "decision_memory": 7
+          }
+        }
+      ],
+      "accepted_before_feedback": [
+        "SYN-08-R2"
+      ],
+      "stakeholder_feedback_event": {
+        "event_type": "evidence_score_update",
+        "source": "sales_volumes",
+        "candidate_id": "SYN-08-R3",
+        "old_synthetic_rating": 5,
+        "new_synthetic_rating": 9,
+        "note": "Simulated stakeholder input; PM confirmation is required before applying.",
+        "provider_role": "simulated sales-planning analyst",
+        "simulated_feedback_summary": "A simulated volume scenario increases the projected mix for efficient variants, raising the reach rating for vehicle efficiency.",
+        "source_status": "SYNTHETIC; not a BMW quote, study result, or real stakeholder response"
+      },
+      "labels": {
+        "accepted_ids_must_remain": [
+          "SYN-08-R2"
+        ],
+        "synthetic_pm_selected_next_id": "SYN-08-R3",
+        "synthetic_pm_rationale": "Keep comfort settings already accepted. Select vehicle efficiency next for the high-mileage company-car profile, where usage volume could make operating cost consequential. Handling response supports sportiness, but sportiness is not the stated project focus. The PM should not let a strong competitor score silently replace the cost objective. The sales change and scores are synthetic. Even real projected volume would indicate potential exposure, not prove customer preference, margin, or lifetime cost savings. Ask controlling and powertrain engineering for a transparent cost and energy range under representative duty cycles; compare projected mix with actual trim availability. Reopen handling if the PM changes the strategic focus or verified competitive evidence shows a critical parity gap.",
+        "expected_top_unaccepted_id": "SYN-08-R3",
+        "decision_rationale": {
+          "primary_reason": "Keep comfort settings already accepted. Select vehicle efficiency next for the high-mileage company-car profile, where usage volume could make operating cost consequential.",
+          "tradeoff": "Handling response supports sportiness, but sportiness is not the stated project focus. The PM should not let a strong competitor score silently replace the cost objective.",
+          "uncertainty": "The sales change and scores are synthetic. Even real projected volume would indicate potential exposure, not prove customer preference, margin, or lifetime cost savings.",
+          "next_validation": "Ask controlling and powertrain engineering for a transparent cost and energy range under representative duty cycles; compare projected mix with actual trim availability.",
+          "reopen_condition": "Reopen handling if the PM changes the strategic focus or verified competitive evidence shows a critical parity gap."
+        },
+        "rationale_source_ids": [
+          "BMW-INTERVIEW",
+          "VDI-4520-2",
+          "NASA-REQ-MGMT"
+        ],
+        "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
+        "expected_top_unaccepted_ids": [
+          "SYN-08-R3"
+        ]
+      },
+      "expected_weighted_scores_after_update": {
+        "SYN-08-R1": 7.0,
+        "SYN-08-R2": 7.1143,
+        "SYN-08-R3": 7.6571
+      }
+    },
+    {
+      "case_id": "SYN-09",
+      "synthetic_pm_id": "PM-SIM-09",
+      "upfront_decisions": {
+        "baseline": "BMW 5 Series G68 (China long-wheelbase context example only)",
+        "target_market": "China",
+        "vehicle_category": "premium executive sedan",
+        "target_customer": "rear-seat passenger who values a comfortable cabin",
+        "strategic_focus": "premium comfort",
+        "evidence_weights_1_to_10": {
+          "customer_feedback": 8,
+          "customer_studies": 9,
+          "competitor_data": 4,
+          "sales_volumes": 6,
+          "decision_memory": 5
+        }
+      },
+      "candidates": [
+        {
+          "requirement_id": "SYN-09-R1",
+          "description": "Improve seat comfort",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 9,
+            "customer_studies": 8,
+            "competitor_data": 4,
+            "sales_volumes": 6,
+            "decision_memory": 5
+          }
+        },
+        {
+          "requirement_id": "SYN-09-R2",
+          "description": "Improve connected services",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 7,
+            "customer_studies": 9,
+            "competitor_data": 4,
+            "sales_volumes": 4,
+            "decision_memory": 6
+          }
+        },
+        {
+          "requirement_id": "SYN-09-R3",
+          "description": "Improve cargo access",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 6,
+            "customer_studies": 7,
+            "competitor_data": 7,
+            "sales_volumes": 9,
+            "decision_memory": 8
+          }
+        }
+      ],
+      "accepted_before_feedback": [
+        "SYN-09-R3"
+      ],
+      "stakeholder_feedback_event": {
+        "event_type": "evidence_score_update",
+        "source": "competitor_data",
+        "candidate_id": "SYN-09-R2",
+        "old_synthetic_rating": 8,
+        "new_synthetic_rating": 4,
+        "note": "Simulated stakeholder input; PM confirmation is required before applying.",
+        "provider_role": "simulated competitor-intelligence analyst",
+        "simulated_feedback_summary": "A simulated competitor review finds connected-service functions are common in the comparison set, reducing the competitive-urgency rating.",
+        "source_status": "SYNTHETIC; not a BMW quote, study result, or real stakeholder response"
+      },
+      "labels": {
+        "accepted_ids_must_remain": [
+          "SYN-09-R3"
+        ],
+        "synthetic_pm_selected_next_id": "SYN-09-R1",
+        "synthetic_pm_rationale": "Keep cargo access as an accepted G68 requirement. For the next premium-comfort decision, choose seat comfort because it maps directly to the defined rear-seat passenger profile. Connected services remain necessary to assess, but feature parity alone is not a reason to invest ahead of a direct comfort issue. The competitor comparison and ratings are fabricated. The China target is a chosen persona for this case, not a claim about all Chinese buyers or chauffeured use. Review current, dated G68 competitor offers and run a localized rear-seat comfort clinic; separate derivative effects from market effects. Raise connected services if a verified competitor gap or market-matched customer task failure emerges.",
+        "expected_top_unaccepted_id": "SYN-09-R1",
+        "decision_rationale": {
+          "primary_reason": "Keep cargo access as an accepted G68 requirement. For the next premium-comfort decision, choose seat comfort because it maps directly to the defined rear-seat passenger profile.",
+          "tradeoff": "Connected services remain necessary to assess, but feature parity alone is not a reason to invest ahead of a direct comfort issue.",
+          "uncertainty": "The competitor comparison and ratings are fabricated. The China target is a chosen persona for this case, not a claim about all Chinese buyers or chauffeured use.",
+          "next_validation": "Review current, dated G68 competitor offers and run a localized rear-seat comfort clinic; separate derivative effects from market effects.",
+          "reopen_condition": "Raise connected services if a verified competitor gap or market-matched customer task failure emerges."
+        },
+        "rationale_source_ids": [
+          "BMW-G68-SPEC",
+          "BMW-DATA-COVERAGE",
+          "QFD-CHRYSLER-1995",
+          "VDI-4520-2"
+        ],
+        "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
+        "expected_top_unaccepted_ids": [
+          "SYN-09-R1"
+        ]
+      },
+      "expected_weighted_scores_after_update": {
+        "SYN-09-R1": 6.9062,
+        "SYN-09-R2": 6.4688,
+        "SYN-09-R3": 7.2812
+      }
+    },
+    {
+      "case_id": "SYN-10",
+      "synthetic_pm_id": "PM-SIM-10",
+      "upfront_decisions": {
+        "baseline": "BMW 5 Series G60 (US context example only)",
+        "target_market": "United States",
+        "vehicle_category": "premium executive sedan",
+        "target_customer": "commuter who relies on clear, low-distraction controls",
+        "strategic_focus": "everyday usability",
+        "evidence_weights_1_to_10": {
+          "customer_feedback": 5,
+          "customer_studies": 7,
+          "competitor_data": 8,
+          "sales_volumes": 6,
+          "decision_memory": 9
+        }
+      },
+      "candidates": [
+        {
+          "requirement_id": "SYN-10-R1",
+          "description": "Improve infotainment menus",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 8,
+            "customer_studies": 6,
+            "competitor_data": 7,
+            "sales_volumes": 5,
+            "decision_memory": 3
+          }
+        },
+        {
+          "requirement_id": "SYN-10-R2",
+          "description": "Improve cabin quietness",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 7,
+            "customer_studies": 9,
+            "competitor_data": 5,
+            "sales_volumes": 8,
+            "decision_memory": 6
+          }
+        },
+        {
+          "requirement_id": "SYN-10-R3",
+          "description": "Improve driver assistance clarity",
+          "evidence_scores_1_to_10": {
+            "customer_feedback": 6,
+            "customer_studies": 8,
+            "competitor_data": 9,
+            "sales_volumes": 7,
+            "decision_memory": 5
+          }
+        }
+      ],
+      "accepted_before_feedback": [
+        "SYN-10-R1"
+      ],
+      "stakeholder_feedback_event": {
+        "event_type": "evidence_score_update",
+        "source": "decision_memory",
+        "candidate_id": "SYN-10-R1",
+        "old_synthetic_rating": 9,
+        "new_synthetic_rating": 3,
+        "note": "Simulated stakeholder input; PM confirmation is required before applying.",
+        "provider_role": "simulated product historian",
+        "simulated_feedback_summary": "A simulated memory audit finds the inherited menu decision was made for an earlier HMI/software architecture; its transferability to the successor is lowered.",
+        "source_status": "SYNTHETIC; not a BMW quote, study result, or real stakeholder response"
+      },
+      "labels": {
+        "accepted_ids_must_remain": [
+          "SYN-10-R1"
+        ],
+        "synthetic_pm_selected_next_id": "SYN-10-R3",
+        "synthetic_pm_rationale": "Do not remove the accepted menu requirement: weaker precedent does not cancel its current approval. Select driver-assistance clarity as the next usability investigation because the target commuter must understand prompts quickly. Cabin quietness matters to comfort, but it is less central to the stated everyday-control objective. Any driver-assistance wording must preserve driver responsibility and verified system limits. The memory audit and candidate ratings are fabricated. This does not establish that current US drivers misunderstand BMW assistance features. Run comprehension tests on representative prompts in a stationary, controlled study, then review the resulting requirement with HMI and safety engineering. Reopen the menu work if successor-interface testing shows the accepted requirement no longer addresses the observed task.",
+        "expected_top_unaccepted_id": "SYN-10-R3",
+        "decision_rationale": {
+          "primary_reason": "Do not remove the accepted menu requirement: weaker precedent does not cancel its current approval. Select driver-assistance clarity as the next usability investigation because the target commuter must understand prompts quickly.",
+          "tradeoff": "Cabin quietness matters to comfort, but it is less central to the stated everyday-control objective. Any driver-assistance wording must preserve driver responsibility and verified system limits.",
+          "uncertainty": "The memory audit and candidate ratings are fabricated. This does not establish that current US drivers misunderstand BMW assistance features.",
+          "next_validation": "Run comprehension tests on representative prompts in a stationary, controlled study, then review the resulting requirement with HMI and safety engineering.",
+          "reopen_condition": "Reopen the menu work if successor-interface testing shows the accepted requirement no longer addresses the observed task."
+        },
+        "rationale_source_ids": [
+          "BMW-INTERVIEW",
+          "NASA-REQ-MGMT",
+          "BMW-USA-5SERIES"
+        ],
+        "rationale_basis_note": "Research informs the structure of the reasoning only; this PM choice and every numeric rating remain fabricated.",
+        "expected_top_unaccepted_ids": [
+          "SYN-10-R3"
+        ]
+      },
+      "expected_weighted_scores_after_update": {
+        "SYN-10-R1": 5.5714,
+        "SYN-10-R2": 6.8571,
+        "SYN-10-R3": 7.0
+      }
+    }
+  ],
+  "rationale_design_basis": {
+    "scope_note": "Cross-domain research informs how the rationales explain customer need, trade-off, change impact and evidence gaps. It does not make synthetic ratings or simulated PM choices real.",
+    "sources": [
+      {
+        "id": "BMW-INTERVIEW",
+        "domain": "BMW field research",
+        "source": "research/winning_plan.md; actual finale conversation and whiteboard notes",
+        "transfer": "Treat project goal and target market as context; PM owns the decision; consult engineering/controlling; avoid a universal source hierarchy."
+      },
+      {
+        "id": "QFD-CHRYSLER-1995",
+        "domain": "automotive quality and product development",
+        "source": "Lockamy, Quality Function Deployment: Total Quality Management for New Product Design (1995), Chrysler case",
+        "url": "https://doi.org/10.1108/02656719510089939",
+        "transfer": "Connect stated customer needs to candidate product/design decisions; keep the customer need visible when discussing a feature."
+      },
+      {
+        "id": "VDI-4520-2",
+        "domain": "German product management",
+        "source": "VDI 4520 Blatt 2 (May 2025)",
+        "url": "https://www.vdi.de/en/home/vdi-standards/details/vdi-4520-blatt-2-product-management-methods-and-tools-in-the-phases-of-the-product-management-process",
+        "transfer": "Explain the PM trade-off across customer, development/design, production, sales and marketing over the product lifecycle."
+      },
+      {
+        "id": "NASA-REQ-MGMT",
+        "domain": "systems engineering and change control",
+        "source": "NASA NPR 7123.1B with Change 4; NASA Systems Engineering Handbook",
+        "url": "https://nodis3.gsfc.nasa.gov/displayAll.cfm?Internal_ID=N_PR_7123_001B_&page_name=ALL",
+        "transfer": "Record why a change was proposed, evaluate impacts, retain traceability and state what would reopen the decision; NASA is a process analogue, not an automotive mandate."
+      },
+      {
+        "id": "BMW-USA-5SERIES",
+        "domain": "United States product context",
+        "source": "BMW USA 5 Series Sedan overview",
+        "url": "https://www.bmwusa.com/vehicles/5-series/sedan/bmw-5-series-sedan-overview.html",
+        "transfer": "Use current US-market feature context only; the official page does not establish customer priority."
+      },
+      {
+        "id": "BMW-G68-SPEC",
+        "domain": "China product context",
+        "source": "BMW China 5 Series long-wheelbase specification sheet",
+        "url": "https://www.bmw.com.cn/content/dam/bmw/marketCN/bmw_com_cn/specsheet/G68-page.pdf.asset.1772448532369.pdf",
+        "transfer": "Treat G68 as a distinct China long-wheelbase derivative; do not transfer G60 evidence as if market and derivative were interchangeable."
+      },
+      {
+        "id": "BMW-DATA-COVERAGE",
+        "domain": "cross-market measurement",
+        "source": "research/simulation_results.md; supplied BMW study and feedback workbooks",
+        "transfer": "Keep market, derivative, source type and denominator visible. Missing respondent counts and confounded market/derivative comparisons stay explicit."
+      }
+    ],
+    "anti_stereotype_rule": "Market-specific rationales refer to the selected target customer and matched derivative, not assumptions about national character or universal preferences."
+  }
+}
