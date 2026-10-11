@@ -1,22 +1,39 @@
 import { createServer } from 'node:http';
-import { appendFile, readFile } from 'node:fs/promises';
+import { appendFile, readFile, rename, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { extname, join, normalize } from 'node:path';
 import { classifyReportAudiences, classifyStakeholderResponse, draftStakeholderEmail, outcomeToStatus, researchMarketIntelligence, synthesizeRequirements } from './src/openai.mjs';
 import { DECISION_EVENT_TYPES, isRecordedDecision } from './src/decision-memory.mjs';
+import { fileURLToPath } from 'node:url';
+import { validateBatch } from './src/uploads.mjs';
 
-const root = new URL('.', import.meta.url).pathname.replace(/^\/(.:)/, '$1');
+const root = fileURLToPath(new URL('.', import.meta.url));
+// Load .env when present; variables already set in the shell take precedence.
+try { process.loadEnvFile(join(root, '.env')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
 const port = Number(process.env.PORT || 4173);
-const apiVersion = 'pm-api-5';
+const apiVersion = 'pm-api-6';
 const decisionEventsPath = join(root, 'data', 'decision-events.ndjson');
+const uploadsPath = join(root, 'data', 'uploads.json');
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp' };
 
 const sendJson = (res, status, value) => { res.writeHead(status, { 'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store' }); res.end(JSON.stringify(value)); };
-const readJson = req => new Promise((resolve, reject) => {
+const readJson = (req, limit = 100_000) => new Promise((resolve, reject) => {
   let body='';
-  req.on('data', chunk => { body += chunk; if (body.length > 100_000) reject(new Error('Request is too large.')); });
+  req.on('data', chunk => { body += chunk; if (body.length > limit) reject(new Error('Request is too large.')); });
   req.on('end', () => { try { resolve(JSON.parse(body || '{}')); } catch { reject(new Error('Invalid JSON request.')); } });
   req.on('error', reject);
 });
+
+const UPLOADS_NOTICE = 'Evidence added by PMs through the app. Not part of the supplied BMW archive.';
+async function readUploads(){
+  try { const store=JSON.parse(await readFile(uploadsPath,'utf8')); return { notice:UPLOADS_NOTICE, batches:Array.isArray(store.batches)?store.batches:[] }; }
+  catch (error) { if (error.code==='ENOENT') return { notice:UPLOADS_NOTICE, batches:[] }; throw error; }
+}
+async function writeUploads(store){
+  // Write to a temp file first so a crash never leaves half-written JSON.
+  const temp=`${uploadsPath}.${process.pid}.tmp`;
+  await writeFile(temp, JSON.stringify(store,null,2), 'utf8'); await rename(temp, uploadsPath);
+}
 
 createServer(async (req, res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname;
@@ -47,6 +64,24 @@ createServer(async (req, res) => {
       await appendFile(decisionEventsPath,`${JSON.stringify(immutableEvent)}\n`,'utf8');
       sendJson(res,201,{ok:true,id:immutableEvent.id});
     } catch(error){sendJson(res,400,{error:error.message})}
+    return;
+  }
+  if (pathname === '/api/uploads' || pathname.startsWith('/api/uploads/')) {
+    try {
+      const store=await readUploads();
+      if (req.method === 'GET' && pathname === '/api/uploads') { sendJson(res,200,store); return; }
+      if (req.method === 'POST' && pathname === '/api/uploads') {
+        const batch={ batchId:randomUUID(), uploadedAt:new Date().toISOString(), ...validateBatch(await readJson(req, 2_000_000)) };
+        store.batches.push(batch); await writeUploads(store); sendJson(res,201,batch); return;
+      }
+      if (req.method === 'DELETE' && pathname.startsWith('/api/uploads/')) {
+        const batchId=decodeURIComponent(pathname.slice('/api/uploads/'.length)),before=store.batches.length;
+        store.batches=store.batches.filter(batch=>batch.batchId!==batchId);
+        if (store.batches.length===before) { sendJson(res,404,{error:'Upload not found.'}); return; }
+        await writeUploads(store); sendJson(res,200,{ok:true}); return;
+      }
+      sendJson(res,405,{error:'Method not allowed.'});
+    } catch (error) { sendJson(res,400,{error:error.message}); }
     return;
   }
   if (pathname === '/api/interpret-stakeholder' && req.method === 'POST') {

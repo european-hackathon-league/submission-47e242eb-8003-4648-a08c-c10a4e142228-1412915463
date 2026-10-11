@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="./enhancements.css">
   <link rel="stylesheet" href="./bmw-dark.css">
   <link rel="stylesheet" href="./bmw-editorial.css">
+  <link rel="stylesheet" href="./readable.css">
 </head>
 <body>
   <header class="app-header">
@@ -51,6 +52,38 @@
           <p class="guardrail"><span aria-hidden="true">♢</span> Every requirement. Every source. A clear line of reasoning.</p>
           <button id="generate-button" class="primary" type="submit" disabled><span class="shiny-label">Loading verified evidence… <span class="shiny-arrow" aria-hidden="true">···</span></span></button>
         </form>
+      </section>
+
+      <section id="add-evidence" class="evidence-upload" aria-labelledby="upload-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">02 / YOUR EVIDENCE</p><h2 id="upload-title">Add your own evidence.</h2></div>
+          <p>Ranked together with the BMW data. Always cited as your upload.</p>
+        </div>
+        <div class="upload-layout">
+          <div class="upload-step">
+            <h3><span>1</span>What kind of evidence is it?</h3>
+            <div id="upload-types" class="upload-types" role="radiogroup" aria-label="Evidence type"></div>
+          </div>
+          <div class="upload-step">
+            <h3><span>2</span>How much should it count?</h3>
+            <label class="upload-weight">Weight <output id="upload-weight-output">5 / 10</output><input id="upload-weight" type="range" min="1" max="10" value="5"></label>
+            <p id="upload-weight-hint" class="upload-hint">5 counts the same as BMW data.</p>
+            <p class="upload-scope">Applies to <strong id="upload-scope">the selected vehicle and market</strong>. Change it under Product context.</p>
+          </div>
+          <div class="upload-step upload-input">
+            <h3><span>3</span>Add the data</h3>
+            <div class="upload-tabs" role="tablist" aria-label="Input method">
+              <button type="button" role="tab" aria-selected="true" data-upload-mode="paste">Paste text</button>
+              <button type="button" role="tab" aria-selected="false" data-upload-mode="csv">Upload CSV</button>
+            </div>
+            <textarea id="upload-text" aria-label="Pasted evidence, one item per line"></textarea>
+            <label id="upload-drop" class="upload-drop" hidden><input id="upload-file" type="file" accept=".csv,text/csv"><strong>Drop a CSV here or click to browse</strong><span id="upload-file-name">The template shows the expected columns.</span></label>
+            <div class="upload-actions"><a id="upload-template" href="#" download>Download CSV template</a><button id="upload-preview-button" class="primary" type="button">Preview rows <span aria-hidden="true">→</span></button></div>
+            <div id="upload-errors" class="upload-errors" role="alert"></div>
+          </div>
+        </div>
+        <div id="upload-preview" class="upload-preview" hidden></div>
+        <div id="upload-list" class="upload-list"></div>
       </section>
 
       <section class="foundation-strip" aria-label="Product intelligence foundations">

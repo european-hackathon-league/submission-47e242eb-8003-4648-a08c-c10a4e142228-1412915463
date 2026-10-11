@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { buildModel, gmailComposeUrl, validateCitations } from '../src/engine.mjs';
 import { buildModel as buildBrowserModel } from '../public/engine.js';
 
@@ -157,4 +158,51 @@ test('creates a Gmail compose link from the editable email draft', () => {
   assert.equal(url.searchParams.get('to'),'engineer@bmwgroup.com');
   assert.equal(url.searchParams.get('su'),'Feasibility review');
   assert.match(url.searchParams.get('body'),/Please review/);
+});
+
+test('connectivity features are filed under Digital Experience, not the Driving fallback', async () => {
+  const { groupFor } = await import('../src/engine.mjs');
+  for (const feature of ['WiFi hotspot', 'Personal eSIM', 'USB port', 'Intelligent Personal Assistant', 'Vehicle key', 'Driver profile'])
+    assert.equal(groupFor(feature), 'Digital Experience & Controls', feature);
+  assert.equal(groupFor('Glove box'), 'Interior & Comfort');
+  assert.equal(groupFor('Drivetrain'), 'Driving & Powertrain');
+});
+
+test('plain-language explanation is derived from the requirement numbers and flags weak demand honestly', async () => {
+  const { buildModel, signalFor } = await import('../src/engine.mjs');
+  assert.equal(signalFor(0, 'low'), 'market');
+  assert.equal(signalFor(5, 'high'), 'weak');
+  assert.equal(signalFor(20, 'high'), 'limited');
+  assert.equal(signalFor(60, 'high'), 'solid');
+  assert.equal(signalFor(300, 'high'), 'strong');
+  const evidence = JSON.parse(await readFile(new URL('../data/evidence.json', import.meta.url), 'utf8')).records;
+  const context = JSON.parse(await readFile(new URL('../data/context.json', import.meta.url), 'utf8'));
+  const groups = buildModel(evidence, { vehicle:'G60', market:'US', months:18, people:12, importance:8 }, {}, context, {});
+  for (const requirement of groups.flatMap(group => group.requirements)) {
+    const { explanation: x, scoreParts: parts } = requirement;
+    assert.ok(x.exists.length && x.rank.length, requirement.feature);
+    assert.match(x.exists[0], requirement.frequency ? new RegExp(`^${requirement.frequency.toLocaleString()} customer`) : /market evidence only/);
+    assert.ok(Math.abs(parts.demand + parts.timeline + parts.market + parts.memory - requirement.score) <= 2, `${requirement.feature} parts add up to score`);
+    if (['weak', 'limited', 'market'].includes(x.signal.key)) assert.match(x.caveat, /Validate demand before committing/);
+    else assert.equal(x.caveat, '');
+  }
+});
+
+test('every feasibility question has a suggested department and the draft follows the chosen department', async () => {
+  const { departmentOptions, draftEmail, entityFor, DEPARTMENTS } = await import('../src/engine.mjs');
+  assert.equal(entityFor('Braking').name, 'Chassis & Vehicle Dynamics');
+  assert.equal(entityFor('Drivetrain').name, 'Powertrain Engineering');
+  assert.equal(entityFor('If applicable: 4WD/AWD performance').name, 'Powertrain Engineering');
+  assert.equal(entityFor('ground clearance').name, 'Chassis & Vehicle Dynamics');
+  const options = departmentOptions('Braking');
+  assert.equal(options.length, DEPARTMENTS.length);
+  assert.equal(options[0].name, 'Chassis & Vehicle Dynamics');
+  assert.equal(options.filter(option => option.suggested).length, 1);
+  const requirement = { feature:'Braking', statement:'Provide predictable braking.', whyExists:'36 customers.', evidenceCount:3, estimatedMonths:15, owner:{ name:'Chassis & Vehicle Dynamics' }, citations:[{ file:'f.xlsx', sheet:'s', row:1 }] };
+  const config = { vehicle:'G60', market:'US', months:18, people:12, importance:8 };
+  const chassis = draftEmail(requirement, config), cost = draftEmail(requirement, config, 'Purchasing & Cost Controlling');
+  assert.match(chassis, /Hello Chassis & Vehicle Dynamics team/);
+  assert.match(chassis, /chassis tuning/);
+  assert.match(cost, /Hello Purchasing & Cost Controlling team/);
+  assert.match(cost, /cost, sourcing and supplier/);
 });

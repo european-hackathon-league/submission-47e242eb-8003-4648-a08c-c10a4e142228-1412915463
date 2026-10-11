@@ -1,7 +1,7 @@
 const DOMAIN_RULES = [
-  ['Interior & Comfort', /seat|comfort|lumbar|climat|blower|acoustic|noise|audio|sound|belt|mirror|console|storage|interior|cabin|cupholder|ambient|spatial|roominess|wellbeing/i],
-  ['Exterior & Utility', /exterior|roof|trunk|tailgate|door|headlight|taillight|paint|wheel|tire|luggage|cargo|compartment|fold|body equipment/i],
-  ['Digital Experience & Controls', /digital|app|bluetooth|carplay|android|connected|remote|mobile|phone|operat|control|touch|display|cluster|parking|automatic-hold|speed limit|button|owner's manual|camera|infotainment|idrive|navigation/i]
+  ['Interior & Comfort', /seat|comfort|lumbar|climat|blower|acoustic|noise|audio|sound|belt|mirror|console|storage|interior|cabin|cupholder|ambient|spatial|roominess|wellbeing|air conditioning|sun protection|glove box|headrest|armrest|floor mat|grab handle/i],
+  ['Exterior & Utility', /exterior|roof|trunk|tailgate|door|headlight|taillight|paint|wheel|tire|luggage|cargo|compartment|fold|body equipment|window|windshield|wiper|frunk|welcome light|access and exit|filler flap|socket cover/i],
+  ['Digital Experience & Controls', /digital|app|bluetooth|carplay|android|connected|remote|mobile|phone|operat|control|touch|display|cluster|parking|automatic-hold|speed limit|button|owner's manual|camera|infotainment|idrive|navigation|wifi|hotspot|esim|usb|radio|personal assistant|activation word|voice|speech|driver profile|vehicle key|lock \/ unlock|surround view|all-round view|drive recorder|back-up assistant|emergency request|instrument panel/i]
 ];
 
 const OUTCOME_RULES = [
@@ -15,20 +15,107 @@ const OUTCOME_RULES = [
   ['Braking confidence', /brake|pedal/i]
 ];
 
-const ENTITY_RULES = [
-  ['Software & Connected Services', /app|digital|bluetooth|carplay|connected|remote|operating system|display|touch|camera/i, 'Electrical/Electronic Engineering'],
-  ['Interior Engineering', /seat|comfort|lumbar|climat|blower|console|storage|mirror|belt|audio|sound/i, 'Product Integration'],
-  ['Chassis Engineering', /handling|riding|chassis|steer|brake|pedal|suspension|stability/i, 'Vehicle Dynamics'],
-  ['E-Mobility Engineering', /electric|charging|battery|range|efficiency/i, 'Software & Connected Services'],
-  ['Body Engineering', /exterior|roof|trunk|tailgate|door|luggage|compartment|space/i, 'Manufacturing']
+// Departments a PM can route a feasibility question to. Order matters for suggestions:
+// more specific owners are checked first; Product Integration is the cross-domain fallback.
+export const DEPARTMENTS = [
+  { name:'Driver Assistance & Automated Driving', rule:/assist|cruise control|lane|collision|blind spot|cross traffic|fatigue|surround view|all-round view|parking|back-up|high-beam|automated|rear view camera|impression of safety/i,
+    focus:'the sensor, software and homologation implications' },
+  { name:'E-Mobility Engineering', rule:/electric|high.voltage|(?<!wireless )charging|charge|battery|\brange\b|recuperation|regenerat|wallbox|preconditioning/i,
+    focus:'the high-voltage, charging-hardware and range implications' },
+  { name:'Powertrain Engineering', rule:/drivetrain|transmission|engine|start-stop|\(msa\)|4wd|awd|fuel|exhaust/i,
+    focus:'the drivetrain hardware and calibration effort, and any effect on efficiency targets' },
+  { name:'Chassis & Vehicle Dynamics', rule:/handling|riding|chassis|suspension|damping|cushioning|stability|brak|ground clearance|tire|^steering$|driving dynamics/i,
+    focus:'the chassis tuning, component changes and validation effort' },
+  { name:'Software & Connected Services', rule:/\bapps?\b|digital|bluetooth|carplay|android|connected|remote|operating|controller|instrument panel|owner's manual|display|touch|navigation|infotainment|idrive|traffic|rtti|my modes|driver profile|voice|speech|personal assistant|wifi|hotspot|esim|radio|camera|update|usb/i,
+    focus:'the software effort, release timing and backend dependencies' },
+  { name:'Electrical/Electronic Engineering', rule:/exterior lighting|headlight|taillight|light carpet|wireless charging|vehicle key|lock \/ unlock|comfort access|anti-theft|alarm|socket|wiper|vehicle battery/i,
+    focus:'the wiring, control-unit and electrical-architecture implications' },
+  { name:'Interior Engineering', rule:/seat|comfort|lumbar|climat|air conditioning|blower|console|storage|belt|audio|sound|acoustic|interior|ambient|cabin|armrest|headrest|glove box|steering wheel|cupholder|sun protection|floor mat|spatial/i,
+    focus:'the packaging, material and supplier implications' },
+  { name:'Body Engineering', rule:/exterior|body|roof|trunk|tailgate|door|luggage|cargo|compartment|frunk|window|windshield|mirror|paint|bumper|space|access and exit/i,
+    focus:'the body-structure, tooling and design-freeze implications' },
+  { name:'Product Integration', rule:null,
+    focus:'which domain should own this and the cross-domain integration effort' },
+  { name:'Manufacturing & Quality', rule:/squeak|rattle|fault|reliab|quality|fit and finish/i,
+    focus:'the production-process, quality-target and tooling implications' },
+  { name:'Purchasing & Cost Controlling', rule:null,
+    focus:'the cost, sourcing and supplier implications' },
+  { name:'Product Marketing & Sales', rule:/value for money|price|pricing|brand|dealer/i,
+    focus:'the market positioning, pricing and launch-communication implications' }
 ];
+const FALLBACK_DEPARTMENT='Product Integration';
+// Source labels sometimes contain non-breaking spaces; match on normalised text.
+const normalizeLabel=value=>String(value).replace(/\s+/g,' ').trim();
+const departmentByName=name=>DEPARTMENTS.find(department=>department.name===name);
 
-export const groupFor = feature => DOMAIN_RULES.find(([,rule]) => rule.test(feature))?.[0] || 'Driving & Powertrain';
+// All departments, best match for this feature first.
+export function departmentOptions(feature) {
+  const matches=DEPARTMENTS.filter(department=>department.rule?.test(normalizeLabel(feature)));
+  const suggested=matches[0]?.name||FALLBACK_DEPARTMENT;
+  return [departmentByName(suggested),...DEPARTMENTS.filter(department=>department.name!==suggested)].map(department=>({name:department.name,focus:department.focus,suggested:department.name===suggested,matches:matches.includes(department)}));
+}
+
+const SIGNALS = {
+  strong: { label: 'Strong customer signal', tone: 'strong' },
+  solid: { label: 'Solid customer signal', tone: 'solid' },
+  limited: { label: 'Limited customer signal', tone: 'limited' },
+  weak: { label: 'Weak customer signal', tone: 'weak' },
+  market: { label: 'Market evidence only', tone: 'weak' }
+};
+export function signalFor(frequency, confidence) {
+  if (!frequency) return 'market';
+  if (confidence === 'low' || frequency < 10) return 'weak';
+  if (frequency < 25) return 'limited';
+  if (frequency < 100 || confidence !== 'high') return 'solid';
+  return 'strong';
+}
+const plural = (n, word, many = `${word}s`) => `${n.toLocaleString()} ${n === 1 ? word : many}`;
+const listJoin = items => items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
+const DRIVER_LABELS = { demand: 'customer demand', timeline: 'fitting the timeline', market: 'market and competitor evidence' };
+
+// Short, readable reasons derived only from the requirement's own numbers.
+export function explainRequirement(r, config, previous, next) {
+  const signalKey = signalFor(r.frequency, r.confidence), signal = { key: signalKey, ...SIGNALS[signalKey] };
+  const parts = r.scoreParts, studies = r.citations.filter(c => c.sourceType === 'market_study').length;
+  const competitors = r.citations.filter(c => /competitor|industry/.test(c.sourceType || '')).length;
+  const web = r.citations.filter(c => c.sourceType === 'external_web').length;
+  const pmMarket = r.citations.filter(c => c.sourceType === 'pm_market_data').length, pmTrends = r.citations.filter(c => c.sourceType === 'pm_global_trend').length;
+  const exists = [];
+  exists.push(r.frequency ? `${plural(r.frequency, 'customer')} raised this (duplicates and low-quality feedback removed)${r.uploadedFeedback ? `, ${r.uploadedFeedback} of them from your uploads` : ''}` : 'No direct customer feedback; based on market evidence only');
+  const market = [studies && plural(studies, 'customer-study measure'), competitors && plural(competitors, 'competitor signal'), web && plural(web, 'web source'), pmMarket && `${plural(pmMarket, 'row')} of your market data`, pmTrends && plural(pmTrends, 'global trend', 'global trends') + ' you added'].filter(Boolean);
+  exists.push(market.length ? `Also backed by ${listJoin(market)}` : 'No customer-study or competitor evidence attached');
+  if (['not-feasible', 'pm-rejected'].includes(r.status)) {
+    return { signal, exists, rank: ['Rejected: kept visible for traceability', 'No longer competes in the active ranking'], caveat: '' };
+  }
+  const rank = [];
+  rank.push(r.estimatedMonths <= config.months
+    ? `Fits the ${config.months}-month target (about ${r.estimatedMonths} months of work)`
+    : `Needs about ${r.estimatedMonths} months, longer than the ${config.months}-month target`);
+  const [driver] = Object.entries({ demand: parts.demand, timeline: parts.timeline, market: parts.market }).sort((a, b) => b[1] - a[1]);
+  rank.push(`Biggest driver of its score: ${DRIVER_LABELS[driver[0]]}`);
+  if (parts.memory) rank.push(`+${parts.memory} points from a similar past decision in Decision Memory`);
+  if (previous) rank.push(previous.score === r.score
+    ? `Tied on score with “${previous.feature}” (${r.score}), which more customers raised`
+    : `Below “${previous.feature}” (${previous.score}), which scores higher`);
+  else if (next) rank.push(`Highest score in this domain, ahead of “${next.feature}” (${next.score})`);
+  let caveat = '';
+  if (signalKey === 'weak' || signalKey === 'limited' || signalKey === 'market') {
+    const reason = r.frequency ? `Only ${plural(r.frequency, 'customer')} raised this` : 'No customer raised this directly';
+    const rest = [parts.timeline && `timeline fit (${parts.timeline})`, parts.market && `market evidence (${parts.market})`, parts.memory && `past decisions (${parts.memory})`].filter(Boolean);
+    caveat = parts.demand < r.score / 4
+      ? `${reason}. Just ${parts.demand} of its ${r.score} points ${parts.demand === 1 ? 'comes' : 'come'} from customer demand; the rest is ${listJoin(rest)}. Validate demand before committing.`
+      : `${reason}. Validate demand before committing.`;
+  }
+  return { signal, exists, rank, caveat };
+}
+
+export const groupFor = feature => DOMAIN_RULES.find(([,rule]) => rule.test(String(feature).replace(/\s+/g,' ')))?.[0] || 'Driving & Powertrain';
 export const outcomeFor = feature => OUTCOME_RULES.find(([,rule]) => rule.test(feature))?.[0] || `Improve ${feature}`;
 
 export function entityFor(feature) {
-  const match=ENTITY_RULES.find(([,rule])=>rule.test(feature));
-  return { name:match?.[0]||'Product Integration', alternative:match?.[2]||'Product Owner', confidence:match?'medium':'low', reason:match?`The source feature classification “${feature}” matches this function’s typical ownership.`:'Ownership crosses domains and requires PM correction or confirmation.' };
+  const matches=DEPARTMENTS.filter(department=>department.rule?.test(normalizeLabel(feature)));
+  const name=matches[0]?.name||FALLBACK_DEPARTMENT;
+  return { name, alternative:matches[1]?.name||(name===FALLBACK_DEPARTMENT?'Manufacturing & Quality':FALLBACK_DEPARTMENT), confidence:matches.length===1?'high':matches.length?'medium':'low', reason:matches.length?`“${feature}” is typically owned by ${name}.`:`No single owner is obvious for “${feature}”, so it starts with ${FALLBACK_DEPARTMENT}.` };
 }
 
 const monthsFor = feature => /app|software|display|touch|operating|bluetooth|carplay|manual/i.test(feature)?6:/seat|console|storage|mirror|belt|audio|climat|control|camera/i.test(feature)?12:/chassis|suspension|body|roof|luggage|battery|drivetrain/i.test(feature)?24:15;
@@ -125,6 +212,9 @@ function marketInputs(context,config,feedbackFeatures){
   return {assigned,unmatched:unmatched.slice(0,24),sales};
 }
 
+// Unique customers, with PM-uploaded rows scaled by their weight (5 = same as BMW data).
+const weightedCount=records=>[...new Map(records.map(r=>[r.feedbackId,r])).values()].reduce((sum,r)=>sum+(r.weight??1),0);
+
 export function buildModel(records,config,statuses={},context={},overrides={}) {
   const relevant=records.filter(r=>r.vehicle===config.vehicle&&r.market===config.market&&r.quality!=='low'&&r.feature&&!INVALID_FEATURE.test(r.feature));
   const byFeature=new Map();
@@ -134,19 +224,22 @@ export function buildModel(records,config,statuses={},context={},overrides={}) {
   for(const study of intelligence.unmatched){const feature=String(study.cells.A).trim();if(!byFeature.has(feature))byFeature.set(feature,{feedback:[],studies:[study],external:[],competitors:[]})}
   for(const signal of context?.external||[]){if(signal.vehicle!==config.vehicle||signal.market!==config.market||!signal.feature)continue;if(!byFeature.has(signal.feature))byFeature.set(signal.feature,{feedback:[],studies:[],external:[],competitors:[]});byFeature.get(signal.feature).external.push(signal)}
   for(const signal of context?.competitors||[]){if(signal.vehicle!==config.vehicle||signal.market!==config.market||!signal.feature)continue;const feature=competitorFeatureMatch(signal.feature,[...byFeature.keys()]);if(!byFeature.has(feature))byFeature.set(feature,{feedback:[],studies:[],external:[],competitors:[]});byFeature.get(feature).competitors.push(signal)}
-  const maxFrequency=Math.max(1,...[...byFeature.values()].map(bucket=>new Set(bucket.feedback.map(x=>x.feedbackId)).size));
+  for(const signal of context?.uploads||[]){if(signal.vehicle!==config.vehicle||signal.market!==config.market||!signal.feature)continue;if(!byFeature.has(signal.feature))byFeature.set(signal.feature,{feedback:[],studies:[],external:[],competitors:[]});const bucket=byFeature.get(signal.feature);(bucket.uploads||=[]).push(signal)}
+  const maxFrequency=Math.max(1,...[...byFeature.values()].map(bucket=>weightedCount(bucket.feedback)));
   const requirements=[...byFeature].map(([feature,bucket])=>{
-    const unique=[...new Map(bucket.feedback.map(item=>[item.feedbackId,item])).values()],studies=bucket.studies,external=bucket.external||[],competitors=bucket.competitors||[];
+    const unique=[...new Map(bucket.feedback.map(item=>[item.feedbackId,item])).values()].sort((a,b)=>Number(Boolean(b.uploaded))-Number(Boolean(a.uploaded))),studies=bucket.studies,external=bucket.external||[],competitors=bucket.competitors||[],uploads=bucket.uploads||[],uploadedFeedback=unique.filter(r=>r.uploaded).length;
     const months=monthsFor(feature),peopleNeeded=Math.max(2,Math.ceil(months/3));
-    const frequencyScore=Math.round(unique.length/maxFrequency*100),marketScore=Math.min(100,(studies.length?45+Math.min(20,studies.length*5):0)+Math.min(35,competitors.length*7)+Math.min(20,external.length*10)+(intelligence.sales?10:0));
+    const frequencyScore=Math.round(weightedCount(unique)/maxFrequency*100),marketScore=Math.min(100,(studies.length?45+Math.min(20,studies.length*5):0)+Math.min(35,competitors.length*7)+Math.min(20,external.length*10)+Math.min(30,Math.round(uploads.reduce((sum,u)=>sum+u.weight*8,0)))+(intelligence.sales?10:0));
     const fitScore=Math.round(Math.min(100,(config.months*Math.max(1,config.people)/(months*peopleNeeded))*70));
-    const importance=Number(config.importance)/10,historicalBonus=config.historyFeatures?.includes(feature)?5:0;
+    const importance=Number(config.importance)/10,historicalBonus=config.historyBonus?.[feature]??(config.historyFeatures?.includes(feature)?5:0);
+    const scoreParts={demand:Math.round(frequencyScore*(.60-importance*.20)),timeline:Math.round(fitScore*(.25+importance*.20)),market:Math.round(marketScore*.15),memory:historicalBonus};
     let score=Math.min(100,Math.round(frequencyScore*(.60-importance*.20)+fitScore*(.25+importance*.20)+marketScore*.15+historicalBonus));
     if(statuses[feature]==='deleted')score=-1;
     if(['not-feasible','pm-rejected'].includes(statuses[feature]))score=0;
     if(statuses[feature]==='conditional'||statuses[feature]==='approved-conditional')score-=12;
     const qualityCounts=unique.reduce((out,row)=>(out[row.quality]=(out[row.quality]||0)+1,out),{});
-    const feedbackCitations=unique.slice(0,8).map(r=>({evidenceId:r.evidenceId,file:r.sourceFile,sheet:r.sheet,row:r.row,column:'Customer Feedback / Feature classification',excerpt:r.text,feedbackId:r.feedbackId,sourceType:'customer_feedback'}));
+    const feedbackCitations=unique.slice(0,8).map(r=>({evidenceId:r.evidenceId,file:r.sourceFile,sheet:r.sheet,row:r.row,column:'Customer Feedback / Feature classification',excerpt:r.text,feedbackId:r.feedbackId,sourceType:'customer_feedback',uploaded:Boolean(r.uploaded)}));
+    const uploadCitations=uploads.map(u=>({evidenceId:u.evidenceId,file:u.sourceFile,sheet:'PM upload',row:u.row,column:u.sourceType==='pm_market_data'?'PM market data':'PM global trend',excerpt:u.text,feedbackId:u.evidenceId,sourceType:u.sourceType,url:/^https?:\/\//i.test(u.source)?u.source:'',note:u.source,uploaded:true}));
     const studyCitations=studies.slice(0,4).map(row=>({evidenceId:row.evidenceId,file:row.sourceFile,sheet:row.sheet,row:row.row,column:'Market study measure',excerpt:String(row.cells.A),feedbackId:row.evidenceId,sourceType:'market_study'}));
     const competitorCitations=competitors.map(signal=>({evidenceId:signal.evidenceId,file:signal.sourceFile,sheet:signal.sheet,row:signal.row,column:`Competitor signal · ${signal.classificationBasis}`,excerpt:signal.rationale,feedbackId:signal.evidenceId,sourceType:signal.sourceType||'competitor_intelligence',url:signal.sourceUrl||''}));
     const externalCitations=external.flatMap(signal=>signal.sourceUrls.slice(0,4).map(url=>({evidenceId:signal.evidenceId,file:url,sheet:'External web intelligence',row:'live',column:'Cited market signal',excerpt:signal.rationale,feedbackId:signal.evidenceId,sourceType:'external_web',url})));
@@ -155,10 +248,10 @@ export function buildModel(records,config,statuses={},context={},overrides={}) {
     return {
       id:`req-${feature.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')}`,feature,group:groupFor(feature),outcome:outcomeFor(feature),
       statement:overrides[feature]||external[0]?.statement||requirementStatement(feature,bucket.feedback,!unique.length),problem:`Evidence identifies ${feature.toLowerCase()} as a product-cycle priority for ${config.vehicle} in ${config.market}.`,
-      frequency:unique.length,evidenceCount:unique.length+studies.length+competitors.length+externalCitations.length+(salesCitation?1:0),marketEvidenceCount:studies.length+competitors.length+externalCitations.length+(salesCitation?1:0),score,scoreBreakdown:{frequency:frequencyScore,marketIntelligence:marketScore,timeToMarketFit:fitScore,deadlineImportance:Number(config.importance),historicalDecisionBonus:historicalBonus},
+      frequency:unique.length,uploadedFeedback,uploadedSignals:uploads.length,evidenceCount:unique.length+studies.length+competitors.length+externalCitations.length+uploads.length+(salesCitation?1:0),marketEvidenceCount:studies.length+competitors.length+externalCitations.length+uploads.length+(salesCitation?1:0),score,scoreParts,scoreBreakdown:{frequency:frequencyScore,marketIntelligence:marketScore,timeToMarketFit:fitScore,deadlineImportance:Number(config.importance),historicalDecisionBonus:historicalBonus},
       estimatedMonths:months,estimatedPeople:peopleNeeded,fitScore,status:statuses[feature]||'not-checked',owner:entityFor(feature),
-      confidence:unique.length+studies.length+competitors.length+externalCitations.length>=10?'high':unique.length+studies.length+competitors.length+externalCitations.length>=3?'medium':'low',evidenceQuality:qualityCounts,
-      citations:[...feedbackCitations,...studyCitations,...competitorCitations,...externalCitations,...(salesCitation?[salesCitation]:[])],
+      confidence:unique.length+studies.length+competitors.length+externalCitations.length+uploads.length>=10?'high':unique.length+studies.length+competitors.length+externalCitations.length+uploads.length>=3?'medium':'low',evidenceQuality:qualityCounts,
+      citations:[...feedbackCitations,...studyCitations,...competitorCitations,...externalCitations,...uploadCitations,...(salesCitation?[salesCitation]:[])],
       whyExists:`${unique.length} unique, relevant feedback record${unique.length===1?'':'s'} and ${marketSummary} support this requirement. Low-quality and duplicate feedback does not contribute to the count.`,
       rankBasis:`Feedback frequency: ${unique.length} (${frequencyScore}/100 normalized). Market intelligence: ${marketScore}/100. Planning estimate: ${months} months with about ${peopleNeeded} people. Against the PM’s ${config.months}-month target, ${config.people}-person team and ${config.importance}/10 deadline importance, time-to-market fit is ${fitScore}/100.${historicalBonus?` Relevant demo-cycle memory adds ${historicalBonus} points.`:''}`
     };
@@ -171,18 +264,18 @@ export function buildModel(records,config,statuses={},context={},overrides={}) {
     const active=sorted.filter(item=>!['not-feasible','pm-rejected'].includes(item.status));
     const selected=[...active.slice(0,Math.max(0,10-rejected.length)),...rejected.slice(0,10)].slice(0,10);
     const ranked=selected.map((r,index)=>{
-      if(['not-feasible','pm-rejected'].includes(r.status))return {...r,rank:index+1,whyRanked:`This requirement remains visible for decision traceability after rejection. It no longer competes in the active priority ranking and has a score of 0/100. ${r.rankBasis}`};
+      if(['not-feasible','pm-rejected'].includes(r.status))return {...r,rank:index+1,explanation:explainRequirement(r,config),whyRanked:`This requirement remains visible for decision traceability after rejection. It no longer competes in the active priority ranking and has a score of 0/100. ${r.rankBasis}`};
       const above=index?` It ranks below “${selected[index-1].feature}” (${selected[index-1].score}) because its combined evidence and schedule score is lower.`:'';
       const below=index<selected.length-1?` It ranks above “${selected[index+1].feature}” (${selected[index+1].score}) because its combined score is higher.`:'';
-      return {...r,rank:index+1,whyRanked:`${r.rankBasis} Final score: ${r.score}/100.${above}${below}`};
+      return {...r,rank:index+1,explanation:explainRequirement(r,config,selected[index-1],selected[index+1]),whyRanked:`${r.rankBasis} Final score: ${r.score}/100.${above}${below}`};
     });
     return {name,description:`BMW domain containing evidence-backed outcomes such as ${[...new Set(ranked.map(r=>r.outcome))].slice(0,4).join(', ')}. The PM can rename, split, or merge this group.`,evidenceSummary:`${ranked.reduce((sum,r)=>sum+r.evidenceCount,0)} cited feedback and market-intelligence links across ${ranked.length} ranked requirements.`,requirements:ranked};
   }).filter(g=>g.requirements.length).sort((a,b)=>b.requirements[0].score-a.requirements[0].score);
 }
 
-export function validateCitations(groups,evidence,context={}){const ids=new Set([...evidence,...(context.studies||[]),...(context.sales||[]),...(context.competitors||[]),...(context.external||[])].map(r=>r.evidenceId));return groups.flatMap(g=>g.requirements).every(r=>r.citations.length&&r.citations.every(c=>ids.has(c.evidenceId)))}
+export function validateCitations(groups,evidence,context={}){const ids=new Set([...evidence,...(context.studies||[]),...(context.sales||[]),...(context.competitors||[]),...(context.external||[]),...(context.uploads||[])].map(r=>r.evidenceId));return groups.flatMap(g=>g.requirements).every(r=>r.citations.length&&r.citations.every(c=>ids.has(c.evidenceId)))}
 
-export function draftEmail(r,c){return `Subject: Feasibility review — ${r.feature}\n\nHello ${r.owner.name} team,\n\nFor the ${c.vehicle} in ${c.market}, we are evaluating this requirement:\n“${r.statement}”\n\nWhy it exists: ${r.whyExists}\nEvidence: ${r.evidenceCount} cited records; ${r.citations[0].file}, ${r.citations[0].sheet}, row ${r.citations[0].row} (plus ${Math.max(0,r.citations.length-1)} additional citations).\n\nPlanning context: ${c.months}-month target, ${c.people} people, deadline importance ${c.importance}/10. The ${r.estimatedMonths}-month estimate shown in PM is a planning estimate, not a feasibility conclusion.\n\nCould you confirm whether this requirement is feasible, feasible with conditions, or not feasible? Please identify constraints, timing implications, and any recommended wording changes.\n\nThank you.`}
+export function draftEmail(r,c,department=r.owner.name){const focus=departmentByName(department)?.focus||'the feasibility, effort and timing implications';return `Subject: Feasibility review — ${r.feature}\n\nHello ${department} team,\n\nFor the ${c.vehicle} in ${c.market}, we are evaluating this requirement:\n“${r.statement}”\n\nWhy it exists: ${r.whyExists}\nEvidence: ${r.evidenceCount} cited records; ${r.citations[0].file}, ${r.citations[0].sheet}, row ${r.citations[0].row} (plus ${Math.max(0,r.citations.length-1)} additional citations).\n\nPlanning context: ${c.months}-month target, ${c.people} people, deadline importance ${c.importance}/10. The ${r.estimatedMonths}-month estimate shown in PM is a planning estimate, not a feasibility conclusion.\n\nFrom your side, we especially need to understand ${focus}.\n\nCould you confirm whether this requirement is feasible, feasible with conditions, or not feasible? Please identify constraints, timing implications, and any recommended wording changes.\n\nThank you.`}
 
 export function gmailComposeUrl(recipient,draft){
   const lines=String(draft||'').split(/\r?\n/),first=lines[0]||'';

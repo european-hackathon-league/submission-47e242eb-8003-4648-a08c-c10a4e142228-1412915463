@@ -1,6 +1,8 @@
-import { buildModel, draftEmail, gmailComposeUrl, validateCitations } from './engine.js';
+import { buildModel, departmentOptions, draftEmail, gmailComposeUrl, validateCitations } from './engine.js';
 import { DECISION_EVENT_TYPES, decisionReason, isRecordedDecision } from '../src/decision-memory.mjs';
 import { createReportPdf } from './pdf-report.js';
+import { enhanceSelect } from './select.js';
+import { UPLOAD_TYPES, parseInput, suggestFeature, templateCsv, toKnowledge } from '../src/uploads.mjs';
 import { mergeReportAudienceAssignments, partitionReportRequirements } from '../src/report-routing.mjs';
 
 const storedDecisions=JSON.parse(localStorage.getItem('decision-events')||'[]').filter(isRecordedDecision);
@@ -8,6 +10,48 @@ localStorage.setItem('decision-events',JSON.stringify(storedDecisions));
 const state = { evidence: [], context: null, historical: [], groups: [], selected: 0, config: null, statuses: JSON.parse(localStorage.getItem('requirement-statuses') || '{}'), overrides: JSON.parse(localStorage.getItem('requirement-overrides') || '{}'), events: storedDecisions, activeRequirement: null, openAIConfigured:false, wordingError:'', reportRouting:null };
 const $ = id => document.getElementById(id);
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+
+// Plain-language reasoning shared by the requirement card and the detail drawer.
+function reasoningHtml(r){
+  const x=r.explanation;if(!x)return `<p>${escapeHtml(r.whyExists)}</p><p>${escapeHtml(r.whyRanked)}</p>`;
+  const parts=r.scoreParts||{},rejected=['not-feasible','pm-rejected'].includes(r.status);
+  const segments=[['demand','Customer demand'],['timeline','Timeline fit'],['market','Market evidence'],['memory','Past decisions']].filter(([key])=>parts[key]>0);
+  const total=segments.reduce((sum,[key])=>sum+parts[key],0)||1;
+  const bullets=items=>`<ul>${items.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+  return `<div class="why-panel">
+    <div class="why-head"><span class="signal signal-${x.signal.tone}"><i aria-hidden="true"></i>${escapeHtml(x.signal.label)}</span>${rejected?'':`<span class="why-score"><strong>${r.score}</strong>/100 priority score</span>`}</div>
+    ${x.caveat?`<p class="why-caveat"><strong>Honest caveat</strong>${escapeHtml(x.caveat)}</p>`:''}
+    <div class="why-cols"><section><h4>Why it exists</h4>${bullets(x.exists)}</section><section><h4>Why rank #${r.rank}</h4>${bullets(x.rank)}</section></div>
+    ${rejected||!segments.length?'':`<div class="score-mix"><h4>What makes up the score</h4><div class="mix-bar" role="img" aria-label="${segments.map(([key,label])=>`${label} ${parts[key]} points`).join(', ')}">${segments.map(([key])=>`<span class="mix-${key}" style="flex:${parts[key]/total}"></span>`).join('')}</div><ul class="mix-legend">${segments.map(([key,label])=>`<li class="mix-${key}"><i aria-hidden="true"></i>${label} <strong>${parts[key]}</strong></li>`).join('')}</ul></div>`}
+  </div>`;
+}
+
+const SOURCE_GROUPS=[
+  ['customer_feedback','What customers said'],['market_study','Customer study'],
+  ['competitor','Competitors'],['pm_market_data','Your market data'],['pm_global_trend','Global trends you added'],['external_web','Web research'],['sales_volume','Sales planning']
+];
+const sourceGroupFor=c=>['pm_market_data','pm_global_trend'].includes(c.sourceType)?c.sourceType:c.sourceType==='customer_feedback'?'customer_feedback':c.sourceType==='market_study'?'market_study':c.sourceType==='sales_volume'?'sales_volume':c.sourceType==='external_web'?'external_web':'competitor';
+const friendlyFile=file=>{
+  const name=String(file).split('/').pop();
+  if(/feedback_hackathon/i.test(name))return `${name.split('_')[0]} customer feedback`;
+  if(/customer_studies/i.test(name))return 'Customer studies';
+  if(/competitor/i.test(name))return 'Competitor workbook';
+  if(/sales_volumes/i.test(name))return 'Sales volumes';
+  return name.replace(/\.[a-z0-9]+$/i,'').replaceAll('_',' ');
+};
+function citationHtml(c){
+  const local=!/^https?:\/\//i.test(c.file),external=c.url&&/^https?:\/\//i.test(c.url);
+  const where=c.uploaded?`<span class="cite-upload">Your data</span><span>${escapeHtml(c.file.replace(/^PM upload · /,''))} · row ${escapeHtml(c.row)}${c.note&&!external?` · ${escapeHtml(c.note)}`:''}</span>`:local?`<a href="/sources/${encodeURIComponent(c.file)}" target="_blank" rel="noopener" title="${escapeHtml(`${c.file} › ${c.sheet} › row ${c.row}`)}">${escapeHtml(friendlyFile(c.file))} · row ${escapeHtml(c.row)}</a>`:`<a href="${escapeHtml(c.file)}" target="_blank" rel="noopener">${escapeHtml(new URL(c.file).hostname)}</a>`;
+  const text=String(c.excerpt||''),long=text.length>260;
+  return `<li class="cite"><blockquote class="${long?'long':''}">${long?`<details><summary>“${escapeHtml(text.slice(0,240).trimEnd())}…” <span>Read full text</span></summary>“${escapeHtml(text)}”</details>`:escapeHtml(text)}</blockquote><div class="cite-source">${where}${external&&local?`<a class="cite-external" href="${escapeHtml(c.url)}" target="_blank" rel="noopener">Original source ↗</a>`:''}</div></li>`;
+}
+function citationsHtml(citations){
+  return SOURCE_GROUPS.map(([key,label])=>{
+    const items=citations.filter(c=>sourceGroupFor(c)===key);if(!items.length)return '';
+    const first=items.slice(0,4),rest=items.slice(4);
+    return `<section class="cite-group"><h4>${label} <span>${items.length}</span></h4><ul>${first.map(citationHtml).join('')}</ul>${rest.length?`<details class="cite-more"><summary>Show ${rest.length} more</summary><ul>${rest.map(citationHtml).join('')}</ul></details>`:''}</section>`;
+  }).join('');
+}
 const statusKey = feature => `${state.config.vehicle}|${state.config.market}|${feature}`;
 const statusMap = () => Object.fromEntries(Object.entries(state.statuses).filter(([key]) => key.startsWith(`${state.config.vehicle}|${state.config.market}|`)).map(([key,value]) => [key.split('|').slice(2).join('|'),value==='awaiting'?'not-checked':value]));
 const overrideMap = () => Object.fromEntries(Object.entries(state.overrides).filter(([key]) => key.startsWith(`${state.config.vehicle}|${state.config.market}|`)).map(([key,value]) => [key.split('|').slice(2).join('|'),value]));
@@ -15,6 +59,7 @@ const overrideMap = () => Object.fromEntries(Object.entries(state.overrides).fil
 async function init() {
   $('importance').addEventListener('input', e => $('importance-output').value = `${e.target.value} / 10`);
   $('vehicle').addEventListener('change', populateMarkets);
+  enhanceSelect($('vehicle'));enhanceSelect($('market'));
   $('config-form').addEventListener('submit', event => { event.preventDefault(); if (state.evidence.length) generate(); });
   $('edit-config').addEventListener('click', () => showView('overview'));
   document.querySelector('[data-home]').addEventListener('click', event => { event.preventDefault(); showView('overview'); });
@@ -32,13 +77,163 @@ async function init() {
   const [response,contextResponse,historyResponse] = await Promise.all([fetch('../data/evidence.json'),fetch('../data/context.json'),fetch('../data/historical-decisions.json')]);
   if (!response.ok || !contextResponse.ok || !historyResponse.ok) throw new Error(`Evidence stores failed to load. Start PM with “node server.mjs” from the repository root.`);
   const [payload,context,history] = await Promise.all([response.json(),contextResponse.json(),historyResponse.json()]);
-  state.evidence = payload.records;
+  state.baseEvidence = payload.records;
   state.context = context;
-  state.historical = history.decisions.filter(decision=>/^(approved|rejected)/i.test(decision.decisionStatus)&&String(decision.pmReasoning||'').trim()).map(decision=>({id:decision.id,type:'historical-decision',title:decision.requirement,description:`${decision.productCycle} · ${decision.decisionStatus}. ${decision.pmReasoning}`,data:decision,actor:'Prior-cycle PM',at:decision.timestamp,provenance:decision.provenance}));
-  renderMemory();
+  state.demoHistorical = history.decisions.filter(decision=>/^(approved|rejected)/i.test(decision.decisionStatus)&&String(decision.pmReasoning||'').trim()).map(decision=>({id:decision.id,type:'historical-decision',title:decision.requirement,description:`${decision.productCycle} · ${decision.decisionStatus}. ${decision.pmReasoning}`,data:decision,actor:'Prior-cycle PM',at:decision.timestamp,provenance:decision.provenance}));
+  await loadUploads();
+  initUploadPanel();
   populateMarkets();
   $('generate-button').disabled = false;
   $('generate-button').innerHTML = '<span class="shiny-label">Generate requirements <span class="shiny-arrow" aria-hidden="true">→</span></span>';
+}
+
+// ---------- PM-supplied evidence ----------
+const uploadState={type:'customer_feedback',mode:'paste',fileName:'',fileText:'',rows:[]};
+const UPLOAD_PLACEHOLDERS={
+  customer_feedback:'One comment per line, for example:\nThe rear seats feel cramped on long trips.\nMy phone keeps disconnecting from CarPlay.',
+  market_data:'One finding per line, for example:\nMercedes E-Class 2027 makes ventilated seats standard in the US.',
+  global_trend:'One trend per line, for example:\nWireless charging with active cooling is becoming expected in premium sedans.',
+  past_decision:''
+};
+const PREVIEW_LIMIT=100;
+
+async function loadUploads(){
+  try{const response=await fetch('/api/uploads');state.uploads=response.ok?(await response.json()).batches:[]}catch{state.uploads=[]}
+  applyUploads();
+}
+
+// Merge stored uploads into the evidence, market signals and Decision Memory the app already uses.
+function applyUploads(){
+  const knowledge=toKnowledge(state.uploads||[]);
+  state.evidence=state.baseEvidence.concat(knowledge.records);
+  state.context.uploads=knowledge.signals;
+  state.uploadedDecisions=knowledge.decisions;
+  state.historical=[...state.demoHistorical,...knowledge.decisions.map(decision=>({id:decision.id,type:'historical-decision',title:decision.requirement,description:`${decision.productCycle} · ${decision.decisionStatus}. ${decision.pmReasoning}`,data:decision,actor:'Prior-cycle PM · uploaded',at:decision.timestamp,provenance:decision.provenance}))];
+  renderMemory();
+  renderUploadList();
+}
+
+function uploadFeatures(){
+  const vehicle=$('vehicle').value,market=$('market').value,counts=new Map();
+  const count=records=>{for(const record of records)if(record.feature&&record.quality!=='low'&&!/^(no_class_found|other|none|n\/a|unknown)?$/i.test(record.feature))counts.set(record.feature,(counts.get(record.feature)||0)+1)};
+  count(state.baseEvidence.filter(record=>record.vehicle===vehicle&&record.market===market));
+  if(!counts.size)count(state.baseEvidence.filter(record=>record.vehicle===vehicle));
+  return [...counts].sort((a,b)=>b[1]-a[1]).map(([feature])=>feature);
+}
+
+const weightHint=weight=>weight===5?'5 counts the same as BMW data.':`${weight} counts ${weight/5}× as much as BMW data.`;
+const marketLabel=code=>({US:'United States',GB:'United Kingdom',DE:'Germany',CN:'China',JP:'Japan',KR:'South Korea',FR:'France',IT:'Italy',ES:'Spain',CA:'Canada'})[code]||code;
+
+function initUploadPanel(){
+  $('upload-types').innerHTML=Object.entries(UPLOAD_TYPES).map(([key,spec])=>`<button type="button" role="radio" class="upload-type" data-upload-type="${key}" aria-checked="${key===uploadState.type}"><strong>${escapeHtml(spec.label)}</strong><span>${escapeHtml(spec.help)}</span></button>`).join('');
+  $('upload-types').addEventListener('click',event=>{const tile=event.target.closest('[data-upload-type]');if(tile)setUploadType(tile.dataset.uploadType)});
+  $('upload-types').addEventListener('keydown',event=>{
+    if(!['ArrowRight','ArrowDown','ArrowLeft','ArrowUp'].includes(event.key))return;event.preventDefault();
+    const keys=Object.keys(UPLOAD_TYPES),next=(keys.indexOf(uploadState.type)+(['ArrowRight','ArrowDown'].includes(event.key)?1:-1)+keys.length)%keys.length;
+    setUploadType(keys[next]);document.querySelector(`[data-upload-type="${keys[next]}"]`).focus();
+  });
+  $('upload-weight').addEventListener('input',event=>{const weight=Number(event.target.value);$('upload-weight-output').value=`${weight} / 10`;$('upload-weight-hint').textContent=weightHint(weight)});
+  document.querySelectorAll('[data-upload-mode]').forEach(tab=>tab.addEventListener('click',()=>setUploadMode(tab.dataset.uploadMode)));
+  $('upload-file').addEventListener('change',event=>readUploadFile(event.target.files[0]));
+  const drop=$('upload-drop');
+  drop.addEventListener('dragover',event=>{event.preventDefault();drop.classList.add('dragging')});
+  drop.addEventListener('dragleave',()=>drop.classList.remove('dragging'));
+  drop.addEventListener('drop',event=>{event.preventDefault();drop.classList.remove('dragging');readUploadFile(event.dataTransfer.files[0])});
+  $('upload-preview-button').addEventListener('click',previewUpload);
+  const scopeChanged=()=>{$('upload-scope').textContent=`BMW ${$('vehicle').selectedOptions[0]?.textContent.split(' · ')[0].replace(/^BMW /,'')||$('vehicle').value} · ${marketLabel($('market').value)}`;closePreview();renderUploadList()};
+  $('vehicle').addEventListener('change',()=>setTimeout(scopeChanged));$('market').addEventListener('change',scopeChanged);
+  scopeChanged();setUploadType(uploadState.type);
+}
+
+function setUploadType(type){
+  uploadState.type=type;
+  document.querySelectorAll('[data-upload-type]').forEach(tile=>{const on=tile.dataset.uploadType===type;tile.setAttribute('aria-checked',String(on));tile.tabIndex=on?0:-1});
+  const template=$('upload-template');template.href=`data:text/csv;charset=utf-8,${encodeURIComponent(templateCsv(type))}`;template.download=`${type.replaceAll('_','-')}-template.csv`;
+  $('upload-text').placeholder=UPLOAD_PLACEHOLDERS[type];
+  const pasteTab=document.querySelector('[data-upload-mode="paste"]');pasteTab.disabled=type==='past_decision';
+  setUploadMode(type==='past_decision'?'csv':uploadState.mode);
+  closePreview();
+}
+
+function setUploadMode(mode){
+  uploadState.mode=mode;
+  document.querySelectorAll('[data-upload-mode]').forEach(tab=>tab.setAttribute('aria-selected',String(tab.dataset.uploadMode===mode)));
+  $('upload-text').hidden=mode!=='paste';$('upload-drop').hidden=mode!=='csv';
+}
+
+async function readUploadFile(file){
+  if(!file)return;
+  if(!/\.csv$/i.test(file.name)&&file.type!=='text/csv'){showUploadMessage('error','Please choose a .csv file. In Excel use File › Save As › CSV.');return}
+  uploadState.fileName=file.name;uploadState.fileText=await file.text();
+  $('upload-file-name').textContent=`${file.name} · ${(file.size/1024).toFixed(1)} KB`;showUploadMessage('', '');
+}
+
+function showUploadMessage(kind,html){$('upload-errors').className=`upload-errors ${kind}`;$('upload-errors').innerHTML=html}
+
+function previewUpload(){
+  const csv=uploadState.mode==='csv',input=csv?uploadState.fileText:$('upload-text').value;
+  if(!input.trim()){showUploadMessage('error',csv?'Choose a CSV file first.':'Paste at least one line first.');return}
+  const {rows,errors}=parseInput(uploadState.type,input,{csv});
+  showUploadMessage(errors.length?'error':'',errors.map(escapeHtml).join('<br>'));
+  if(!rows.length)return;
+  const features=uploadFeatures();
+  uploadState.rows=rows.map(row=>({...row,feature:suggestFeature(row,features)}));
+  uploadState.features=features;
+  renderPreview();
+}
+
+function renderPreview(){
+  const rows=uploadState.rows,assigned=rows.filter(row=>row.feature).length,spec=UPLOAD_TYPES[uploadState.type];
+  const content=row=>uploadState.type==='past_decision'
+    ?`<strong>${escapeHtml(row.requirement)}</strong><span class="preview-decision">${escapeHtml(row.decision)}</span><small>${escapeHtml(row.reasoning)}</small>`
+    :`<span>${escapeHtml(row.text.length>220?`${row.text.slice(0,220)}…`:row.text)}</span>${row.source||row.source_url?`<small>${escapeHtml(row.source||row.source_url)}</small>`:''}`;
+  const options=selected=>`<option value="">Choose a feature…</option>${uploadState.features.map(feature=>`<option value="${escapeHtml(feature)}" ${feature===selected?'selected':''}>${escapeHtml(feature)}</option>`).join('')}`;
+  const shown=rows.slice(0,PREVIEW_LIMIT);
+  $('upload-preview').hidden=false;
+  $('upload-preview').innerHTML=`<div class="preview-head"><div><h3>Check the rows before they are added</h3><p>${escapeHtml(spec.label)} · weight ${$('upload-weight').value}/10 · ${escapeHtml($('upload-scope').textContent)}. Features were matched automatically; correct any that are wrong.</p></div><p class="preview-count"><strong>${assigned}</strong> of ${rows.length} rows have a feature${assigned<rows.length?`<span>Rows without a feature are left out.</span>`:''}</p></div>
+  <table class="preview-table"><thead><tr><th scope="col">Row</th><th scope="col">${uploadState.type==='past_decision'?'Decision':'Evidence'}</th><th scope="col">Feature</th><th scope="col"><span class="visually-hidden">Remove</span></th></tr></thead><tbody>${shown.map((row,index)=>`<tr class="${row.feature?'':'unassigned'}"><td class="num">${row.row}</td><td class="preview-content">${content(row)}</td><td><select data-preview-row="${index}" aria-label="Feature for row ${row.row}">${options(row.feature)}</select></td><td><button type="button" class="preview-remove" data-drop-row="${index}" aria-label="Remove row ${row.row}">×</button></td></tr>`).join('')}</tbody></table>
+  ${rows.length>PREVIEW_LIMIT?`<p class="preview-more">Showing the first ${PREVIEW_LIMIT} of ${rows.length} rows. The rest keep their suggested feature.</p>`:''}
+  <div class="preview-actions"><button type="button" id="upload-cancel" class="secondary">Cancel</button><button type="button" id="upload-commit" class="primary" ${assigned?'':'disabled'}>Add ${assigned} row${assigned===1?'':'s'} to the knowledge base <span aria-hidden="true">→</span></button></div>`;
+  document.querySelectorAll('[data-preview-row]').forEach(select=>{enhanceSelect(select);select.addEventListener('change',()=>{uploadState.rows[Number(select.dataset.previewRow)].feature=select.value;renderPreview()})});
+  document.querySelectorAll('[data-drop-row]').forEach(button=>button.addEventListener('click',()=>{uploadState.rows.splice(Number(button.dataset.dropRow),1);uploadState.rows.length?renderPreview():closePreview()}));
+  $('upload-cancel').onclick=closePreview;
+  $('upload-commit').onclick=commitUpload;
+}
+
+function closePreview(){uploadState.rows=[];$('upload-preview').hidden=true;$('upload-preview').innerHTML=''}
+
+async function commitUpload(){
+  const button=$('upload-commit'),rows=uploadState.rows.filter(row=>row.feature);
+  button.disabled=true;button.textContent='Adding…';
+  try{
+    const response=await fetch('/api/uploads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:uploadState.type,vehicle:$('vehicle').value,market:$('market').value,weight:Number($('upload-weight').value),fileName:uploadState.mode==='csv'?uploadState.fileName:'Pasted text',rows})});
+    const batch=await readApiResponse(response);
+    state.uploads.push(batch);applyUploads();closePreview();
+    $('upload-text').value='';$('upload-file').value='';uploadState.fileText='';uploadState.fileName='';$('upload-file-name').textContent='The template shows the expected columns.';
+    addEvent('evidence-uploaded','PM added evidence',`${batch.rows.length} ${UPLOAD_TYPES[batch.type].label.toLowerCase()} rows for ${batch.vehicle} · ${batch.market}, weight ${batch.weight}/10.`,{batchId:batch.batchId,type:batch.type},'PM');
+    showUploadMessage('success',`Added ${batch.rows.length} row${batch.rows.length===1?'':'s'}.${state.config?' <button type="button" id="upload-regenerate" class="secondary">Regenerate requirements to include them</button>':' They are included when you generate requirements.'}`);
+    if(state.config)$('upload-regenerate').onclick=()=>$('config-form').requestSubmit();
+  }catch(error){showUploadMessage('error',`Could not add the rows: ${escapeHtml(error.message)}`);button.disabled=false;button.textContent='Try again'}
+}
+
+function renderUploadList(){
+  const target=$('upload-list');if(!target)return;
+  const vehicle=$('vehicle').value,market=$('market').value,batches=[...(state.uploads||[])].sort((a,b)=>(b.vehicle===vehicle&&b.market===market)-(a.vehicle===vehicle&&a.market===market)||new Date(b.uploadedAt)-new Date(a.uploadedAt));
+  if(!batches.length){target.innerHTML='';return}
+  target.innerHTML=`<h3>Your evidence in the knowledge base</h3><ul>${batches.map(batch=>`<li class="${batch.vehicle===vehicle&&batch.market===market?'':'other-scope'}"><div><strong>${escapeHtml(UPLOAD_TYPES[batch.type]?.label||batch.type)}</strong><span>${batch.rows.length} row${batch.rows.length===1?'':'s'} · weight ${batch.weight}/10 · ${escapeHtml(batch.vehicle)} · ${escapeHtml(marketLabel(batch.market))}</span><small>${escapeHtml(batch.fileName)} · added ${new Date(batch.uploadedAt).toLocaleString()}</small></div><button type="button" class="secondary" data-remove-upload="${escapeHtml(batch.batchId)}">Remove</button></li>`).join('')}</ul>`;
+  target.querySelectorAll('[data-remove-upload]').forEach(button=>button.onclick=()=>removeUpload(button.dataset.removeUpload));
+}
+
+async function removeUpload(batchId){
+  const batch=state.uploads.find(item=>item.batchId===batchId);
+  if(!batch||!confirm(`Remove ${batch.rows.length} uploaded ${UPLOAD_TYPES[batch.type]?.label.toLowerCase()||''} rows from the knowledge base?`))return;
+  try{
+    await readApiResponse(await fetch(`/api/uploads/${encodeURIComponent(batchId)}`,{method:'DELETE'}));
+    state.uploads=state.uploads.filter(item=>item.batchId!==batchId);applyUploads();
+    addEvent('evidence-removed','PM removed uploaded evidence',`${batch.rows.length} ${UPLOAD_TYPES[batch.type]?.label.toLowerCase()||''} rows removed.`,{batchId},'PM');
+    showUploadMessage('success',`Removed.${state.config?' <button type="button" id="upload-regenerate" class="secondary">Regenerate requirements</button>':''}`);
+    if(state.config)$('upload-regenerate').onclick=()=>$('config-form').requestSubmit();
+  }catch(error){showUploadMessage('error',`Could not remove it: ${escapeHtml(error.message)}`)}
 }
 
 function initOrbitSweepGradient(){
@@ -66,7 +261,7 @@ async function checkOpenAIStatus(){
   try{
     const response=await fetch('/api/health');
     const status=await readApiResponse(response);
-    if(status.apiVersion!=='pm-api-5')throw new Error('An outdated PM server is running. Stop it and restart “node server.mjs”.');
+    if(status.apiVersion!=='pm-api-6')throw new Error('An outdated PM server is running. Stop it and restart “node server.mjs”.');
     state.openAIConfigured=Boolean(status.openaiConfigured);
     $('ai-status').innerHTML=`<span></span> ${status.openaiConfigured?`OpenAI ready · ${escapeHtml(status.model)}`:'OpenAI key required'}`;
     $('ai-status').classList.toggle('offline',!status.openaiConfigured);
@@ -133,6 +328,8 @@ async function generate(event) {
   state.config = { vehicle:$('vehicle').value, market:$('market').value, months:Number($('months').value), people:Number($('people').value), importance:Number($('importance').value) };
   const historicalEvidenceIds=state.historical.filter(event=>event.data.vehicle===state.config.vehicle&&event.data.market===state.config.market).flatMap(event=>event.data.supportingEvidence||[]);
   state.config.historyFeatures=[...new Set(historicalEvidenceIds.map(id=>state.evidence.find(record=>record.evidenceId===id)?.feature).filter(Boolean))];
+  state.config.historyBonus=Object.fromEntries(state.config.historyFeatures.map(feature=>[feature,5]));
+  for(const decision of state.uploadedDecisions||[])if(decision.vehicle===state.config.vehicle&&decision.market===state.config.market)state.config.historyBonus[decision.feature]=Math.max(state.config.historyBonus[decision.feature]||0,decision.weight);
   state.groups = buildModel(state.evidence, state.config, statusMap(), state.context, overrideMap());
   state.selected = 0;
   try{await synthesizeGroundedWording(state.groups)}catch(error){state.wordingError=error.message}
@@ -159,9 +356,10 @@ function render() {
   $('project-title').textContent = `${c.vehicle} requirement strategy · ${marketLabel}`;
   $('context-chips').innerHTML = `<div class="context-metric"><small>Time to market</small><strong>${c.months}<span> months</span></strong></div><div class="context-metric"><small>Team</small><strong>${c.people}<span> people</span></strong></div><div class="context-metric"><small>Deadline</small><strong>${c.importance}<span>/10</span></strong></div>`;
   const relevant=state.evidence.filter(r=>r.vehicle===c.vehicle&&r.market===c.market), low=relevant.filter(r=>r.quality==='low').length;
+  const uploadedHere=relevant.filter(r=>r.uploaded).length+(state.context.uploads||[]).filter(signal=>signal.vehicle===c.vehicle&&signal.market===c.market).length;
   const sources=state.context?.manifest?.length||0,marketCitations=state.groups.flatMap(item=>item.requirements).flatMap(requirement=>requirement.citations).filter(citation=>citation.sourceType!=='customer_feedback'),studySignals=new Set(marketCitations.filter(citation=>citation.sourceType==='market_study').map(citation=>citation.evidenceId)).size,salesSignals=new Set(marketCitations.filter(citation=>citation.sourceType==='sales_volume').map(citation=>citation.evidenceId)).size,competitorSignals=new Set(marketCitations.filter(citation=>['competitor_feedback','competitor_equipment','industry_study'].includes(citation.sourceType)).map(citation=>citation.evidenceId)).size;
   const wordingState=state.wordingError?`<span class="wording-warning" title="${escapeHtml(state.wordingError)}">Deterministic wording fallback</span>`:state.openAIConfigured?'<span>Grounded wording validated</span>':'';
-  $('integrity').innerHTML = `<span class="status-dot"></span><strong>Evidence workspace</strong><span>${relevant.length.toLocaleString()} contextual feedback records</span><span>${studySignals+salesSignals} market signals</span><span>${competitorSignals} competitor signals</span><span>${sources} source files</span><span>${low.toLocaleString()} low-quality excluded</span>${wordingState}`;
+  $('integrity').innerHTML = `<span class="status-dot"></span><strong>Evidence workspace</strong><span>${relevant.length.toLocaleString()} contextual feedback records</span><span>${studySignals+salesSignals} market signals</span><span>${competitorSignals} competitor signals</span><span>${sources} source files</span><span>${low.toLocaleString()} low-quality excluded</span>${uploadedHere?`<span>${uploadedHere.toLocaleString()} rows from your uploads</span>`:''}${wordingState}`;
   $('group-list').innerHTML = state.groups.map((g,i)=>`<button class="group-button ${i===state.selected?'active':''}" data-group="${i}"><strong>${escapeHtml(g.name)}</strong><span>${g.requirements.length} supported requirement${g.requirements.length===1?'':'s'}</span></button>`).join('');
   document.querySelectorAll('[data-group]').forEach(b=>b.onclick=()=>{state.selected=Number(b.dataset.group);render()});
   if (!group) { $('group-title').textContent='No supported groups'; $('group-description').textContent='Try another vehicle or market.'; $('requirements').innerHTML=''; return; }
@@ -169,7 +367,7 @@ function render() {
   $('group-title').textContent=group.name;
   $('group-description').innerHTML=`<span>Ranked by customer impact</span><span title="${linkedEvidence} cited records · ${marketLinks} market signals">Evidence-led priority</span>`;
   $('req-count').textContent=String(group.requirements.length).padStart(2,'0');
-  $('requirements').innerHTML=group.requirements.map((r,index)=>{const approved=['approved','approved-conditional'].includes(r.status),statusBadge=['not-checked','awaiting'].includes(r.status)?'':`<span class="badge ${r.status}">${r.status.replaceAll('-',' ')}</span>`;return `<article class="requirement"><div class="rank"><span>${String(r.rank).padStart(2,'0')}</span></div><div class="requirement-main"><div class="requirement-label"><span class="outcome">${escapeHtml(r.outcome)}</span>${statusBadge}</div><h3>${escapeHtml(r.statement)}</h3><div class="meta"><span>${r.evidenceCount} cited records</span><span>${r.marketEvidenceCount} market signals</span><span>Priority ${r.fitScore} /100</span><span>${escapeHtml(r.owner.name)}</span></div></div><div class="actions"><button class="primary-card-action" data-validate="${r.id}">Check feasibility</button>${approved?`<button class="approval-state" disabled title="Approved" aria-label="Approved">✓</button>`:`<button class="decision-action approve-action" data-approve="${r.id}" title="Approve requirement" aria-label="Approve requirement">Approve</button>`}<button class="decision-action reject-action" data-reject="${r.id}" title="Reject requirement" aria-label="Reject requirement">Reject</button></div><details class="card-reasoning" ${index===0?'open':''}><summary><span>Evidence & reasoning</span><i aria-hidden="true"></i></summary><div class="reasoning-panel"><section><strong>Customer impact</strong><p>${escapeHtml(r.whyExists)}</p></section><section><strong>Ranking rationale</strong><p>${escapeHtml(r.whyRanked)}</p></section><div class="reasoning-tools"><button class="evidence-link" data-detail="${r.id}">View cited sources</button><button data-up="${r.id}">Move up</button><button data-down="${r.id}">Move down</button><button data-move="${r.id}">Move group</button><button class="delete-action" data-delete="${r.id}">Delete</button></div></div></details></article>`}).join('');
+  $('requirements').innerHTML=group.requirements.map((r,index)=>{const approved=['approved','approved-conditional'].includes(r.status),statusBadge=['not-checked','awaiting'].includes(r.status)?'':`<span class="badge ${r.status}">${r.status.replaceAll('-',' ')}</span>`;return `<article class="requirement"><div class="rank"><span>${String(r.rank).padStart(2,'0')}</span></div><div class="requirement-main"><div class="requirement-label"><span class="outcome">${escapeHtml(r.outcome)}</span>${statusBadge}</div><h3>${escapeHtml(r.statement)}</h3><div class="meta"><span>${r.evidenceCount} cited records</span><span>${r.marketEvidenceCount} market signals</span><span>Priority ${r.score}/100</span>${r.explanation?`<span class="signal signal-${r.explanation.signal.tone}"><i aria-hidden="true"></i>${escapeHtml(r.explanation.signal.label)}</span>`:''}<span>${escapeHtml(r.owner.name)}</span></div></div><div class="actions"><button class="primary-card-action" data-validate="${r.id}">Check feasibility</button>${approved?`<button class="approval-state" disabled title="Approved" aria-label="Approved">✓</button>`:`<button class="decision-action approve-action" data-approve="${r.id}" title="Approve requirement" aria-label="Approve requirement">Approve</button>`}<button class="decision-action reject-action" data-reject="${r.id}" title="Reject requirement" aria-label="Reject requirement">Reject</button></div><details class="card-reasoning"><summary><span>Evidence & reasoning</span><i aria-hidden="true"></i></summary><div class="reasoning-panel">${reasoningHtml(r)}<div class="reasoning-tools"><button class="evidence-link" data-detail="${r.id}">View cited sources</button><button data-up="${r.id}">Move up</button><button data-down="${r.id}">Move down</button><button data-move="${r.id}">Move group</button><button class="delete-action" data-delete="${r.id}">Delete</button></div></div></details></article>`}).join('');
   document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>openDetail(findRequirement(b.dataset.detail)));
   document.querySelectorAll('[data-validate]').forEach(b=>b.onclick=()=>openValidation(findRequirement(b.dataset.validate)));
   document.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>openDetail(findRequirement(b.dataset.approve),'approve'));
@@ -184,7 +382,7 @@ function render() {
 const findRequirement=id=>state.groups.flatMap(g=>g.requirements).find(r=>r.id===id);
 function openDetail(r,intent=''){
   const decisionPrompt=intent==='approve'?'Optionally record why you approved this requirement.':intent==='reject'?'Optionally record why you rejected this requirement.':intent==='delete'?'Optionally record why you removed this requirement.':'An optional note can add context to the audit trail.';
-  $('detail-content').innerHTML=`<div class="dialog-body"><p class="eyebrow">RANK #${r.rank} · ${escapeHtml(r.group)} · ${escapeHtml(r.outcome)}</p><h2>${escapeHtml(r.statement)}</h2><div class="edit-requirement"><textarea id="requirement-edit">${escapeHtml(r.statement)}</textarea><button id="save-requirement" class="secondary">Save edited wording</button></div><div class="evidence-box"><h3>WHY THIS REQUIREMENT EXISTS</h3><p>${escapeHtml(r.problem)}</p><p>${escapeHtml(r.whyExists)}</p><p><strong>Evidence confidence:</strong> ${escapeHtml(r.confidence)} · feedback quality ${Object.entries(r.evidenceQuality).map(([key,value])=>`${key}: ${value}`).join(', ')||'non-feedback evidence only'}</p></div><div class="evidence-box"><h3>WHY THIS REQUIREMENT HAS THIS RANK</h3><p>${escapeHtml(r.whyRanked)}</p></div><h3>Verifiable source evidence</h3>${r.citations.map(c=>`<div class="citation"><a href="/sources/${encodeURIComponent(c.file)}" target="_blank" rel="noopener"><code>${escapeHtml(c.file)} › ${escapeHtml(c.sheet)} › row ${c.row} · ${escapeHtml(c.column)}</code></a>${c.url&&/^https?:\/\//i.test(c.url)?`<a class="external-source" href="${escapeHtml(c.url)}" target="_blank" rel="noopener">Open original external source ↗</a>`:''}<p>${escapeHtml(c.excerpt)}</p></div>`).join('')}<div class="decision-box ${intent?'decision-intent':''}"><h3>Decision note · saved to Decision Memory</h3><p class="decision-help">${escapeHtml(decisionPrompt)} This records your reasoning; it is not asking another PM for approval.</p><textarea id="pm-rationale" placeholder="Write a short decision note..."></textarea><div class="decision-actions"><button id="record-rationale" class="secondary">🎙 Dictate note</button><button id="delete-requirement" class="secondary ${intent==='delete'?'intent-action':''}">Delete</button><button id="reject-requirement" class="secondary ${intent==='reject'?'intent-action':''}">Reject & recalibrate group</button><button id="approve-requirement" class="primary ${intent==='approve'?'intent-action':''}">${r.status==='conditional'?'Approve with conditions':'Approve requirement'} <span>→</span></button></div></div></div>`;
+  $('detail-content').innerHTML=`<div class="dialog-body"><p class="eyebrow">RANK #${r.rank} · ${escapeHtml(r.group)} · ${escapeHtml(r.outcome)}</p><h2>${escapeHtml(r.statement)}</h2><div class="edit-requirement"><textarea id="requirement-edit">${escapeHtml(r.statement)}</textarea><button id="save-requirement" class="secondary">Save edited wording</button></div><div class="evidence-box drawer-reasoning">${reasoningHtml(r)}</div><h3 class="sources-title">Sources behind this requirement</h3><p class="sources-help">Every point links to its original source. Your uploads are marked.</p>${citationsHtml(r.citations)}<div class="decision-box ${intent?'decision-intent':''}"><h3>Decision note · saved to Decision Memory</h3><p class="decision-help">${escapeHtml(decisionPrompt)} This records your reasoning; it is not asking another PM for approval.</p><textarea id="pm-rationale" placeholder="Write a short decision note..."></textarea><div class="decision-actions"><button id="record-rationale" class="secondary">🎙 Dictate note</button><button id="delete-requirement" class="secondary ${intent==='delete'?'intent-action':''}">Delete</button><button id="reject-requirement" class="secondary ${intent==='reject'?'intent-action':''}">Reject & recalibrate group</button><button id="approve-requirement" class="primary ${intent==='approve'?'intent-action':''}">${r.status==='conditional'?'Approve with conditions':'Approve requirement'} <span>→</span></button></div></div></div>`;
   $('detail-dialog').showModal();
   $('pm-rationale').placeholder='Optional decision note…';
   $('save-requirement').onclick=()=>editRequirement(r);
@@ -292,21 +490,6 @@ function mergeGroup(){
   addEvent('group-merged','PM merged feature groups',`${source.name} → ${target.name}`);render();
 }
 
-function openValidationLegacy(r){
-  state.activeRequirement=r;
-  const contacts=JSON.parse(localStorage.getItem('stakeholder-contacts')||'{}'),recipient=contacts[r.owner.name]||'';
-  const aiSetup=state.openAIConfigured?'':`<div class="api-setup"><strong>OpenAI processing is not configured</strong><p>Restart the PM server from PowerShell with:</p><code>$env:OPENAI_API_KEY="your-key"<br>node server.mjs</code><p>Then refresh this page. The key remains on the server and is never stored in the browser.</p></div>`;
-  $('validation-content').innerHTML=`<div class="dialog-body"><p class="eyebrow">STAKEHOLDER VALIDATION · NOT AUTOMATICALLY SENT</p><h2>${escapeHtml(r.statement)}</h2><label class="owner-field"><strong>Responsible department · PM editable</strong><input id="owner-edit" value="${escapeHtml(r.owner.name)}"><small>${escapeHtml(r.owner.confidence)}-confidence routing suggestion. Alternative: ${escapeHtml(r.owner.alternative)}. ${escapeHtml(r.owner.reason)}</small></label><div class="validation-grid"><div><h3>Editable draft email</h3><textarea id="email-draft">${escapeHtml(draftEmail(r,state.config))}</textarea><div class="gmail-actions"><label><span>Relevant stakeholder email</span><input id="stakeholder-email" type="email" placeholder="name@bmwgroup.com" value="${escapeHtml(recipient)}"></label><a id="gmail-draft" class="primary gmail-link" target="_blank" rel="noopener">Open draft in Gmail <span>↗</span></a></div></div><div><h3>Paste or transcribe engineering response</h3><textarea id="stakeholder-response" placeholder="Paste the received response here. Nothing changes until you confirm the interpretation."></textarea>${aiSetup}<div class="feedback-actions"><button id="transcribe-response" class="secondary">🎙 Transcribe response</button><button id="interpret" class="primary confirm" ${state.openAIConfigured?'':'disabled'}>${state.openAIConfigured?'Process Feedback & Recalibrate':'OpenAI key required'}</button></div><div id="interpretation"></div></div></div></div>`;
-  $('validation-dialog').showModal();
-  const syncGmail=()=>{$('gmail-draft').href=gmailComposeUrl($('stakeholder-email').value,$('email-draft').value)};
-  syncGmail();$('email-draft').oninput=syncGmail;$('stakeholder-email').oninput=syncGmail;
-  $('stakeholder-email').onchange=()=>{const email=$('stakeholder-email').value.trim();if(email){contacts[$('owner-edit').value.trim()||r.owner.name]=email;localStorage.setItem('stakeholder-contacts',JSON.stringify(contacts))}};
-  $('owner-edit').onchange=()=>{const owner=$('owner-edit').value.trim();if(owner&&owner!==r.owner.name){const before=r.owner.name;r.owner.name=owner;$('stakeholder-email').value=contacts[owner]||'';syncGmail();addEvent('responsible-entity-corrected','PM corrected requirement ownership',`${r.feature}: ${before} → ${owner}`)}};
-  $('transcribe-response').onclick=()=>transcribeResponse();
-  if(state.openAIConfigured)$('interpret').onclick=()=>interpretStakeholderResponse(r);
-  addEvent('validation-draft-opened','Feasibility draft prepared',`${r.feature} routed to ${r.owner.name}; email remains unsent.`,{requirementId:r.id,responsibleEntity:r.owner.name},'PM');
-}
-
 function transcribeResponse(){
   const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition,button=$('transcribe-response');
   if(!Recognition){alert('Voice transcription is not supported in this browser. Paste or type the response instead.');return}
@@ -317,14 +500,24 @@ function transcribeResponse(){
 
 function openValidation(r){
   state.activeRequirement=r;
+  const departments=departmentOptions(r.feature),suggested=departments.find(d=>d.suggested);
+  const ownerHint=name=>name===suggested.name?`Suggested for this requirement: ${r.owner.reason} Pick another department to reroute; the draft updates.`:`Rerouted by the PM. Suggested department: ${suggested.name}.`;
   const contacts=JSON.parse(localStorage.getItem('stakeholder-contacts')||'{}'),recipient=contacts[r.owner.name]||'';
   const aiSetup=state.openAIConfigured?'':`<div class="api-setup"><strong>OpenAI tools are not configured</strong><p>The default draft and Gmail link still work. To create an email from notes or interpret a reply, restart the PM server from PowerShell with:</p><code>$env:OPENAI_API_KEY="your-key"<br>node server.mjs</code><p>Refresh this page afterward. The key remains server-side.</p></div>`;
-  $('validation-content').innerHTML=`<div class="dialog-body"><p class="eyebrow">STAKEHOLDER VALIDATION · NOT AUTOMATICALLY SENT</p><h2>${escapeHtml(r.statement)}</h2><label class="owner-field"><strong>Responsible department · PM editable</strong><input id="owner-edit" value="${escapeHtml(r.owner.name)}"><small>${escapeHtml(r.owner.confidence)}-confidence routing suggestion. Alternative: ${escapeHtml(r.owner.alternative)}. ${escapeHtml(r.owner.reason)}</small></label><div class="validation-grid"><div><h3>Editable draft email</h3><textarea id="email-draft">${escapeHtml(draftEmail(r,state.config))}</textarea><div class="email-composer"><label><strong>Rough email notes · optional</strong><textarea id="email-notes" placeholder="Type or dictate the points you want added to the email. The default draft above remains available."></textarea></label><div class="email-compose-actions"><button id="transcribe-email-notes" class="secondary">🎙 Transcribe notes</button><button id="create-email" class="primary" ${state.openAIConfigured?'':'disabled'}>${state.openAIConfigured?'Create email from notes':'OpenAI key required'}</button></div><div id="email-generation-status"></div></div><div class="gmail-actions"><label><span>Relevant stakeholder email</span><input id="stakeholder-email" type="email" placeholder="name@bmwgroup.com" value="${escapeHtml(recipient)}"></label><a id="gmail-draft" class="primary gmail-link" target="_blank" rel="noopener">Open draft in Gmail <span>↗</span></a></div></div><div><h3>Paste engineering response</h3><p class="decision-help">Paste the reply exactly as received. OpenAI proposes an interpretation; nothing changes until you confirm it.</p><textarea id="stakeholder-response" placeholder="Paste the engineering response here."></textarea>${aiSetup}<div class="feedback-actions"><button id="interpret" class="primary confirm" ${state.openAIConfigured?'':'disabled'}>${state.openAIConfigured?'Process feedback & recalibrate':'OpenAI key required'}</button></div><div id="interpretation"></div></div></div></div>`;
+  $('validation-content').innerHTML=`<div class="dialog-body"><p class="eyebrow">STAKEHOLDER VALIDATION · NOT AUTOMATICALLY SENT</p><h2>${escapeHtml(r.statement)}</h2><label class="owner-field"><strong>Send this question to</strong><select id="owner-edit">${departments.map(d=>`<option value="${escapeHtml(d.name)}" ${d.suggested?'data-badge="Suggested"':''} ${d.name===r.owner.name?'selected':''}>${escapeHtml(d.name)}</option>`).join('')}</select><small id="owner-hint">${escapeHtml(ownerHint(r.owner.name))}</small></label><div class="validation-grid"><div><h3>Editable draft email</h3><textarea id="email-draft">${escapeHtml(draftEmail(r,state.config,r.owner.name))}</textarea><div class="email-composer"><label><strong>Rough email notes · optional</strong><textarea id="email-notes" placeholder="Type or dictate the points you want added to the email. The default draft above remains available."></textarea></label><div class="email-compose-actions"><button id="transcribe-email-notes" class="secondary">🎙 Transcribe notes</button><button id="create-email" class="primary" ${state.openAIConfigured?'':'disabled'}>${state.openAIConfigured?'Create email from notes':'OpenAI key required'}</button></div><div id="email-generation-status"></div></div><div class="gmail-actions"><label><span>Relevant stakeholder email</span><input id="stakeholder-email" type="email" placeholder="name@bmwgroup.com" value="${escapeHtml(recipient)}"></label><a id="gmail-draft" class="primary gmail-link" target="_blank" rel="noopener">Open draft in Gmail <span>↗</span></a></div></div><div><h3>Paste engineering response</h3><p class="decision-help">Paste the reply exactly as received. OpenAI proposes an interpretation; nothing changes until you confirm it.</p><textarea id="stakeholder-response" placeholder="Paste the engineering response here."></textarea>${aiSetup}<div class="feedback-actions"><button id="interpret" class="primary confirm" ${state.openAIConfigured?'':'disabled'}>${state.openAIConfigured?'Process feedback & recalibrate':'OpenAI key required'}</button></div><div id="interpretation"></div></div></div></div>`;
   $('validation-dialog').showModal();
+  enhanceSelect($('owner-edit'));
   const syncGmail=()=>{$('gmail-draft').href=gmailComposeUrl($('stakeholder-email').value,$('email-draft').value)};
   syncGmail();$('email-draft').oninput=syncGmail;$('stakeholder-email').oninput=syncGmail;
   $('stakeholder-email').onchange=()=>{const email=$('stakeholder-email').value.trim();if(email){contacts[$('owner-edit').value.trim()||r.owner.name]=email;localStorage.setItem('stakeholder-contacts',JSON.stringify(contacts))}};
-  $('owner-edit').onchange=()=>{const owner=$('owner-edit').value.trim();if(owner&&owner!==r.owner.name){const before=r.owner.name;r.owner.name=owner;$('stakeholder-email').value=contacts[owner]||'';syncGmail();addEvent('responsible-entity-corrected','PM corrected requirement ownership',`${r.feature}: ${before} → ${owner}`)}};
+  let autoDraft=$('email-draft').value;
+  $('owner-edit').onchange=()=>{
+    const owner=$('owner-edit').value;if(!owner||owner===r.owner.name)return;
+    const before=r.owner.name,edited=$('email-draft').value!==autoDraft;
+    if(!edited||confirm(`Replace your edited draft with the default draft for ${owner}?`)){autoDraft=draftEmail(r,state.config,owner);$('email-draft').value=autoDraft}
+    r.owner.name=owner;$('owner-hint').textContent=ownerHint(owner);$('stakeholder-email').value=contacts[owner]||'';syncGmail();
+    addEvent('responsible-entity-corrected','PM rerouted feasibility question',`${r.feature}: ${before} → ${owner}`,{requirementId:r.id,before,after:owner});
+  };
   $('transcribe-email-notes').onclick=transcribeEmailNotes;
   if(state.openAIConfigured){$('create-email').onclick=()=>createEmailDraft(r,syncGmail);$('interpret').onclick=()=>interpretStakeholderResponse(r)}
   addEvent('validation-draft-opened','Feasibility draft prepared',`${r.feature} routed to ${r.owner.name}; email remains unsent.`,{requirementId:r.id,responsibleEntity:r.owner.name},'PM');
@@ -400,31 +593,6 @@ function renderMemory(query=$('memory-search')?.value||''){
   $('timeline').innerHTML=events.length?events.map(e=>{const historical=e.type==='historical-decision',status=historical?e.data.decisionStatus:e.type==='requirement-rejected'?'Rejected':e.type==='requirement-approved-with-conditions'?'Approved with conditions':'Approved',requirement=e.data.statement||e.data.before?.statement||e.data.requirement||e.title,reason=decisionReason(e),audit=e.data?.citations||e.data?.supportingEvidence?`<details><summary>Inspect supporting evidence</summary><pre>${escapeHtml(JSON.stringify({citations:e.data.citations||e.data.supportingEvidence,provenance:e.provenance},null,2))}</pre></details>`:'';return `<div class="event"><time>${new Date(e.at).toLocaleString()}</time><div class="event-dot"></div><article><p class="eyebrow">${escapeHtml(status)} · ${escapeHtml(e.actor||'PM')}</p><h3>${escapeHtml(requirement)}</h3><p><strong>Reason:</strong> ${escapeHtml(reason)}</p>${audit}</article></div>`}).join(''):`<p>${needle?'No approved or rejected requirements match this search.':'No requirements have been approved or rejected yet.'}</p>`;
 }
 
-function downloadReportLegacy(kind){
-  if(!state.config||!state.groups.length){alert('Generate a product cycle before exporting a report.');return}
-  const all=state.groups.flatMap(group=>group.requirements.map(requirement=>({...requirement,group:group.name}))),approved=all.filter(r=>['approved','approved-conditional'].includes(r.status));
-  const market=({US:'United States',GB:'United Kingdom',DE:'Germany',CN:'China'})[state.config.market]||state.config.market;
-  const humanStatus=status=>status.replaceAll('-',' ').replace(/\b\w/g,letter=>letter.toUpperCase());
-  const sources=requirement=>{const unique=[...new Set(requirement.citations.map(c=>`${c.file} / ${c.sheet}`))],shown=unique.slice(0,4);return `${shown.join('; ')}${unique.length>shown.length?` (+${unique.length-shown.length} more sources)`:''}`};
-  const requirementItem=requirement=>({kicker:`#${requirement.rank}  ·  ${requirement.outcome}  ·  ${humanStatus(requirement.status)}`,title:requirement.statement,details:[`Priority: ${requirement.fitScore}/100  |  Responsible entity: ${requirement.owner.name}`,`Evidence: ${requirement.evidenceCount} cited records, including ${requirement.marketEvidenceCount} market signals.`]});
-  let title,subtitle,sections;
-  if(kind==='technical'){
-    title='TECHNICAL REQUIREMENT REPORT';subtitle='Approved requirements prepared for responsible engineering entities';
-    sections=state.groups.map(group=>({title:group.name,items:group.requirements.filter(r=>['approved','approved-conditional'].includes(r.status)).map(r=>({kicker:`${r.feature}  ·  ${humanStatus(r.status)}`,title:r.statement,details:[`Responsible entity: ${r.owner.name}`,`Evidence basis: ${r.evidenceCount} cited records and ${r.marketEvidenceCount} market signals.`,`Representative sources: ${sources(r)}`]}))})).filter(section=>section.items.length);
-    if(!sections.length)sections=[{title:'Approved requirements',empty:'No requirements have received PM approval.',items:[]}];
-  }else if(kind==='gtm'){
-    title='GO-TO-MARKET REQUIREMENT REPORT';subtitle=`Approved customer outcomes for ${market}`;
-    sections=[{title:'Approved market proposition',items:approved.map(r=>({kicker:`${r.group}  ·  ${r.outcome}`,title:r.statement,details:[`Customer evidence: ${r.evidenceCount} cited records.`,`Market intelligence: ${r.marketEvidenceCount} signals support this requirement for ${market}.`]})),empty:'No approved requirements are available for GTM reporting.'}];
-  }else{
-    title='PM REQUIREMENT REPORT';subtitle='Evidence-led product-cycle priorities and recorded decisions';
-    sections=state.groups.map(group=>({title:group.name,items:group.requirements.map(requirementItem)}));
-    const decisions=[...state.events.filter(isRecordedDecision),...state.historical].sort((a,b)=>new Date(b.at)-new Date(a.at));
-    sections.push({title:'Decision record',items:decisions.map(event=>({kicker:`${event.actor||'PM'}  ·  ${new Date(event.at).toLocaleDateString()}`,title:event.data.statement||event.data.requirement||event.title,details:[`Decision: ${event.type==='requirement-rejected'||/rejected/i.test(event.data?.decisionStatus||'')?'Rejected':'Approved'}`,`Reason: ${decisionReason(event)}`]})),empty:'No requirements have been approved or rejected yet.'});
-  }
-  const pdf=createReportPdf({title,subtitle,metadata:[{label:'Vehicle',value:state.config.vehicle},{label:'Market',value:market},{label:'Delivery context',value:`${state.config.months} months / ${state.config.people} people`},{label:'Approved',value:`${approved.length} of ${all.length} requirements`}],sections}),blob=new Blob([pdf],{type:'application/pdf'}),url=URL.createObjectURL(blob),anchor=document.createElement('a'),safe=value=>String(value).replace(/[<>:"/\\|?*\u0000-\u001F]/g,'-').replace(/\s+/g,'-');anchor.href=url;anchor.download=`PM-${kind}-${safe(state.config.vehicle)}-${safe(state.config.market)}.pdf`;anchor.click();URL.revokeObjectURL(url);
-  addEvent('report-generated',`${kind.toUpperCase()} report generated`,`${approved.length} approved requirements included.`);
-}
-
 async function classifyRequirementsForReports(requirements){
   const signature=JSON.stringify(requirements.map(requirement=>[requirement.id,requirement.statement,requirement.owner?.name,requirement.status]));
   if(state.reportRouting?.signature===signature)return state.reportRouting;
@@ -461,7 +629,7 @@ async function downloadReport(kind,button){
     const routingFor=requirement=>routingResult.routing.get(requirement.id);
     const audienceLabel=requirement=>routingFor(requirement).technical?'Technical':'GTM';
     const item=(requirement,detailType='pm')=>{
-      const route=routingFor(requirement),details=[`Status: ${humanStatus(requirement.status)}  |  Priority: ${requirement.fitScore}/100  |  Owner: ${requirement.owner.name}`,`Audience: ${audienceLabel(requirement)}. ${route.rationale}`];
+      const route=routingFor(requirement),details=[`Status: ${humanStatus(requirement.status)}  |  Priority: ${requirement.score}/100  |  Owner: ${requirement.owner.name}`,`Audience: ${audienceLabel(requirement)}. ${route.rationale}`];
       if(detailType==='technical')details.push(`Evidence basis: ${requirement.evidenceCount} cited records and ${requirement.marketEvidenceCount} market signals.`,`Representative sources: ${sources(requirement)}`);
       else if(detailType==='gtm')details.push(`Customer evidence: ${requirement.evidenceCount} cited records. Market intelligence: ${requirement.marketEvidenceCount} signals for ${market}.`,`Representative sources: ${sources(requirement)}`);
       else details.push(`Evidence: ${requirement.evidenceCount} cited records, including ${requirement.marketEvidenceCount} market signals.`);
