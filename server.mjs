@@ -1,3 +1,5 @@
+import { isDiaryEvent } from './src/project-diary.mjs';
+import { summarizeDiaryDay } from './src/openai.mjs';
 import { createServer } from 'node:http';
 import { appendFile, readFile, rename, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
@@ -45,6 +47,16 @@ createServer(async (req, res) => {
     sendJson(res, 200, { configured: Boolean(process.env.OPENAI_API_KEY), model: process.env.OPENAI_MODEL || 'gpt-4o-mini' });
     return;
   }
+  if (pathname === '/api/project-diary' && req.method === 'GET') {
+    try { const lines=(await readFile(decisionEventsPath,'utf8')).split(/\r?\n/).filter(Boolean); sendJson(res,200,{events:lines.map(line=>JSON.parse(line)).filter(isDiaryEvent)}); }
+    catch(error) { sendJson(res,error.code==='ENOENT'?200:500,error.code==='ENOENT'?{events:[]}:{error:'Project diary could not be read.'}); }
+    return;
+  }
+  if (pathname === '/api/project-diary/summary' && req.method === 'POST') {
+    try { sendJson(res,200,await summarizeDiaryDay(await readJson(req, 2_000_000))); }
+    catch(error) { sendJson(res,/OPENAI_API_KEY/.test(error.message)?503:400,{error:error.message}); }
+    return;
+  }
   if (pathname === '/api/decision-events' && req.method === 'GET') {
     try {
       const lines=(await readFile(decisionEventsPath,'utf8')).split(/\r?\n/).filter(Boolean);
@@ -58,8 +70,7 @@ createServer(async (req, res) => {
     try {
       const event=await readJson(req);
       if(!event.id||!event.type||!event.title||!event.at)throw new Error('Decision event is incomplete.');
-      if(!DECISION_EVENT_TYPES.has(event.type))throw new Error('Decision Memory only accepts requirement approvals and rejections.');
-      if(!String(event.data?.rationale||'').trim())throw new Error('An approval or rejection reason is required.');
+      if(!isDiaryEvent(event))throw new Error('Unsupported project diary event.');
       const immutableEvent={id:String(event.id),type:String(event.type),title:String(event.title),description:String(event.description||''),actor:String(event.actor||'PM'),data:event.data||{},at:String(event.at),provenance:'Append-only application event'};
       await appendFile(decisionEventsPath,`${JSON.stringify(immutableEvent)}\n`,'utf8');
       sendJson(res,201,{ok:true,id:immutableEvent.id});

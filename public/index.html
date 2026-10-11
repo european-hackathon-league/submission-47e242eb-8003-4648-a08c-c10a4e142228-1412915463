@@ -21,7 +21,7 @@
       <button data-view="workspace" class="nav"><span class="nav-index">02</span><span>Requirements</span></button>
       <button data-view="memory" class="nav"><span class="nav-index">03</span><span>Decision memory</span><em id="event-count">0</em></button>
     </nav>
-    <div class="header-account"><span>Product workspace</span><strong>PM</strong></div>
+    <div class="header-account"><button id="new-feature-button" class="header-feature-button" type="button">Project Diary</button><span>Product workspace</span><strong>PM</strong></div>
     <div class="truth" id="ai-status"><span></span> Checking OpenAI…</div>
   </header>
 
@@ -119,6 +119,13 @@
     <section id="memory" class="hidden memory" aria-label="Decision memory">
       <div class="memory-head"><p class="eyebrow">Approval & rejection record</p><h1>Decision memory</h1><p>Only approved or rejected requirements are recorded here, together with the PM’s reason.</p><input id="memory-search" type="search" placeholder="Search decisions and reasons"><div class="report-actions"><button class="secondary" data-report="pm">Export PM PDF</button><button class="secondary" data-report="technical">Export technical PDF</button><button class="secondary" data-report="gtm">Export GTM PDF</button></div></div><div id="timeline"></div>
       <footer class="app-footer"><span>BMW Product Intelligence</span><span>Evidence-led product workspace</span><span>Precision in every decision.</span></footer>
+    </section>
+    <section id="project-diary" class="hidden diary-page" aria-label="Project Diary">
+      <h1>Project Diary</h1>
+      <div class="diary-controls"><label>Project<select id="diary-scope"><option value="current">BMW 5 Series · G60 · United States</option><option value="all">All recorded projects</option></select></label><label>Day<input id="diary-date" type="date"></label><button id="diary-all" type="button">All dates</button><button id="diary-summarize" type="button">Summarize selected day</button></div>
+      <p id="diary-context"></p><h2>Daily project activity</h2>
+      <div class="diary-calendar"><div class="diary-weekdays" aria-hidden="true"><span></span><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div id="diary-graph" class="diary-graph" aria-label="Daily activity calendar"></div></div><p id="diary-save-status" role="status"></p>
+      <div class="diary-controls diary-story-controls"><label>Storyline<select id="diary-period"><option value="week">Last Week</option><option value="month">Last Month</option><option value="quarter">Last Quarter</option><option value="onboarding">Onboarding</option><option value="custom">Custom dates</option></select></label><label>From<input id="diary-start" type="date"></label><label>To<input id="diary-end" type="date"></label><button id="diary-story" type="button">Generate storyline</button></div><p id="diary-range-status" role="status"></p><div id="diary-summary" aria-live="polite"></div><div id="diary-timeline"></div>
     </section>
   </main>
 

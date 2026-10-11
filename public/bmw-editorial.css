@@ -18,7 +18,7 @@ button,input,select,textarea{font:inherit}
 .eyebrow,.section-label{margin:0;color:#536173;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
 
 /* Global navigation */
-.app-header{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:300px 1fr 230px;align-items:stretch;height:88px;padding:0 clamp(24px,4.5vw,58px);background:rgba(247,249,252,.97);border-bottom:1px solid var(--editorial-line);backdrop-filter:blur(14px)}
+.app-header{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:300px 1fr 290px;align-items:stretch;height:88px;padding:0 clamp(24px,4.5vw,58px);background:rgba(247,249,252,.97);border-bottom:1px solid var(--editorial-line);backdrop-filter:blur(14px)}
 .nav-brand{display:flex!important;align-items:center;gap:14px;min-width:0!important;padding:0!important;color:var(--editorial-ink)!important;text-decoration:none!important}
 .bmw-logo{width:44px!important;height:44px!important;flex:0 0 auto}
 .nav-brand>span{display:grid;gap:4px}
@@ -32,6 +32,9 @@ button,input,select,textarea{font:inherit}
 .app-header .nav-index{color:#667587!important;font-size:10px!important;font-weight:500!important}
 .app-header .nav em{display:inline-grid;min-width:22px;height:22px;place-items:center;padding:0 6px;background:#dce5ee!important;color:#667485!important;border-radius:11px;font-size:10px;font-style:normal}
 .header-account{display:flex;align-items:center;justify-content:flex-end;gap:14px;color:#354252;font-size:11px}
+.header-feature-button{flex:0 0 auto;min-height:38px;padding:0 16px;border:1px solid var(--editorial-blue);border-radius:2px;background:var(--editorial-blue);color:#fff;font:inherit;font-size:12px;font-weight:600;white-space:nowrap}
+.header-feature-button:disabled{opacity:1;cursor:default}
+.header-feature-button:focus-visible{outline:2px solid var(--editorial-ink);outline-offset:3px}
 .header-account strong{display:grid;width:36px;height:36px;place-items:center;border:1px solid var(--editorial-line);border-radius:50%;font-size:10px;font-weight:500}
 .app-header>.truth{position:absolute;right:56px;bottom:-24px;display:none}
 
@@ -172,7 +175,7 @@ dialog::backdrop{background:#18243155!important;backdrop-filter:blur(8px)}
 .close{color:#24313f!important}
 
 @media(max-width:1000px){
-  .app-header{grid-template-columns:230px 1fr 80px;padding:0 24px}.header-account>span{display:none}.app-header .nav{min-width:100px!important;padding-inline:8px!important}
+  .app-header{grid-template-columns:230px 1fr 180px;padding:0 24px}.header-account>span{display:none}.app-header .nav{min-width:100px!important;padding-inline:8px!important}
   .editorial-hero:before{inset:0 0 0 34%}.hero-copy{width:56vw;padding-left:32px}.hero-copy h1{font-size:54px}
   .context-form{grid-template-columns:repeat(2,minmax(0,1fr))}.deadline-field{grid-column:1/-1}.context-form .guardrail{grid-column:1}.context-form #generate-button{grid-column:2}
   .foundation-strip{grid-template-columns:1fr 1fr}.foundation-strip>div,.foundation-strip article{border-bottom:1px solid #c1ceda}
@@ -286,3 +289,17 @@ dialog::backdrop{background:#18243155!important;backdrop-filter:blur(8px)}
   .workspace-view .reasoning-tools{flex-wrap:wrap;justify-content:flex-start}
   .workspace-view .reasoning-tools .evidence-link{width:100%;margin-right:0}
 }
+
+.diary-page{max-width:1180px;margin:auto;padding:54px 28px;color:var(--editorial-ink)}
+.diary-page h1{font-size:44px;font-weight:400;letter-spacing:-.04em;margin:12px 0}
+.diary-controls{display:flex;flex-wrap:wrap;align-items:end;gap:14px;margin:28px 0}
+.diary-controls label{display:grid;gap:8px;font-size:12px}
+.diary-controls button,.diary-controls select,.diary-controls input{min-height:40px;padding:8px 12px;background:#fff;color:#182431;border:1px solid #bdc9d4;border-radius:3px}
+.diary-controls button:disabled{opacity:.5;cursor:not-allowed}
+.diary-graph{display:grid;grid-template-rows:24px repeat(7,14px);grid-auto-flow:column;grid-auto-columns:14px;gap:4px;overflow-x:auto;padding:8px 2px 16px;justify-content:start}
+.diary-day{width:14px;height:14px;padding:0;border:0;border-radius:2px;background:#e0e7ee;cursor:pointer}
+.diary-day.level-1{background:#a9d1f4}.diary-day.level-2{background:#69a9e4}.diary-day.level-3{background:#267ecb}.diary-day.level-4{background:#07539c}.diary-day.selected,.diary-day:focus-visible{outline:2px solid #182431;outline-offset:1px}
+.diary-entry,.diary-summary-card{background:#fff;border:1px solid #d4dee8;padding:22px;margin:16px 0;border-radius:4px}
+.diary-entry time,.diary-reason{font-size:12px;color:#526071}.diary-entry pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;font-size:12px}.diary-entry h3{margin:10px 0}.diary-entry p{line-height:1.6}.diary-summary-card{border-left:3px solid #1c69d4}
+
+.diary-calendar{display:flex;gap:10px;align-items:start}.diary-calendar .diary-graph{flex:1;min-width:0}.diary-weekdays{display:grid;grid-template-rows:24px repeat(7,14px);gap:4px;padding-top:8px;font-size:10px;color:#526071}.diary-month{font-size:10px;white-space:nowrap;color:#354252;align-self:center;pointer-events:none}.diary-direction{font-size:12px;color:#354252}.diary-direction span{display:block;margin-top:6px;color:#526071}

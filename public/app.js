@@ -1,3 +1,4 @@
+import { isDiaryEvent, diaryEntries, dayKey, diaryRange, eventsInRange } from '../src/project-diary.mjs';
 import { buildModel, departmentOptions, draftEmail, gmailComposeUrl, validateCitations } from './engine.js';
 import { DECISION_EVENT_TYPES, decisionReason, isRecordedDecision } from '../src/decision-memory.mjs';
 import { createReportPdf } from './pdf-report.js';
@@ -5,7 +6,7 @@ import { enhanceSelect } from './select.js';
 import { UPLOAD_TYPES, parseInput, suggestFeature, templateCsv, toKnowledge } from '../src/uploads.mjs';
 import { mergeReportAudienceAssignments, partitionReportRequirements } from '../src/report-routing.mjs';
 
-const storedDecisions=JSON.parse(localStorage.getItem('decision-events')||'[]').filter(isRecordedDecision);
+const storedDecisions=JSON.parse(localStorage.getItem('decision-events')||'[]').filter(isDiaryEvent);
 localStorage.setItem('decision-events',JSON.stringify(storedDecisions));
 const state = { evidence: [], context: null, historical: [], groups: [], selected: 0, config: null, statuses: JSON.parse(localStorage.getItem('requirement-statuses') || '{}'), overrides: JSON.parse(localStorage.getItem('requirement-overrides') || '{}'), events: storedDecisions, activeRequirement: null, openAIConfigured:false, wordingError:'', reportRouting:null };
 const $ = id => document.getElementById(id);
@@ -57,6 +58,14 @@ const statusMap = () => Object.fromEntries(Object.entries(state.statuses).filter
 const overrideMap = () => Object.fromEntries(Object.entries(state.overrides).filter(([key]) => key.startsWith(`${state.config.vehicle}|${state.config.market}|`)).map(([key,value]) => [key.split('|').slice(2).join('|'),value]));
 
 async function init() {
+  $('new-feature-button').addEventListener('click',()=>showView('diary'));
+  $('diary-date').addEventListener('change',()=>{state.diarySummary=null;renderDiary()});
+  $('diary-all').addEventListener('click',()=>{$('diary-date').value='';state.diarySummary=null;renderDiary()});
+  $('diary-scope').addEventListener('change',()=>{state.diarySummary=null;renderDiary()});
+  $('diary-summarize').addEventListener('click',summarizeSelectedDay);
+  $('diary-period').addEventListener('change',()=>{state.diarySummary=null;renderDiary()});
+  ['diary-start','diary-end'].forEach(id=>$(id).addEventListener('change',()=>{$('diary-period').value='custom';state.diarySummary=null;renderDiary()}));
+  $('diary-story').addEventListener('click',()=>summarizeSelectedDay(true));
   $('importance').addEventListener('input', e => $('importance-output').value = `${e.target.value} / 10`);
   $('vehicle').addEventListener('change', populateMarkets);
   enhanceSelect($('vehicle'));enhanceSelect($('market'));
@@ -291,16 +300,18 @@ function populateMarkets(){
 }
 
 async function loadDecisionEvents(){
-  try{const response=await fetch('/api/decision-events'),payload=await readApiResponse(response);const known=new Set(state.events.map(event=>event.id));state.events.push(...payload.events.filter(event=>isRecordedDecision(event)&&!known.has(event.id)))}catch{}
+  try{const response=await fetch('/api/project-diary'),payload=await readApiResponse(response);const known=new Set(state.events.map(event=>event.id));state.events.push(...payload.events.filter(event=>isDiaryEvent(event)&&!known.has(event.id)))}catch{}
 }
 
 function addEvent(type, title, description, data={},actor='PM') {
-  if(!DECISION_EVENT_TYPES.has(type)||!String(data.rationale||'').trim())return;
+  if(!DIARY_EVENT_ALLOWED(type))return;
+  data={...data,project:state.config?{vehicle:state.config.vehicle,market:state.config.market}:null};
   const event={ id: crypto.randomUUID(), type, title, description, data, actor, at: new Date().toISOString(), provenance:'Append-only application event' };
   state.events.unshift(event);
   localStorage.setItem('decision-events', JSON.stringify(state.events));
-  fetch('/api/decision-events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(event)}).catch(()=>{});
+  fetch('/api/decision-events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(event)}).then(readApiResponse).then(()=>{$('diary-save-status').textContent=''}).catch(error=>{$('diary-save-status').textContent=`Saved in this browser; server save failed: ${error.message}`});
   renderMemory();
+  renderDiary();
 }
 
 function groundingEvidence(requirement){
@@ -341,9 +352,10 @@ async function generate(event) {
 }
 
 function showView(view) {
-  ['setup','workspace','memory'].forEach(id=>$(id).classList.add('hidden'));
+  ['setup','workspace','memory','project-diary'].forEach(id=>$(id).classList.add('hidden'));
   let activeView=view;
-  if(view==='overview')$('setup').classList.remove('hidden');
+  if(view==='diary'){$('project-diary').classList.remove('hidden');renderDiary()}
+  else if(view==='overview')$('setup').classList.remove('hidden');
   else if(view==='memory'){$('memory').classList.remove('hidden');setTimeout(()=>$('memory-search').focus(),0)}
   else if(state.config)$('workspace').classList.remove('hidden');
   else{$('setup').classList.remove('hidden');activeView='overview'}
@@ -411,7 +423,7 @@ function recordRationale(){
 }
 
 function saveDecision(r,status){
-  const rationale=$('pm-rationale').value.trim()||`PM ${status.startsWith('approved')?'approved':status==='deleted'?'deleted':'rejected'} this requirement directly.`;
+  const rationale=$('pm-rationale').value.trim();
   commitDecision(r,status,rationale);$('detail-dialog').close();render();
 }
 
@@ -660,3 +672,47 @@ async function downloadReport(kind,button){
   }catch(error){alert(`The PDF could not be generated: ${error.message}`)}finally{if(button){button.disabled=false;button.textContent=originalLabel}}
 }
 init().catch(error=>{document.body.innerHTML=`<main class="memory"><h1>Unable to load evidence</h1><p>${escapeHtml(error.message)}</p></main>`});
+
+function DIARY_EVENT_ALLOWED(type){return isDiaryEvent({id:'check',type,at:new Date().toISOString()})}
+function diaryProject(){return state.config||{vehicle:$('vehicle').value,market:$('market').value}}
+function diaryProjectLabel(){const project=diaryProject();const vehicles={G60:'BMW 5 Series · G60',F70:'BMW 1 Series · F70',G70:'BMW 7 Series · G70'},markets={US:'United States',GB:'United Kingdom',DE:'Germany',CN:'China'};return `${vehicles[project.vehicle]||project.vehicle} · ${markets[project.market]||project.market}`}
+function scopedDiary(){return diaryEntries([...state.events,...state.historical.map(event=>({...event,type:event.data?.decisionStatus?.toLowerCase().includes('reject')?'requirement-rejected':'requirement-approved',data:{...event.data,rationale:event.data.pmReasoning}}))],$('diary-scope').value==='current'?diaryProject():null)}
+function renderDiary(){
+  if(!$('diary-timeline'))return;
+  $('diary-scope').querySelector('[value=current]').textContent=diaryProjectLabel();
+  const events=scopedDiary(),day=$('diary-date').value;
+  $('diary-context').textContent=$('diary-scope').value==='current'?diaryProjectLabel():'All recorded projects (older records may have no project context).';
+  const counts=new Map();for(const event of events){const key=dayKey(event.at);counts.set(key,(counts.get(key)||0)+1)}
+  const end=new Date();end.setHours(12,0,0,0);const start=new Date(end);start.setDate(start.getDate()-364);
+  if(events.length){const oldest=new Date(events[events.length-1].at);oldest.setHours(12,0,0,0);if(oldest<start)start.setTime(oldest.getTime())}
+  start.setDate(start.getDate()-start.getDay());
+  const cells=[];let index=0,lastMonth='';
+  for(const date=new Date(start);date<=end;date.setDate(date.getDate()+1),index++){
+    const key=dayKey(date),count=counts.get(key)||0,week=Math.floor(index/7)+1;
+    if(index%7===0){const labelDate=new Date(date);labelDate.setDate(labelDate.getDate()+Math.min(6,Math.round((end-date)/86400000)));const month=`${labelDate.getFullYear()}-${labelDate.getMonth()}`;const label=month!==lastMonth?labelDate.toLocaleDateString(undefined,{month:'short',year:'numeric'}):'';cells.push(`<span class="diary-month" style="grid-column:${week};grid-row:1">${escapeHtml(label)}</span>`);lastMonth=month}
+    const readable=date.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    cells.push(`<button type="button" style="grid-column:${week};grid-row:${date.getDay()+2}" class="diary-day level-${Math.min(4,count)} ${key===day?'selected':''}" data-day="${key}" title="${readable}: ${count} changes" aria-label="${readable}: ${count} changes" aria-pressed="${key===day}"></button>`);
+  }
+  $('diary-graph').innerHTML=cells.join('');$('diary-graph').querySelectorAll('[data-day]').forEach(button=>button.onclick=()=>{$('diary-date').value=$('diary-date').value===button.dataset.day?'':button.dataset.day;state.diarySummary=null;renderDiary()});
+  const selected=diaryEntries(events,null,day);
+  $('diary-timeline').innerHTML=selected.length?selected.map(event=>`<article class="diary-entry"><time>${escapeHtml(new Date(event.at).toLocaleString())}</time><h3>${escapeHtml(event.title)}</h3><p>${escapeHtml(event.description)}</p><p class="diary-reason">${escapeHtml(event.data?.rationale?`PM reason: ${event.data.rationale}`:'No written PM rationale recorded.')}</p><details><summary>Recorded details</summary><pre>${escapeHtml(JSON.stringify(event.data,null,2))}</pre></details></article>`).join(''):'<p>No recorded changes for this selection.</p>';
+  $('diary-summarize').disabled=!day||!selected.length||!state.openAIConfigured||state.diaryBusy;
+  $('diary-summarize').title=!state.openAIConfigured?'Configure OPENAI_API_KEY on the server to enable summaries.':'Analyze all recorded changes for the selected day';
+  if($('diary-period').value!=='custom'){const range=diaryRange($('diary-period').value,events);$('diary-start').value=range.start;$('diary-end').value=range.end}
+  const from=$('diary-start').value,to=$('diary-end').value,valid=from&&to&&from<=to,rangeEvents=valid?eventsInRange(events,from,to):[];
+  $('diary-range-status').textContent=valid?`${from} – ${to} · ${rangeEvents.length} recorded changes`:'Choose a valid start and end date.';
+  $('diary-story').disabled=!valid||!rangeEvents.length||!state.openAIConfigured||state.diaryBusy;
+  $('diary-story').title=state.openAIConfigured?'Summarize all recorded changes in this period':'Configure OPENAI_API_KEY to enable storylines.';
+  $('diary-summary').innerHTML=state.diarySummary||'';
+}
+async function summarizeSelectedDay(story=false){
+  story=story===true;
+  const day=$('diary-date').value,start=$('diary-start').value,end=$('diary-end').value,events=story?eventsInRange(scopedDiary(),start,end):diaryEntries(scopedDiary(),null,day);if((!story&&!day)||!events.length)return;
+  const label=story?`${start} – ${end}`:day;
+  state.diaryBusy=true;state.diarySummary='<p>Analyzing the selected day…</p>';renderDiary();
+  try{
+    const response=await fetch('/api/project-diary/summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({day:story?undefined:day,start:story?start:undefined,end:story?end:undefined,events,project:diaryProject(),onboarding:story&&$('diary-period').value==='onboarding'})});const result=await readApiResponse(response);
+    state.diarySummary=`<section class="diary-summary-card"><h2>${story?'Project storyline':'Biggest decisions'} · ${escapeHtml(label)}</h2>${result.storyline?`<p>${escapeHtml(result.storyline)}</p>`:''}<ol>${result.decisions.map(item=>`<li><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.significance)}</p><small>Recorded events: ${item.eventIds.map(escapeHtml).join(', ')}</small></li>`).join('')}</ol><small>AI summary of ${events.length} recorded changes · ${escapeHtml(result.model)}. Review against the diary below.</small></section>`;
+  }catch(error){state.diarySummary=`<p role="alert">${escapeHtml(error.message)}</p>`}
+  finally{state.diaryBusy=false;renderDiary()}
+}
