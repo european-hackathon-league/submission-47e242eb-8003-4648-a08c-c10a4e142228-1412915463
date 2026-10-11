@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('..', import.meta.url).pathname.replace(/^\/(.:)/,'$1');
+const root = fileURLToPath(new URL('..', import.meta.url));
 
 test('normalized evidence and every supplied source file are present and traceable', async () => {
   const evidence=JSON.parse(await readFile(join(root,'data/evidence.json'),'utf8'));

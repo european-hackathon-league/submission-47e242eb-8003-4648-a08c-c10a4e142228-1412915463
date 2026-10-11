@@ -1,0 +1,14 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+
+# Dependencies (none today, kept for safety)
+node_modules/
+
+# Local review artifacts and temp files
+.impeccable/review/
+*.tmp

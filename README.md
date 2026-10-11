@@ -102,6 +102,19 @@ The three exports serve different audiences:
 
 Technical and GTM assignments are mutually exclusive, so the two departmental reports are not duplicates. With OpenAI configured, a strict structured-output classification selects the primary audience. Without it, an inspectable deterministic classifier provides the fallback. The PM report always contains the complete requirement set.
 
+### Adding your own evidence
+
+The setup page has an **Add your own evidence** section. Choose what the data is, how much it should count, and add it by pasting text or uploading a CSV (a template per type is provided):
+
+| Type | Feeds into |
+| --- | --- |
+| Customer feedback | Customer demand (unique-customer frequency) |
+| Market data | Market evidence |
+| Global trend | Market evidence |
+| Past decision | Decision Memory and the past-decision bonus |
+
+The weight (1–10) scales the contribution: 5 counts the same as BMW data, 10 counts double, 1 counts a fifth. Customer counts shown to the PM are never inflated by the weight. Each row is matched to an existing feature automatically and can be corrected in the preview; rows without a feature are left out. Uploads are stored server-side in `data/uploads.json`, apply to the selected vehicle and market, and are always cited as **Your data**, never as BMW source material.
+
 ## Evidence and traceability
 
 The checked-in normalized store was produced from the supplied archive and competitor workbook. The current fixture contains:
@@ -147,7 +160,7 @@ OpenAI cannot change the deterministic rank, feature, group, or selected evidenc
 
 ### Prerequisites
 
-- Node.js 20 or newer
+- Node.js 20.12 or newer
 - PowerShell 5 or newer only if you need to regenerate the evidence store
 - An OpenAI API key for the optional AI-assisted features
 
@@ -164,6 +177,15 @@ npm start
 Open [http://localhost:4173](http://localhost:4173). Wait for **Loading verified evidence…** to become **Generate requirements**.
 
 ### Start with OpenAI
+
+Recommended: use a `.env` file. The server loads it from the project root on start; it is gitignored.
+
+```bash
+cp .env.example .env   # then paste your key into OPENAI_API_KEY
+npm start
+```
+
+Variables already set in your shell take precedence over `.env`. Alternatively, set them directly.
 
 PowerShell:
 
@@ -226,28 +248,34 @@ The tests cover source presence, ingestion integrity, deduplication, exact vehic
 ## Repository structure
 
 ```text
-public/
-  app.js                 Browser workflow and state management
-  engine.js              Deterministic requirement generation and ranking
-  pdf-report.js          Dependency-free structured PDF renderer
-  index.html             Application shell
-  *.css / image assets   BMW-inspired responsive interface
-src/
-  openai.mjs             Server-side OpenAI integrations and validation
-  report-routing.mjs     Technical/GTM routing and deterministic fallback
-  decision-memory.mjs    Allowed decision-event types and reason handling
-  engine.mjs             Test/runtime re-export of the browser engine
+public/                      Browser app (served by server.mjs)
+  index.html                 Application shell
+  app.js                     Workflow, state, evidence upload panel, reports
+  engine.js                  Deterministic ranking, plain-language reasoning, department routing
+  select.js                  Branded dropdown that replaces the native select popup
+  pdf-report.js              Dependency-free structured PDF renderer
+  readable.css               Projector scale, reasoning, citation, dropdown and upload styles (loaded last)
+  *.css / image assets       BMW-inspired base theme
+src/                         Shared modules (browser and server)
+  uploads.mjs                PM evidence types, CSV parsing, feature matching, validation
+  openai.mjs                 Server-side OpenAI integrations and validation
+  report-routing.mjs         Technical/GTM routing and deterministic fallback
+  decision-memory.mjs        Allowed decision-event types and reason handling
+  engine.mjs                 Test/runtime re-export of the browser engine
 data/
-  evidence.json          Normalized feedback evidence with provenance
-  context.json           Studies, sales, competitors, and source metadata
-  decision-events.ndjson Append-only approval/rejection records
+  evidence.json              Normalized feedback evidence with provenance
+  context.json               Studies, sales, competitors, and source metadata
+  decision-events.ndjson     Append-only approval/rejection records
   historical-decisions.json  Explicitly labeled demonstration history
-  sources/               Original files available for inspection
-scripts/
-  ingest-evidence.ps1    Read-only source ingestion and normalization
-test/                    Node test suite for product and audit invariants
-server.mjs               Static file server plus server-side API routes
-docs/acceptance-audit.md Detailed implementation and prototype-boundary audit
+  uploads.json               PM-added evidence (created on first upload)
+  sources/                   Original files available for inspection
+scripts/ingest-evidence.ps1  Read-only source ingestion and normalization
+test/                        Node test suite for product and audit invariants
+server.mjs                   Static file server, API routes, .env loading
+presentation/                Pitch deck (reveal.js, single file) and its assets
+docs/                        Acceptance audit, pitch notes, screenshots
+research/                    Synthetic PM decision cases
+PRODUCT.md, DESIGN.md        Product context and pitch-deck design system
 ```
 
 ## Prototype boundaries
