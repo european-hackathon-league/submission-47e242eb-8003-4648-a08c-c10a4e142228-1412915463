@@ -69,7 +69,7 @@ async function init() {
   $('diary-story').addEventListener('click',()=>summarizeSelectedDay(true));
   $('importance').addEventListener('input', e => $('importance-output').value = `${e.target.value} / 10`);
   $('vehicle').addEventListener('change', populateMarkets);
-  enhanceSelect($('vehicle'));enhanceSelect($('market'));
+  enhanceSelect($('vehicle'));enhanceSelect($('market'));enhanceSelect($('diary-scope'));enhanceSelect($('diary-period'));
   $('config-form').addEventListener('submit', event => { event.preventDefault(); if (state.evidence.length) generate(); });
   $('edit-config').addEventListener('click', () => showView('overview'));
   document.querySelector('[data-home]').addEventListener('click', event => { event.preventDefault(); showView('overview'); });
