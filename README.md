@@ -113,7 +113,7 @@ The setup page has an **Add your own evidence** section. Choose what the data is
 | Global trend | Market evidence |
 | Past decision | Decision Memory and the past-decision bonus |
 
-The weight (1–10) scales the contribution: 5 counts the same as BMW data, 10 counts double, 1 counts a fifth. Customer counts shown to the PM are never inflated by the weight. Each row is matched to an existing feature automatically and can be corrected in the preview; rows without a feature are left out. Uploads are stored server-side in `data/uploads.json`, apply to the selected vehicle and market, and are always cited as **Your data**, never as BMW source material.
+The weight (1–10) scales the contribution: 5 counts the same as BMW data, 10 counts double, 1 counts a fifth. Customer counts shown to the PM are never inflated by the weight. Each row is matched to an existing feature automatically and can be corrected in the preview; rows without a feature are left out. For a demo, use the synthetic files in `demo-data/` (see its README). Uploads are stored server-side in `data/uploads.json`, apply to the selected vehicle and market, and are always cited as **Your data**, never as BMW source material.
 
 ## Evidence and traceability
 
@@ -273,6 +273,7 @@ scripts/ingest-evidence.ps1  Read-only source ingestion and normalization
 test/                        Node test suite for product and audit invariants
 server.mjs                   Static file server, API routes, .env loading
 presentation/                Pitch deck (reveal.js, single file) and its assets
+demo-data/                   Synthetic CSVs for demoing evidence uploads (one per type)
 docs/                        Acceptance audit, pitch notes, screenshots
 research/                    Synthetic PM decision cases
 PRODUCT.md, DESIGN.md        Product context and pitch-deck design system

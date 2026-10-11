@@ -32,6 +32,7 @@ test('feature suggestion prefers an exact feature column, then word overlap, els
   assert.equal(suggestFeature({ feature: 'navigation', text: 'x' }, features), 'Navigation');
   assert.equal(suggestFeature({ text: 'The wireless charging pad overheats my phone' }, features), 'Mobile device, wireless charging');
   assert.equal(suggestFeature({ text: 'Rear seats are too firm' }, features), 'Seats');
+  assert.equal(suggestFeature({ text: 'The glass roof should open fully' }, ['Roof', 'Panorama glass roof']), 'Panorama glass roof');
   assert.equal(suggestFeature({ text: 'Completely unrelated sentence' }, features), '');
   assert.equal(suggestFeature({ text: 'I wish the car came in more colours.' }, ['Caring Car', 'Seats']), '');
 });
@@ -73,4 +74,18 @@ test('uploaded evidence is ranked with BMW data, weighted, and always cited as a
   assert.equal(decisions[0].weight, 8);
   const remembered = find(buildModel(evidence, { ...config, historyBonus: { Seats: 8 } }, {}, context, {}));
   assert.equal(remembered.scoreParts.memory, 8);
+});
+
+test('uploaded past decisions: approved ones add their weight, rejected ones add nothing and are flagged', async () => {
+  const evidence = JSON.parse(await readFile(new URL('../data/evidence.json', import.meta.url), 'utf8')).records;
+  const context = JSON.parse(await readFile(new URL('../data/context.json', import.meta.url), 'utf8'));
+  const decision = (feature, decisionStatus) => ({ feature, decisionStatus, weight: 8, productCycle: 'Demo cycle 2021', pmReasoning: 'Because.' });
+  const config = { vehicle: 'G60', market: 'US', months: 18, people: 12, importance: 8, pastDecisions: [decision('Panorama glass roof', 'approved'), decision('Touch screen, operation', 'rejected')] };
+  const all = buildModel(evidence, config, {}, context, {}).flatMap(group => group.requirements);
+  const roof = all.find(r => r.feature === 'Panorama glass roof'), touch = all.find(r => r.feature === 'Touch screen, operation');
+  assert.equal(roof.scoreParts.memory, 8);
+  assert.match(roof.explanation.added.find(item => item.kind === 'decision').text, /\+8 points/);
+  assert.ok(!roof.explanation.rank.some(line => /past decision/i.test(line)), 'memory bonus is not listed twice');
+  assert.equal(touch.scoreParts.memory, 0);
+  assert.match(touch.explanation.added.find(item => item.kind === 'caution').text, /No points added/);
 });

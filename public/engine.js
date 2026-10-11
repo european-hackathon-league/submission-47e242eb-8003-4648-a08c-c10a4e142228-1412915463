@@ -1,5 +1,5 @@
 const DOMAIN_RULES = [
-  ['Interior & Comfort', /seat|comfort|lumbar|climat|blower|acoustic|noise|audio|sound|belt|mirror|console|storage|interior|cabin|cupholder|ambient|spatial|roominess|wellbeing|air conditioning|sun protection|glove box|headrest|armrest|floor mat|grab handle/i],
+  ['Interior & Comfort', /steering wheel|seat|comfort|lumbar|climat|blower|acoustic|noise|audio|sound|belt|mirror|console|storage|interior|cabin|cupholder|ambient|spatial|roominess|wellbeing|air conditioning|sun protection|glove box|headrest|armrest|floor mat|grab handle/i],
   ['Exterior & Utility', /exterior|roof|trunk|tailgate|door|headlight|taillight|paint|wheel|tire|luggage|cargo|compartment|fold|body equipment|window|windshield|wiper|frunk|welcome light|access and exit|filler flap|socket cover/i],
   ['Digital Experience & Controls', /digital|app|bluetooth|carplay|android|connected|remote|mobile|phone|operat|control|touch|display|cluster|parking|automatic-hold|speed limit|button|owner's manual|camera|infotainment|idrive|navigation|wifi|hotspot|esim|usb|radio|personal assistant|activation word|voice|speech|driver profile|vehicle key|lock \/ unlock|surround view|all-round view|drive recorder|back-up assistant|emergency request|instrument panel/i]
 ];
@@ -73,6 +73,27 @@ const plural = (n, word, many = `${word}s`) => `${n.toLocaleString()} ${n === 1 
 const listJoin = items => items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`;
 const DRIVER_LABELS = { demand: 'customer demand', timeline: 'fitting the timeline', market: 'market and competitor evidence' };
 
+const weightLabel = weights => { const unique = [...new Set(weights)]; return unique.length === 1 ? `weight ${unique[0]}/10` : `weights ${Math.min(...unique)}–${Math.max(...unique)}/10`; };
+const pointsLabel = points => points > 0 ? `+${points} point${points === 1 ? '' : 's'}` : 'under 1 point';
+
+// What the PM's own uploads contributed to this requirement, in plain language.
+function addedEvidence(r) {
+  const items = [], w = r.uploadWeights || {}, pts = r.addedPoints || {};
+  if (w.feedback?.length) items.push({ kind: 'feedback', text: `${plural(w.feedback.length, 'customer comment')} you added (${weightLabel(w.feedback)}): ${pointsLabel(pts.demand)} of customer demand` });
+  const marketRows = (w.market?.length || 0) + (w.trend?.length || 0);
+  if (marketRows) {
+    const what = [w.market?.length && plural(w.market.length, 'market data row'), w.trend?.length && plural(w.trend.length, 'global trend', 'global trends')].filter(Boolean);
+    items.push({ kind: 'market', text: `${listJoin(what)} you added (${weightLabel([...(w.market || []), ...(w.trend || [])])}): ${pointsLabel(pts.market)} of market evidence` });
+  }
+  for (const d of r.pastDecisions || []) {
+    const approved = /^approved/i.test(d.decisionStatus);
+    items.push({ kind: approved ? 'decision' : 'caution', text: approved
+      ? `Past decision you added (${d.productCycle}, ${d.decisionStatus}): “${d.pmReasoning}” ${d.weight === r.scoreParts.memory && pts.memory ? `+${d.weight} points` : 'already covered by an existing memory bonus'}`
+      : `Past decision you added (${d.productCycle}, rejected): “${d.pmReasoning}” No points added. Check whether that reason still holds.` });
+  }
+  return items;
+}
+
 // Short, readable reasons derived only from the requirement's own numbers.
 export function explainRequirement(r, config, previous, next) {
   const signalKey = signalFor(r.frequency, r.confidence), signal = { key: signalKey, ...SIGNALS[signalKey] };
@@ -84,8 +105,9 @@ export function explainRequirement(r, config, previous, next) {
   exists.push(r.frequency ? `${plural(r.frequency, 'customer')} raised this (duplicates and low-quality feedback removed)${r.uploadedFeedback ? `, ${r.uploadedFeedback} of them from your uploads` : ''}` : 'No direct customer feedback; based on market evidence only');
   const market = [studies && plural(studies, 'customer-study measure'), competitors && plural(competitors, 'competitor signal'), web && plural(web, 'web source'), pmMarket && `${plural(pmMarket, 'row')} of your market data`, pmTrends && plural(pmTrends, 'global trend', 'global trends') + ' you added'].filter(Boolean);
   exists.push(market.length ? `Also backed by ${listJoin(market)}` : 'No customer-study or competitor evidence attached');
+  const added = addedEvidence(r);
   if (['not-feasible', 'pm-rejected'].includes(r.status)) {
-    return { signal, exists, rank: ['Rejected: kept visible for traceability', 'No longer competes in the active ranking'], caveat: '' };
+    return { signal, exists, rank: ['Rejected: kept visible for traceability', 'No longer competes in the active ranking'], caveat: '', added };
   }
   const rank = [];
   rank.push(r.estimatedMonths <= config.months
@@ -93,7 +115,7 @@ export function explainRequirement(r, config, previous, next) {
     : `Needs about ${r.estimatedMonths} months, longer than the ${config.months}-month target`);
   const [driver] = Object.entries({ demand: parts.demand, timeline: parts.timeline, market: parts.market }).sort((a, b) => b[1] - a[1]);
   rank.push(`Biggest driver of its score: ${DRIVER_LABELS[driver[0]]}`);
-  if (parts.memory) rank.push(`+${parts.memory} points from a similar past decision in Decision Memory`);
+  if (parts.memory && !r.addedPoints?.memory) rank.push(`+${parts.memory} points from a similar past decision in Decision Memory`);
   if (previous) rank.push(previous.score === r.score
     ? `Tied on score with “${previous.feature}” (${r.score}), which more customers raised`
     : `Below “${previous.feature}” (${previous.score}), which scores higher`);
@@ -106,7 +128,7 @@ export function explainRequirement(r, config, previous, next) {
       ? `${reason}. Just ${parts.demand} of its ${r.score} points ${parts.demand === 1 ? 'comes' : 'come'} from customer demand; the rest is ${listJoin(rest)}. Validate demand before committing.`
       : `${reason}. Validate demand before committing.`;
   }
-  return { signal, exists, rank, caveat };
+  return { signal, exists, rank, caveat, added };
 }
 
 export const groupFor = feature => DOMAIN_RULES.find(([,rule]) => rule.test(String(feature).replace(/\s+/g,' ')))?.[0] || 'Driving & Powertrain';
@@ -229,9 +251,10 @@ export function buildModel(records,config,statuses={},context={},overrides={}) {
   const requirements=[...byFeature].map(([feature,bucket])=>{
     const unique=[...new Map(bucket.feedback.map(item=>[item.feedbackId,item])).values()].sort((a,b)=>Number(Boolean(b.uploaded))-Number(Boolean(a.uploaded))),studies=bucket.studies,external=bucket.external||[],competitors=bucket.competitors||[],uploads=bucket.uploads||[],uploadedFeedback=unique.filter(r=>r.uploaded).length;
     const months=monthsFor(feature),peopleNeeded=Math.max(2,Math.ceil(months/3));
-    const frequencyScore=Math.round(weightedCount(unique)/maxFrequency*100),marketScore=Math.min(100,(studies.length?45+Math.min(20,studies.length*5):0)+Math.min(35,competitors.length*7)+Math.min(20,external.length*10)+Math.min(30,Math.round(uploads.reduce((sum,u)=>sum+u.weight*8,0)))+(intelligence.sales?10:0));
+    const frequencyScore=Math.round(weightedCount(unique)/maxFrequency*100),marketBase=((studies.length?45+Math.min(20,studies.length*5):0)+Math.min(35,competitors.length*7)+Math.min(20,external.length*10)+(intelligence.sales?10:0)),uploadMarket=Math.min(30,Math.round(uploads.reduce((sum,u)=>sum+u.weight*8,0))),marketScore=Math.min(100,marketBase+uploadMarket);
     const fitScore=Math.round(Math.min(100,(config.months*Math.max(1,config.people)/(months*peopleNeeded))*70));
-    const importance=Number(config.importance)/10,historicalBonus=config.historyBonus?.[feature]??(config.historyFeatures?.includes(feature)?5:0);
+    const importance=Number(config.importance)/10,pastDecisions=(config.pastDecisions||[]).filter(d=>d.feature===feature),uploadedBonus=Math.max(0,...pastDecisions.filter(d=>/^approved/i.test(d.decisionStatus)).map(d=>d.weight)),demoBonus=config.historyBonus?.[feature]??(config.historyFeatures?.includes(feature)?5:0),historicalBonus=Math.max(demoBonus,uploadedBonus);
+    const uploadedRecords=unique.filter(r=>r.uploaded),addedPoints={demand:Math.round(weightedCount(uploadedRecords)/maxFrequency*100*(.60-importance*.20)),market:Math.round((marketScore-Math.min(100,marketBase))*.15),memory:uploadedBonus>demoBonus?uploadedBonus-demoBonus:0};
     const scoreParts={demand:Math.round(frequencyScore*(.60-importance*.20)),timeline:Math.round(fitScore*(.25+importance*.20)),market:Math.round(marketScore*.15),memory:historicalBonus};
     let score=Math.min(100,Math.round(frequencyScore*(.60-importance*.20)+fitScore*(.25+importance*.20)+marketScore*.15+historicalBonus));
     if(statuses[feature]==='deleted')score=-1;
@@ -248,7 +271,7 @@ export function buildModel(records,config,statuses={},context={},overrides={}) {
     return {
       id:`req-${feature.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')}`,feature,group:groupFor(feature),outcome:outcomeFor(feature),
       statement:overrides[feature]||external[0]?.statement||requirementStatement(feature,bucket.feedback,!unique.length),problem:`Evidence identifies ${feature.toLowerCase()} as a product-cycle priority for ${config.vehicle} in ${config.market}.`,
-      frequency:unique.length,uploadedFeedback,uploadedSignals:uploads.length,evidenceCount:unique.length+studies.length+competitors.length+externalCitations.length+uploads.length+(salesCitation?1:0),marketEvidenceCount:studies.length+competitors.length+externalCitations.length+uploads.length+(salesCitation?1:0),score,scoreParts,scoreBreakdown:{frequency:frequencyScore,marketIntelligence:marketScore,timeToMarketFit:fitScore,deadlineImportance:Number(config.importance),historicalDecisionBonus:historicalBonus},
+      frequency:unique.length,uploadedFeedback,uploadedSignals:uploads.length,uploadWeights:{feedback:uploadedRecords.map(r=>Math.round((r.weight??1)*5)),market:uploads.filter(u=>u.sourceType==='pm_market_data').map(u=>Math.round(u.weight*5)),trend:uploads.filter(u=>u.sourceType==='pm_global_trend').map(u=>Math.round(u.weight*5))},pastDecisions,addedPoints,evidenceCount:unique.length+studies.length+competitors.length+externalCitations.length+uploads.length+(salesCitation?1:0),marketEvidenceCount:studies.length+competitors.length+externalCitations.length+uploads.length+(salesCitation?1:0),score,scoreParts,scoreBreakdown:{frequency:frequencyScore,marketIntelligence:marketScore,timeToMarketFit:fitScore,deadlineImportance:Number(config.importance),historicalDecisionBonus:historicalBonus},
       estimatedMonths:months,estimatedPeople:peopleNeeded,fitScore,status:statuses[feature]||'not-checked',owner:entityFor(feature),
       confidence:unique.length+studies.length+competitors.length+externalCitations.length+uploads.length>=10?'high':unique.length+studies.length+competitors.length+externalCitations.length+uploads.length>=3?'medium':'low',evidenceQuality:qualityCounts,
       citations:[...feedbackCitations,...studyCitations,...competitorCitations,...externalCitations,...uploadCitations,...(salesCitation?[salesCitation]:[])],

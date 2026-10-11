@@ -280,3 +280,31 @@ body { font-size: 15px; }
   color: var(--editorial-ink) !important; font-size: 14px !important; font-weight: 600; letter-spacing: 0 !important; text-transform: none !important; opacity: 1 !important; cursor: pointer;
 }
 .evidence-upload .secondary:hover { background: var(--editorial-ink) !important; color: #fff !important; }
+
+/* "Based on evidence you added" block and card marker. */
+.why-added { padding: 14px 16px; background: #fff; border: 1px solid var(--editorial-ink); }
+.why-added h4 { display: flex; align-items: center; gap: 4px; color: var(--editorial-ink) !important; }
+.why-added li { position: relative; padding-left: 18px; font-size: 15.5px; line-height: 1.45; color: var(--editorial-ink); }
+.why-added li::before { content: ''; position: absolute; left: 2px; top: .62em; width: 6px; height: 6px; background: var(--editorial-ink); }
+.why-added li.added-caution { color: #5c1f17; }
+.why-added li.added-caution::before { background: var(--signal-weak); }
+.workspace-view .requirement .meta span.has-upload {
+  padding: 1px 7px !important; background: var(--editorial-ink) !important; color: #fff !important;
+  font-size: 11.5px !important; font-weight: 700 !important; letter-spacing: .06em; text-transform: uppercase;
+}
+
+/* Step 3: generate, after the optional evidence step. */
+.generate-step {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 40px;
+  padding: 34px clamp(28px, 4.5vw, 58px) 38px; background: #f7f9fc; border-bottom: 1px solid var(--editorial-line);
+}
+.generate-step h2 { margin: 14px 0 10px; color: var(--editorial-ink); font-size: 26px; font-weight: 500; letter-spacing: -.025em; }
+.generate-summary { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 12px; font-size: 15.5px; color: var(--editorial-ink); }
+.generate-summary span { color: var(--editorial-muted); }
+.generate-summary span::before { content: '·'; margin-right: 18px; color: var(--editorial-line); }
+.generate-step .guardrail { display: flex; align-items: center; gap: 9px; margin: 0; padding-left: 12px; border-left: 2px solid var(--editorial-blue); color: #667586; font-size: 14px; }
+.generate-step .guardrail span { color: #2d5c8f; font-size: 18px; }
+.generate-step #generate-button { flex: none; width: auto; min-width: 360px; min-height: 56px; margin: 0; font-size: 15px; }
+@media (max-width: 900px) { .generate-step { flex-direction: column; align-items: stretch; } .generate-step #generate-button { min-width: 0; } }
+.generate-summary em { flex-basis: 100%; font-style: normal; font-size: 14.5px; color: var(--editorial-muted); }
+.generate-summary em.with-uploads { color: var(--editorial-ink); font-weight: 600; }

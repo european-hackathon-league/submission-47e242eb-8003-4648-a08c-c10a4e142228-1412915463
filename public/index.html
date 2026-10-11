@@ -49,14 +49,12 @@
           <label>Time to market<div class="unit"><input id="months" type="number" min="1" value="18"><span>months</span></div></label>
           <label>Available team<div class="unit"><input id="people" type="number" min="1" value="12"><span>people</span></div></label>
           <label class="deadline-field">Deadline priority <output id="importance-output">8 / 10</output><input id="importance" type="range" min="1" max="10" value="8"></label>
-          <p class="guardrail"><span aria-hidden="true">♢</span> Every requirement. Every source. A clear line of reasoning.</p>
-          <button id="generate-button" class="primary" type="submit" disabled><span class="shiny-label">Loading verified evidence… <span class="shiny-arrow" aria-hidden="true">···</span></span></button>
         </form>
       </section>
 
       <section id="add-evidence" class="evidence-upload" aria-labelledby="upload-title">
         <div class="section-heading">
-          <div><p class="eyebrow">02 / YOUR EVIDENCE</p><h2 id="upload-title">Add your own evidence.</h2></div>
+          <div><p class="eyebrow">02 / YOUR EVIDENCE · OPTIONAL</p><h2 id="upload-title">Add your own evidence.</h2></div>
           <p>Ranked together with the BMW data. Always cited as your upload.</p>
         </div>
         <div class="upload-layout">
@@ -84,6 +82,16 @@
         </div>
         <div id="upload-preview" class="upload-preview" hidden></div>
         <div id="upload-list" class="upload-list"></div>
+      </section>
+
+      <section class="generate-step" aria-labelledby="generate-title">
+        <div class="generate-copy">
+          <p class="eyebrow">03 / GENERATE</p>
+          <h2 id="generate-title">Generate the requirements.</h2>
+          <p id="generate-summary" class="generate-summary"></p>
+          <p class="guardrail"><span aria-hidden="true">♢</span> Every requirement. Every source. A clear line of reasoning.</p>
+        </div>
+        <button id="generate-button" class="primary" type="submit" form="config-form" disabled><span class="shiny-label">Loading verified evidence… <span class="shiny-arrow" aria-hidden="true">···</span></span></button>
       </section>
 
       <section class="foundation-strip" aria-label="Product intelligence foundations">

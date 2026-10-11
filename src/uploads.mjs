@@ -120,7 +120,8 @@ export function suggestFeature(row, features) {
     const featureWords = tokens(feature).map(stem);
     if (!featureWords.length) continue;
     const hits = featureWords.filter(word => words.has(word)).length;
-    const score = hits / featureWords.length + hits * 0.01;
+    // More matching words wins; coverage of the feature name breaks ties.
+    const score = hits + hits / featureWords.length / 2;
     if (hits && score > bestScore) { best = feature; bestScore = score; }
   }
   return best;
