@@ -182,7 +182,7 @@ test('plain-language explanation is derived from the requirement numbers and fla
     const { explanation: x, scoreParts: parts } = requirement;
     assert.ok(x.exists.length && x.rank.length, requirement.feature);
     assert.match(x.exists[0], requirement.frequency ? new RegExp(`^${requirement.frequency.toLocaleString()} customer`) : /market evidence only/);
-    assert.ok(Math.abs(parts.demand + parts.timeline + parts.market + parts.memory - requirement.score) <= 2, `${requirement.feature} parts add up to score`);
+    assert.ok(Math.abs(parts.demand + parts.timeline + parts.market + parts.competitors + parts.memory - requirement.score) <= 2, `${requirement.feature} parts add up to score`);
     if (['weak', 'limited', 'market'].includes(x.signal.key)) assert.match(x.caveat, /Validate demand before committing/);
     else assert.equal(x.caveat, '');
   }

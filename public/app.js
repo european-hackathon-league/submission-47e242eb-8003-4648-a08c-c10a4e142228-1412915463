@@ -16,15 +16,20 @@ const escapeHtml = value => String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;'
 function reasoningHtml(r){
   const x=r.explanation;if(!x)return `<p>${escapeHtml(r.whyExists)}</p><p>${escapeHtml(r.whyRanked)}</p>`;
   const parts=r.scoreParts||{},rejected=['not-feasible','pm-rejected'].includes(r.status);
-  const segments=[['demand','Customer demand'],['timeline','Timeline fit'],['market','Market evidence'],['memory','Past decisions']].filter(([key])=>parts[key]>0);
+  const segments=[['demand','Customer demand'],['timeline','Timeline fit'],['market','Market evidence'],['competitors','Competitor data'],['memory','Past decisions']].filter(([key])=>parts[key]>0);
   const total=segments.reduce((sum,[key])=>sum+parts[key],0)||1;
+  // What each part is made of, so points and source counts are never confused.
+  const cited=test=>r.citations.filter(c=>test(c.sourceType||'')).length,plural=(n,one,many=one+'s')=>`${n} ${n===1?one:many}`;
+  const marketSources=cited(type=>['market_study','sales_volume','external_web','pm_market_data','pm_global_trend'].includes(type)),competitorSignals=cited(type=>/competitor|industry/.test(type)),approvedPast=(r.pastDecisions||[]).filter(d=>/^approved/i.test(d.decisionStatus)).length;
+  const counts={demand:r.frequency?plural(r.frequency,'customer'):'',market:marketSources?plural(marketSources,'source'):'',competitors:competitorSignals?plural(competitorSignals,'signal'):'',memory:approvedPast?plural(approvedPast,'decision'):''};
   const bullets=items=>`<ul>${items.map(item=>`<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
   return `<div class="why-panel">
     <div class="why-head"><span class="signal signal-${x.signal.tone}"><i aria-hidden="true"></i>${escapeHtml(x.signal.label)}</span>${rejected?'':`<span class="why-score"><strong>${r.score}</strong>/100 priority score</span>`}</div>
     ${x.caveat?`<p class="why-caveat"><strong>Honest caveat</strong>${escapeHtml(x.caveat)}</p>`:''}
+    ${x.memory?.length?`<section class="why-memory"><h4><span class="memory-tag">Decision Memory</span>Past decisions on this requirement</h4><ul>${x.memory.map(item=>`<li class="memory-${item.kind}">${escapeHtml(item.text)}</li>`).join('')}</ul></section>`:''}
     ${x.added?.length?`<section class="why-added"><h4><span class="cite-upload">Your data</span>Based on evidence you added</h4><ul>${x.added.map(item=>`<li class="added-${item.kind}">${escapeHtml(item.text)}</li>`).join('')}</ul></section>`:''}
     <div class="why-cols"><section><h4>Why it exists</h4>${bullets(x.exists)}</section><section><h4>Why rank #${r.rank}</h4>${bullets(x.rank)}</section></div>
-    ${rejected||!segments.length?'':`<div class="score-mix"><h4>What makes up the score</h4><div class="mix-bar" role="img" aria-label="${segments.map(([key,label])=>`${label} ${parts[key]} points`).join(', ')}">${segments.map(([key])=>`<span class="mix-${key}" style="flex:${parts[key]/total}"></span>`).join('')}</div><ul class="mix-legend">${segments.map(([key,label])=>`<li class="mix-${key}"><i aria-hidden="true"></i>${label} <strong>${parts[key]}</strong></li>`).join('')}</ul></div>`}
+    ${rejected||!segments.length?'':`<div class="score-mix"><h4>What makes up the score</h4><div class="mix-bar" role="img" aria-label="${segments.map(([key,label])=>`${label} ${parts[key]} points`).join(', ')}">${segments.map(([key])=>`<span class="mix-${key}" style="flex:${parts[key]/total}"></span>`).join('')}</div><ul class="mix-legend">${segments.map(([key,label])=>`<li class="mix-${key}"><i aria-hidden="true"></i>${label} <strong>${parts[key]}</strong> pts${counts[key]?`<span class="mix-count"> · ${counts[key]}</span>`:''}</li>`).join('')}</ul></div>`}
   </div>`;
 }
 
@@ -352,10 +357,7 @@ async function generate(event) {
   event?.preventDefault();
   const button=$('generate-button');button.disabled=true;button.innerHTML='<span class="shiny-label">Grounding requirement wording…</span>';state.wordingError='';
   state.config = { vehicle:$('vehicle').value, market:$('market').value, months:Number($('months').value), people:Number($('people').value), importance:Number($('importance').value) };
-  const historicalEvidenceIds=state.historical.filter(event=>event.data.vehicle===state.config.vehicle&&event.data.market===state.config.market).flatMap(event=>event.data.supportingEvidence||[]);
-  state.config.historyFeatures=[...new Set(historicalEvidenceIds.map(id=>state.evidence.find(record=>record.evidenceId===id)?.feature).filter(Boolean))];
-  state.config.historyBonus=Object.fromEntries(state.config.historyFeatures.map(feature=>[feature,5]));
-  state.config.pastDecisions=(state.uploadedDecisions||[]).filter(decision=>decision.vehicle===state.config.vehicle&&decision.market===state.config.market);
+  state.config.pastDecisions=pastDecisionsFor(state.config);
   state.groups = buildModel(state.evidence, state.config, statusMap(), state.context, overrideMap());
   state.selected = 0;
   try{await synthesizeGroundedWording(state.groups)}catch(error){state.wordingError=error.message}
@@ -369,7 +371,7 @@ async function generate(event) {
 function showView(view) {
   ['setup','workspace','memory','project-diary'].forEach(id=>$(id).classList.add('hidden'));
   let activeView=view;
-  if(view==='diary'){$('project-diary').classList.remove('hidden');renderDiary();checkOpenAIStatus().then(renderDiary)}
+  if(view==='diary'){$('project-diary').classList.remove('hidden');renderDiary();const graph=$('diary-graph');graph.scrollLeft=graph.scrollWidth;checkOpenAIStatus().then(renderDiary)}
   else if(view==='overview')$('setup').classList.remove('hidden');
   else if(view==='memory'){$('memory').classList.remove('hidden');setTimeout(()=>$('memory-search').focus(),0)}
   else if(state.config)$('workspace').classList.remove('hidden');
@@ -394,7 +396,7 @@ function render() {
   $('group-title').textContent=group.name;
   $('group-description').innerHTML=`<span>Ranked by customer impact</span><span title="${linkedEvidence} cited records · ${marketLinks} market signals">Evidence-led priority</span>`;
   $('req-count').textContent=String(group.requirements.length).padStart(2,'0');
-  $('requirements').innerHTML=group.requirements.map((r,index)=>{const approved=['approved','approved-conditional'].includes(r.status),statusBadge=['not-checked','awaiting'].includes(r.status)?'':`<span class="badge ${r.status}">${r.status.replaceAll('-',' ')}</span>`;return `<article class="requirement"><div class="rank"><span>${String(r.rank).padStart(2,'0')}</span></div><div class="requirement-main"><div class="requirement-label"><span class="outcome">${escapeHtml(r.outcome)}</span>${statusBadge}</div><h3>${escapeHtml(r.statement)}</h3><div class="meta"><span>${r.evidenceCount} cited records</span><span>${r.marketEvidenceCount} market signals</span><span>Priority ${r.score}/100</span>${r.explanation?`<span class="signal signal-${r.explanation.signal.tone}"><i aria-hidden="true"></i>${escapeHtml(r.explanation.signal.label)}</span>`:''}${r.explanation?.added?.length?`<span class="has-upload">Includes your data</span>`:''}<span>${escapeHtml(r.owner.name)}</span></div></div><div class="actions"><button class="primary-card-action" data-validate="${r.id}">Check feasibility</button>${approved?`<button class="approval-state" disabled title="Approved" aria-label="Approved">✓</button>`:`<button class="decision-action approve-action" data-approve="${r.id}" title="Approve requirement" aria-label="Approve requirement">Approve</button>`}<button class="decision-action reject-action" data-reject="${r.id}" title="Reject requirement" aria-label="Reject requirement">Reject</button></div><details class="card-reasoning"><summary><span>Evidence & reasoning</span><i aria-hidden="true"></i></summary><div class="reasoning-panel">${reasoningHtml(r)}<div class="reasoning-tools"><button class="evidence-link" data-detail="${r.id}">View cited sources</button><button data-up="${r.id}">Move up</button><button data-down="${r.id}">Move down</button><button data-move="${r.id}">Move group</button><button class="delete-action" data-delete="${r.id}">Delete</button></div></div></details></article>`}).join('');
+  $('requirements').innerHTML=group.requirements.map((r,index)=>{const approved=['approved','approved-conditional'].includes(r.status),statusBadge=['not-checked','awaiting'].includes(r.status)?'':`<span class="badge ${r.status}">${r.status.replaceAll('-',' ')}</span>`;return `<article class="requirement"><div class="rank"><span>${String(r.rank).padStart(2,'0')}</span></div><div class="requirement-main"><div class="requirement-label"><span class="outcome">${escapeHtml(r.outcome)}</span>${statusBadge}</div><h3>${escapeHtml(r.statement)}</h3><div class="meta"><span>${r.evidenceCount} cited records</span><span>${r.marketEvidenceCount} market signals</span><span>Priority ${r.score}/100</span>${r.explanation?`<span class="signal signal-${r.explanation.signal.tone}"><i aria-hidden="true"></i>${escapeHtml(r.explanation.signal.label)}</span>`:''}${r.explanation?.memory?.length?`<span class="has-memory">Past decision</span>`:''}${r.explanation?.added?.length?`<span class="has-upload">Includes your data</span>`:''}<span>${escapeHtml(r.owner.name)}</span></div></div><div class="actions"><button class="primary-card-action" data-validate="${r.id}">Check feasibility</button>${approved?`<button class="approval-state" disabled title="Approved" aria-label="Approved">✓</button>`:`<button class="decision-action approve-action" data-approve="${r.id}" title="Approve requirement" aria-label="Approve requirement">Approve</button>`}<button class="decision-action reject-action" data-reject="${r.id}" title="Reject requirement" aria-label="Reject requirement">Reject</button></div><details class="card-reasoning"><summary><span>Evidence & reasoning</span><i aria-hidden="true"></i></summary><div class="reasoning-panel">${reasoningHtml(r)}<div class="reasoning-tools"><button class="evidence-link" data-detail="${r.id}">View cited sources</button><button data-up="${r.id}">Move up</button><button data-down="${r.id}">Move down</button><button data-move="${r.id}">Move group</button><button class="delete-action" data-delete="${r.id}">Delete</button></div></div></details></article>`}).join('');
   document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>openDetail(findRequirement(b.dataset.detail)));
   document.querySelectorAll('[data-validate]').forEach(b=>b.onclick=()=>openValidation(findRequirement(b.dataset.validate)));
   document.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>openDetail(findRequirement(b.dataset.approve),'approve'));
@@ -404,6 +406,16 @@ function render() {
   document.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>reorderRequirement(b.dataset.down,1));
   document.querySelectorAll('[data-move]').forEach(b=>b.onclick=()=>moveRequirement(b.dataset.move));
   $('integrity').classList.toggle('error', !validateCitations(state.groups,state.evidence,state.context));
+}
+
+// Decision Memory for one vehicle and market: decisions recorded in this app, uploaded past decisions, and the labelled demo history.
+function pastDecisionsFor(config){
+  const scoped=item=>item.vehicle===config.vehicle&&item.market===config.market;
+  const recorded=state.events.filter(isRecordedDecision).filter(event=>event.data?.project&&scoped(event.data.project)).map(event=>({source:'app',feature:event.data.feature||'',requirementId:event.data.requirementId||'',decisionStatus:event.type==='requirement-rejected'?'rejected':event.type==='requirement-approved-with-conditions'?'approved with conditions':'approved',pmReasoning:decisionReason(event),at:event.at,weight:5}));
+  const uploaded=(state.uploadedDecisions||[]).filter(scoped).map(decision=>({...decision,source:'upload'}));
+  const demo=(state.demoHistorical||[]).filter(event=>scoped(event.data)).map(event=>({source:'demo',feature:state.evidence.find(record=>(event.data.supportingEvidence||[]).includes(record.evidenceId))?.feature||'',decisionStatus:event.data.decisionStatus,pmReasoning:event.data.pmReasoning,productCycle:event.data.productCycle,weight:5}));
+  // Newest first, so the latest reasoning leads.
+  return [...recorded.sort((a,b)=>Date.parse(b.at)-Date.parse(a.at)),...uploaded,...demo];
 }
 
 const findRequirement=id=>state.groups.flatMap(g=>g.requirements).find(r=>r.id===id);
@@ -428,13 +440,20 @@ function editRequirement(r){
   $('detail-dialog').close();render();
 }
 
+// Dictation shows the words as they are recognised; click again to stop.
+let activeRecognition=null;
 function recordRationale(){
   const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!Recognition){alert('Voice transcription is not supported in this browser. Type the rationale instead.');return}
-  const recognition=new Recognition();recognition.lang='en-US';recognition.interimResults=false;
-  $('record-rationale').textContent='Listening…';
-  recognition.onresult=e=>$('pm-rationale').value=[...e.results].map(x=>x[0].transcript).join(' ');
-  recognition.onend=()=>$('record-rationale').textContent='🎙 Record rationale';recognition.start();
+  if(activeRecognition){activeRecognition.stop();return}
+  const recognition=new Recognition(),field=$('pm-rationale'),button=$('record-rationale'),base=field.value.trim();
+  recognition.lang='en-US';recognition.interimResults=true;recognition.continuous=true;
+  activeRecognition=recognition;
+  button.textContent='● Listening… click to stop';button.classList.add('listening');field.classList.add('listening');
+  recognition.onresult=event=>{const heard=[...event.results].map(result=>result[0].transcript).join(' ').replace(/\s+/g,' ').trim();field.value=[base,heard].filter(Boolean).join(' ');field.scrollTop=field.scrollHeight};
+  const finish=()=>{if(activeRecognition!==recognition)return;activeRecognition=null;button.textContent='🎙 Dictate note';button.classList.remove('listening');field.classList.remove('listening')};
+  recognition.onend=finish;recognition.onerror=finish;
+  recognition.start();
 }
 
 function saveDecision(r,status){
@@ -448,7 +467,8 @@ function commitDecision(r,status,rationale){
   const approved=status.startsWith('approved');
   const deleted=status==='deleted',type=approved?(status==='approved-conditional'?'requirement-approved-with-conditions':'requirement-approved'):deleted?'requirement-deleted':'requirement-rejected';
   const title=approved?(status==='approved-conditional'?'Requirement approved with conditions':'Requirement approved'):deleted?'Requirement deleted':'Requirement rejected';
-  addEvent(type,title,`${r.feature}: ${rationale}`,{requirementId:r.id,before:{rank:r.rank,score:r.score,status:r.status,statement:r.statement},after:{status},citations:r.citations.map(c=>c.evidenceId),rationale});
+  addEvent(type,title,`${r.feature}: ${rationale}`,{requirementId:r.id,feature:r.feature,before:{rank:r.rank,score:r.score,status:r.status,statement:r.statement},after:{status},citations:r.citations.map(c=>c.evidenceId),rationale});
+  state.config.pastDecisions=pastDecisionsFor(state.config);
   if(status==='pm-rejected'||status==='deleted')recalibrateGroup(r.group,`${deleted?'Requirement deleted':'Requirement rejected'}: ${r.feature}`,r.feature);
   else recalibrateGroup(r.group,`Human decision recorded: ${r.feature}`);
 }

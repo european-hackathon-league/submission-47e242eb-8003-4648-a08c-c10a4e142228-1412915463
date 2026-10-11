@@ -76,16 +76,23 @@ test('uploaded evidence is ranked with BMW data, weighted, and always cited as a
   assert.equal(remembered.scoreParts.memory, 8);
 });
 
-test('uploaded past decisions: approved ones add their weight, rejected ones add nothing and are flagged', async () => {
+test('Decision Memory: approved decisions add their weight once, rejected ones add nothing and are flagged', async () => {
   const evidence = JSON.parse(await readFile(new URL('../data/evidence.json', import.meta.url), 'utf8')).records;
   const context = JSON.parse(await readFile(new URL('../data/context.json', import.meta.url), 'utf8'));
-  const decision = (feature, decisionStatus) => ({ feature, decisionStatus, weight: 8, productCycle: 'Demo cycle 2021', pmReasoning: 'Because.' });
-  const config = { vehicle: 'G60', market: 'US', months: 18, people: 12, importance: 8, pastDecisions: [decision('Panorama glass roof', 'approved'), decision('Touch screen, operation', 'rejected')] };
+  const decision = (feature, decisionStatus, extra = {}) => ({ source: 'upload', feature, decisionStatus, weight: 8, productCycle: 'Demo cycle 2021', pmReasoning: 'Because.', ...extra });
+  const config = { vehicle: 'G60', market: 'US', months: 18, people: 12, importance: 8, pastDecisions: [
+    decision('Panorama glass roof', 'approved'),
+    decision('Touch screen, operation', 'rejected'),
+    { source: 'app', requirementId: 'req-seats', decisionStatus: 'approved', weight: 5, pmReasoning: 'Seat comfort matters more on long US drives.', at: '2026-10-11T08:00:00Z' }
+  ] };
   const all = buildModel(evidence, config, {}, context, {}).flatMap(group => group.requirements);
-  const roof = all.find(r => r.feature === 'Panorama glass roof'), touch = all.find(r => r.feature === 'Touch screen, operation');
+  const roof = all.find(r => r.feature === 'Panorama glass roof'), touch = all.find(r => r.feature === 'Touch screen, operation'), seats = all.find(r => r.feature === 'Seats');
   assert.equal(roof.scoreParts.memory, 8);
-  assert.match(roof.explanation.added.find(item => item.kind === 'decision').text, /\+8 points/);
+  assert.match(roof.explanation.memory[0].text, /\(your upload\).*\+8 points/);
   assert.ok(!roof.explanation.rank.some(line => /past decision/i.test(line)), 'memory bonus is not listed twice');
   assert.equal(touch.scoreParts.memory, 0);
-  assert.match(touch.explanation.added.find(item => item.kind === 'caution').text, /No points added/);
+  assert.match(touch.explanation.memory[0].text, /No points added/);
+  assert.equal(seats.scoreParts.memory, 5, 'decisions recorded in the app match by requirement id');
+  assert.match(seats.explanation.memory[0].text, /^Approved by the PM on 11 Oct 2026: “Seat comfort/);
+  assert.equal(seats.explanation.added.length, 0);
 });

@@ -10,6 +10,7 @@
   --mix-timeline: #8fa6bd;
   --mix-market: #172230;
   --mix-memory: #148461;
+  --mix-competitors: #2f8f9d;
 }
 
 html { zoom: var(--ui-scale); }
@@ -78,6 +79,7 @@ body { font-size: 15px; }
 .mix-timeline, .mix-legend .mix-timeline i { background: var(--mix-timeline); }
 .mix-market, .mix-legend .mix-market i { background: var(--mix-market); }
 .mix-memory, .mix-legend .mix-memory i { background: var(--mix-memory); }
+.mix-competitors, .mix-legend .mix-competitors i { background: var(--mix-competitors); }
 .mix-legend { display: flex !important; flex-wrap: wrap; gap: 6px 22px !important; margin-top: 10px !important; }
 .mix-legend li { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; color: var(--editorial-ink); background: none !important; }
 .mix-legend i { width: 12px; height: 12px; flex: none; }
@@ -319,3 +321,24 @@ body { font-size: 15px; }
 .diary-controls .bmw-select-list { min-width: 100%; width: max-content; max-width: 420px; }
 /* Diary dropdowns use the same regular weight as the neighbouring date fields and buttons. */
 .diary-controls .bmw-select-trigger, .diary-controls .bmw-select-list li, .diary-controls .bmw-select-list li[aria-selected="true"] { font-weight: 400; }
+
+/* Decision Memory block: earlier decisions on this requirement. */
+.why-memory { padding: 14px 16px; background: #f2f7fd; border: 1px solid var(--editorial-blue); }
+.why-memory h4 { display: flex; align-items: center; gap: 4px; color: var(--editorial-ink) !important; }
+.memory-tag { margin-right: 8px; padding: 1px 7px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: var(--editorial-blue); }
+.why-memory ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.why-memory li { position: relative; padding-left: 18px; font-size: 15.5px; line-height: 1.45; color: var(--editorial-ink); }
+.why-memory li::before { content: ''; position: absolute; left: 2px; top: .62em; width: 6px; height: 6px; background: var(--editorial-blue); }
+.why-memory li.memory-caution { color: #5c1f17; }
+.why-memory li.memory-caution::before { background: var(--signal-weak); }
+.workspace-view .requirement .meta span.has-memory {
+  padding: 1px 7px !important; background: var(--editorial-blue) !important; color: #fff !important;
+  font-size: 11.5px !important; font-weight: 700 !important; letter-spacing: .06em; text-transform: uppercase;
+}
+.mix-legend .mix-count { color: var(--editorial-muted); font-weight: 400; }
+
+/* Live dictation state. */
+#record-rationale.listening { color: #b42318 !important; border-color: #b42318 !important; animation: listen-pulse 1.4s ease-in-out infinite; }
+@keyframes listen-pulse { 50% { background: #fff4f2; } }
+#pm-rationale.listening { border-color: var(--editorial-blue) !important; box-shadow: 0 0 0 3px rgba(6, 105, 215, .15); }
+@media (prefers-reduced-motion: reduce) { #record-rationale.listening { animation: none; } }
