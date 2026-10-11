@@ -1,0 +1,37 @@
+{
+  "notice": "Demonstration records authored for the prototype. They are not verified BMW decisions.",
+  "decisions": [
+    {
+      "id": "demo-history-g60-controls-01",
+      "productCycle": "G60 demo cycle 2024",
+      "vehicle": "G60",
+      "market": "US",
+      "featureGroup": "Digital Experience & Controls",
+      "requirement": "Make parking-state controls easier to understand",
+      "decisionStatus": "approved with conditions",
+      "pmReasoning": "Demo rationale: retain the safety behavior while reducing customer uncertainty through clearer interaction and guidance.",
+      "supportingEvidence": ["G60-feedback-row-4"],
+      "stakeholders": ["Chassis Engineering", "Software & Connected Services"],
+      "constraints": ["Behavior must be validated by the responsible engineering teams"],
+      "outcome": "Used only to demonstrate how previous-cycle reasoning appears in PM.",
+      "timestamp": "2024-06-15T10:00:00.000Z",
+      "provenance": "Team-authored demo history"
+    },
+    {
+      "id": "demo-history-g60-access-02",
+      "productCycle": "G60 demo cycle 2024",
+      "vehicle": "G60",
+      "market": "US",
+      "featureGroup": "Digital Experience & Controls",
+      "requirement": "Improve the predictability of digital vehicle access",
+      "decisionStatus": "awaiting validation",
+      "pmReasoning": "Demo rationale: reliability concerns should remain visible to the next PM even when no final feasibility decision was reached.",
+      "supportingEvidence": ["G60-feedback-row-27"],
+      "stakeholders": ["Software & Connected Services"],
+      "constraints": [],
+      "outcome": "Open item carried into the next demonstration cycle.",
+      "timestamp": "2024-07-02T09:30:00.000Z",
+      "provenance": "Team-authored demo history"
+    }
+  ]
+}

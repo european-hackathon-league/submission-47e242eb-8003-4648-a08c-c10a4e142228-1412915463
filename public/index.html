@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PM · BMW Product Intelligence</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./enhancements.css">
+  <link rel="stylesheet" href="./bmw-dark.css">
+</head>
+<body>
+  <aside class="app-nav" aria-label="Primary navigation">
+    <a class="nav-brand" href="#" aria-label="PM home">
+      <img src="./bmw-logo.svg" alt="BMW" class="bmw-logo">
+      <span><strong>PM</strong><small>Product Intelligence</small></span>
+    </a>
+    <nav>
+      <button data-view="workspace" class="nav active"><span class="nav-index">01</span><span>Requirements</span></button>
+      <button data-view="memory" class="nav"><span class="nav-index">02</span><span>Decision memory</span><em id="event-count">0</em></button>
+      <button data-view="market" class="nav"><span class="nav-index">03</span><span>Market intelligence</span></button>
+    </nav>
+    <div class="truth" id="ai-status"><span></span> Checking OpenAI…</div>
+  </aside>
+
+  <main class="app-main orbit-sweep-gradient">
+    <section id="setup" class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">BMW PRODUCT STRATEGY · NEW CYCLE</p>
+        <h1>Shape the next<br>BMW experience.</h1>
+        <p class="sub">Transform customer evidence, market studies, sales planning and current external intelligence into requirements whose sources and ranking logic remain visible.</p>
+      </div>
+      <form id="config-form" class="setup-card" action="javascript:void(0)">
+        <label>Vehicle<select id="vehicle"><option value="G60">BMW 5 Series · G60</option><option value="F70">BMW 1 Series · F70</option><option value="G70">BMW 7 Series · G70</option></select></label>
+        <label>Target market<select id="market"><option value="US">United States</option><option value="GB">United Kingdom</option><option value="DE">Germany</option><option value="CN">China</option></select></label>
+        <div class="split"><label>Time to market<div class="unit"><input id="months" type="number" min="1" value="18"><span>months</span></div></label><label>Available people<input id="people" type="number" min="1" value="12"></label></div>
+        <label>Importance of protecting the deadline <output id="importance-output">8 / 10</output><input id="importance" type="range" min="1" max="10" value="8"></label>
+        <button id="generate-button" class="primary shiny-button" type="submit" disabled><span class="shiny-label">Loading verified evidence… <span class="shiny-arrow" aria-hidden="true">···</span></span></button>
+        <p class="guardrail">Every requirement remains traceable to customer feedback, market studies, or sales intelligence. Feasibility review is available but not required for a PM decision.</p>
+      </form>
+    </section>
+
+    <section id="workspace" class="hidden">
+      <div class="context-bar"><div><p class="eyebrow">ACTIVE PRODUCT CYCLE</p><h2 id="project-title"></h2></div><div id="context-chips"></div><button id="edit-config" class="secondary">Edit context</button></div>
+      <div id="integrity" class="integrity"></div>
+      <div class="workspace-grid">
+        <aside><p class="section-label">BMW VEHICLE DOMAINS</p><div id="group-list"></div></aside>
+        <section class="results"><div class="results-head"><div class="group-heading"><p class="eyebrow">BMW VEHICLE DOMAIN · PM EDITABLE</p><h2 id="group-title"></h2><div id="group-description" class="group-metrics"></div><div class="group-actions"><button id="recalibrate-group" class="secondary">Recalibrate group</button><button id="rename-group" class="secondary">Rename</button><button id="split-group" class="secondary">Split</button><button id="merge-group" class="secondary">Merge</button></div></div><div class="result-count"><strong id="req-count"></strong><span>supported requirements</span></div></div><div id="requirements" class="requirement-list"></div></section>
+      </div>
+    </section>
+
+    <section id="memory" class="hidden memory" aria-label="Decision memory"><div class="memory-head"><p class="eyebrow">APPEND-ONLY AUDIT TRAIL</p><h1>Decision memory</h1><p>Search every requirement, ranking shift, rationale, and stakeholder interaction.</p><input id="memory-search" type="search" placeholder="Search decisions, actors, requirements, or rationale"><div class="report-actions"><button class="secondary" data-report="pm">Export PM report</button><button class="secondary" data-report="technical">Export technical report</button><button class="secondary" data-report="gtm">Export GTM report</button></div></div><div id="timeline"></div></section>
+
+    <section id="market" class="hidden market-view" aria-label="Market intelligence insights">
+      <div class="market-head"><div><p class="eyebrow">EVIDENCE + LIVE RESEARCH</p><h1>Market intelligence insights</h1><p id="market-context">Select a vehicle context to inspect ingested market evidence and research current competitors.</p></div><button id="generate-market-insights" class="primary">Research current market <span>→</span></button></div>
+      <div id="market-status" class="market-status"></div>
+      <div id="market-results" class="market-results"><div class="market-loading"><span></span><h2>Loading market evidence</h2><p>Preparing ingested customer studies, sales plans and contextual feedback.</p></div></div>
+    </section>
+  </main>
+
+  <dialog id="detail-dialog"><button class="close" data-close>×</button><div id="detail-content"></div></dialog>
+  <dialog id="validation-dialog"><button class="close" data-close>×</button><div id="validation-content"></div></dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

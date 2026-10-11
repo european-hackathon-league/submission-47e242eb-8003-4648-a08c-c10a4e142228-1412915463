@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title id="title">BMW</title>
+  <defs>
+    <radialGradient id="rim" cx="35%" cy="25%" r="80%"><stop offset="0" stop-color="#5e6267"/><stop offset=".34" stop-color="#161719"/><stop offset="1" stop-color="#030303"/></radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="57" fill="url(#rim)" stroke="#bac2c8" stroke-width="2"/>
+  <circle cx="60" cy="65" r="36" fill="#fff" stroke="#9aa1a6" stroke-width="2"/>
+  <path d="M60 29a36 36 0 0 0-36 36h36zM60 65v36a36 36 0 0 0 36-36z" fill="#159bd3"/>
+  <path d="M60 29v36h36A36 36 0 0 0 60 29zM60 65H24a36 36 0 0 0 36 36z" fill="#f6f7f8"/>
+  <path d="M60 29v72M24 65h72" stroke="#17191b" stroke-width="2"/>
+  <text x="23" y="39" fill="white" font-family="Arial,sans-serif" font-size="17" font-weight="700" transform="rotate(-42 23 39)">B</text>
+  <text x="52" y="21" fill="white" font-family="Arial,sans-serif" font-size="17" font-weight="700">M</text>
+  <text x="88" y="39" fill="white" font-family="Arial,sans-serif" font-size="17" font-weight="700" transform="rotate(42 88 39)">W</text>
+</svg>
