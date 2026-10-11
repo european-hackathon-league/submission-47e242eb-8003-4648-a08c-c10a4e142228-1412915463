@@ -61,6 +61,12 @@ const FEATURE_REQUIREMENTS=[
   [/non-contact trunk/i,'Make hands-free trunk opening reliable and provide immediate confirmation when the gesture is detected.'],
   [/^exterior$/i,'Resolve documented exterior-quality concerns while preserving the intended BMW design character.'],
   [/head-?up display/i,'Keep Head-Up Display content readable, correctly positioned, and easy to configure.'],
+  [/smartphone integration|connectivity/i,'Keep smartphone pairing, wireless projection, and reconnection reliable, with a clear recovery path when a connection fails.'],
+  [/parking assistance/i,'Provide low-speed parking assistance with a clear surrounding view, unambiguous obstacle warnings, and immediate control hand-back.'],
+  [/audio system/i,'Deliver clear, balanced in-cabin audio with controls that make source, volume, and sound-profile changes immediately understandable.'],
+  [/driver assistance/i,'Make driver-assistance availability, intervention, and control hand-back unambiguous in every supported driving state.'],
+  [/exterior lighting/i,'Provide reliable exterior illumination and a distinctive lighting signature without obscuring system status or required driver action.'],
+  [/ownership support/i,'Provide clear warranty coverage and ownership support terms at the point where the customer needs service or recovery assistance.'],
   [/connecteddrive.*infotainment/i,'Make ConnectedDrive and infotainment services reliable, responsive, and easy to navigate.'],
   [/navigation/i,'Provide clear route guidance with responsive destination search and current traffic information.'],
   [/(active).*cruise|cruise control/i,'Make cruise-control activation, target speed, and intervention state unambiguous to the driver.'],
@@ -91,7 +97,15 @@ const cleanTokens=value=>String(value||'').toLowerCase().replace(/overall|techno
 const studyMarket=market=>EUROPEAN_MARKETS.has(market)?'EU':market;
 const studyApplies=(study,market)=>String(study.sheet||'').toUpperCase().split(/[_-]/).includes(studyMarket(market));
 const isStudyTopic=study=>{const cells=study.cells||{},keys=Object.keys(cells);return keys.length===1&&keys[0]==='A'&&String(cells.A||'').length>3&&!/sample|base|total|mean|median|standard|percent/i.test(cells.A)};
-const topicMatches=(topic,feature)=>{const a=new Set(cleanTokens(topic)),b=cleanTokens(feature);return b.some(token=>a.has(token))||(/exterior/i.test(topic)&&/exterior|wheel|tire|door|roof/i.test(feature))||(/interior/i.test(topic)&&/interior|seat|comfort|cabin/i.test(feature));};
+const topicMatches=(topic,feature)=>{const a=new Set(cleanTokens(topic)),b=cleanTokens(feature),pair=`${topic} ${feature}`;return b.some(token=>a.has(token))||(/exterior/i.test(topic)&&/exterior|wheel|tire|door|roof/i.test(feature))||(/interior/i.test(topic)&&/interior|seat|comfort|cabin/i.test(feature))||(/seat/i.test(topic)&&/seat/i.test(feature))||(/light/i.test(topic)&&/light/i.test(feature))||(/park/i.test(topic)&&/park/i.test(feature))||(/audio|sound/i.test(topic)&&/audio|sound/i.test(feature))||(/climat|ventilat/i.test(topic)&&/climat|blower|ventilat/i.test(feature))||(/connect|smartphone|infotainment|operat|display/i.test(topic)&&/connect|mobile|bluetooth|infotainment|operat|touch|display/i.test(feature))||(/powertrain|drivetrain|transmission|engine/i.test(topic)&&/powertrain|drivetrain|transmission|engine/i.test(feature))||(/steer|handling|suspension/i.test(topic)&&/steer|handling|suspension|riding/i.test(feature))||(/driver assistance|collision|lane|cruise/i.test(topic)&&/driver assistance|collision|lane|cruise/i.test(feature))||(/cargo|trunk|luggage/i.test(topic)&&/cargo|trunk|luggage/i.test(feature))||(/wheel|tire/i.test(pair)&&/wheel|tire/i.test(topic)&&/wheel|tire/i.test(feature));};
+const COMPETITOR_TARGETS=[
+  [/^powertrain performance$/i,/^drivetrain$/i], [/^steering and handling$/i,/handling.*riding/i], [/^driver assistance$/i,/active.*cruise control/i],
+  [/^operating system \/ infotainment$/i,/connecteddrive.*infotainment/i], [/^smartphone integration/i,/pair mobile|bluetooth/i], [/^parking assistance$/i,/remote controlled parking/i],
+  [/^seating comfort$/i,/^seats$|seating, ventilate/i], [/^cabin climate$/i,/interior comfort/i], [/^panoramic roof$/i,/panorama.*roof/i],
+  [/^exterior lighting$/i,/headlight.*taillight/i], [/^electric range and charging$/i,/^electric range$/i], [/^cargo access$/i,/cargo capacity|non-contact trunk/i],
+  [/^audio system$/i,/audio mode/i], [/^wheels \/ tires$/i,/^wheels? \/ tires?$/i], [/^braking$/i,/^braking$/i], [/^head-up display$/i,/^head-up display$/i], [/^digital key$/i,/^digital key$/i]
+];
+const competitorFeatureMatch=(topic,candidates)=>candidates.find(candidate=>candidate.toLowerCase()===topic.toLowerCase())||candidates.find(candidate=>COMPETITOR_TARGETS.some(([source,target])=>source.test(topic)&&target.test(candidate)))||candidates.find(candidate=>topicMatches(topic,candidate))||topic;
 
 function requirementStatement(feature,records,marketOnly=false){
   const curated=FEATURE_REQUIREMENTS.find(([rule])=>rule.test(feature));if(curated)return curated[1];
@@ -114,16 +128,17 @@ function marketInputs(context,config,feedbackFeatures){
 export function buildModel(records,config,statuses={},context={},overrides={}) {
   const relevant=records.filter(r=>r.vehicle===config.vehicle&&r.market===config.market&&r.quality!=='low'&&r.feature&&!INVALID_FEATURE.test(r.feature));
   const byFeature=new Map();
-  for(const record of relevant){if(!byFeature.has(record.feature))byFeature.set(record.feature,{feedback:[],studies:[],external:[]});byFeature.get(record.feature).feedback.push(record)}
+  for(const record of relevant){if(!byFeature.has(record.feature))byFeature.set(record.feature,{feedback:[],studies:[],external:[],competitors:[]});byFeature.get(record.feature).feedback.push(record)}
   const intelligence=marketInputs(context,config,[...byFeature.keys()]);
   for(const [feature,studies] of intelligence.assigned)byFeature.get(feature).studies.push(...studies);
-  for(const study of intelligence.unmatched){const feature=String(study.cells.A).trim();if(!byFeature.has(feature))byFeature.set(feature,{feedback:[],studies:[study],external:[]})}
-  for(const signal of context?.external||[]){if(signal.vehicle!==config.vehicle||signal.market!==config.market||!signal.feature)continue;if(!byFeature.has(signal.feature))byFeature.set(signal.feature,{feedback:[],studies:[],external:[]});byFeature.get(signal.feature).external.push(signal)}
+  for(const study of intelligence.unmatched){const feature=String(study.cells.A).trim();if(!byFeature.has(feature))byFeature.set(feature,{feedback:[],studies:[study],external:[],competitors:[]})}
+  for(const signal of context?.external||[]){if(signal.vehicle!==config.vehicle||signal.market!==config.market||!signal.feature)continue;if(!byFeature.has(signal.feature))byFeature.set(signal.feature,{feedback:[],studies:[],external:[],competitors:[]});byFeature.get(signal.feature).external.push(signal)}
+  for(const signal of context?.competitors||[]){if(signal.vehicle!==config.vehicle||signal.market!==config.market||!signal.feature)continue;const feature=competitorFeatureMatch(signal.feature,[...byFeature.keys()]);if(!byFeature.has(feature))byFeature.set(feature,{feedback:[],studies:[],external:[],competitors:[]});byFeature.get(feature).competitors.push(signal)}
   const maxFrequency=Math.max(1,...[...byFeature.values()].map(bucket=>new Set(bucket.feedback.map(x=>x.feedbackId)).size));
   const requirements=[...byFeature].map(([feature,bucket])=>{
-    const unique=[...new Map(bucket.feedback.map(item=>[item.feedbackId,item])).values()],studies=bucket.studies,external=bucket.external||[];
+    const unique=[...new Map(bucket.feedback.map(item=>[item.feedbackId,item])).values()],studies=bucket.studies,external=bucket.external||[],competitors=bucket.competitors||[];
     const months=monthsFor(feature),peopleNeeded=Math.max(2,Math.ceil(months/3));
-    const frequencyScore=Math.round(unique.length/maxFrequency*100),marketScore=Math.min(100,(studies.length?55+Math.min(25,studies.length*5):0)+Math.min(35,external.length*15)+(intelligence.sales?10:0));
+    const frequencyScore=Math.round(unique.length/maxFrequency*100),marketScore=Math.min(100,(studies.length?45+Math.min(20,studies.length*5):0)+Math.min(35,competitors.length*7)+Math.min(20,external.length*10)+(intelligence.sales?10:0));
     const fitScore=Math.round(Math.min(100,(config.months*Math.max(1,config.people)/(months*peopleNeeded))*70));
     const importance=Number(config.importance)/10,historicalBonus=config.historyFeatures?.includes(feature)?5:0;
     let score=Math.min(100,Math.round(frequencyScore*(.60-importance*.20)+fitScore*(.25+importance*.20)+marketScore*.15+historicalBonus));
@@ -133,16 +148,17 @@ export function buildModel(records,config,statuses={},context={},overrides={}) {
     const qualityCounts=unique.reduce((out,row)=>(out[row.quality]=(out[row.quality]||0)+1,out),{});
     const feedbackCitations=unique.slice(0,8).map(r=>({evidenceId:r.evidenceId,file:r.sourceFile,sheet:r.sheet,row:r.row,column:'Customer Feedback / Feature classification',excerpt:r.text,feedbackId:r.feedbackId,sourceType:'customer_feedback'}));
     const studyCitations=studies.slice(0,4).map(row=>({evidenceId:row.evidenceId,file:row.sourceFile,sheet:row.sheet,row:row.row,column:'Market study measure',excerpt:String(row.cells.A),feedbackId:row.evidenceId,sourceType:'market_study'}));
+    const competitorCitations=competitors.map(signal=>({evidenceId:signal.evidenceId,file:signal.sourceFile,sheet:signal.sheet,row:signal.row,column:`Competitor signal · ${signal.classificationBasis}`,excerpt:signal.rationale,feedbackId:signal.evidenceId,sourceType:signal.sourceType||'competitor_intelligence',url:signal.sourceUrl||''}));
     const externalCitations=external.flatMap(signal=>signal.sourceUrls.slice(0,4).map(url=>({evidenceId:signal.evidenceId,file:url,sheet:'External web intelligence',row:'live',column:'Cited market signal',excerpt:signal.rationale,feedbackId:signal.evidenceId,sourceType:'external_web',url})));
     const salesCitation=intelligence.sales?{evidenceId:intelligence.sales.evidenceId,file:intelligence.sales.sourceFile,sheet:intelligence.sales.sheet,row:intelligence.sales.row,column:'2025 / 2030 sales volume',excerpt:`${intelligence.sales.marketName}: ${Number(intelligence.sales.volume2025).toLocaleString()} vehicles in 2025 and ${Number(intelligence.sales.volume2030).toLocaleString()} projected for 2030.`,feedbackId:intelligence.sales.evidenceId,sourceType:'sales_volume'}:null;
-    const marketSummary=`${studies.length} relevant customer-study measure${studies.length===1?'':'s'}, ${externalCitations.length} current cited web-market signal${externalCitations.length===1?'':'s'}${intelligence.sales?` and ${intelligence.sales.marketName} sales planning (${Number(intelligence.sales.volume2025).toLocaleString()} in 2025; ${Number(intelligence.sales.volume2030).toLocaleString()} projected for 2030)`:''}`;
+    const marketSummary=`${studies.length} relevant customer-study measure${studies.length===1?'':'s'}, ${competitors.length} row-traceable competitor signal${competitors.length===1?'':'s'}, and ${externalCitations.length} current cited web-market signal${externalCitations.length===1?'':'s'}${intelligence.sales?` plus ${intelligence.sales.marketName} sales planning (${Number(intelligence.sales.volume2025).toLocaleString()} in 2025; ${Number(intelligence.sales.volume2030).toLocaleString()} projected for 2030)`:''}`;
     return {
       id:`req-${feature.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')}`,feature,group:groupFor(feature),outcome:outcomeFor(feature),
       statement:overrides[feature]||external[0]?.statement||requirementStatement(feature,bucket.feedback,!unique.length),problem:`Evidence identifies ${feature.toLowerCase()} as a product-cycle priority for ${config.vehicle} in ${config.market}.`,
-      frequency:unique.length,evidenceCount:unique.length+studies.length+externalCitations.length+(salesCitation?1:0),marketEvidenceCount:studies.length+externalCitations.length+(salesCitation?1:0),score,scoreBreakdown:{frequency:frequencyScore,marketIntelligence:marketScore,timeToMarketFit:fitScore,deadlineImportance:Number(config.importance),historicalDecisionBonus:historicalBonus},
+      frequency:unique.length,evidenceCount:unique.length+studies.length+competitors.length+externalCitations.length+(salesCitation?1:0),marketEvidenceCount:studies.length+competitors.length+externalCitations.length+(salesCitation?1:0),score,scoreBreakdown:{frequency:frequencyScore,marketIntelligence:marketScore,timeToMarketFit:fitScore,deadlineImportance:Number(config.importance),historicalDecisionBonus:historicalBonus},
       estimatedMonths:months,estimatedPeople:peopleNeeded,fitScore,status:statuses[feature]||'not-checked',owner:entityFor(feature),
-      confidence:unique.length+studies.length+externalCitations.length>=10?'high':unique.length+studies.length+externalCitations.length>=3?'medium':'low',evidenceQuality:qualityCounts,
-      citations:[...feedbackCitations,...studyCitations,...externalCitations,...(salesCitation?[salesCitation]:[])],
+      confidence:unique.length+studies.length+competitors.length+externalCitations.length>=10?'high':unique.length+studies.length+competitors.length+externalCitations.length>=3?'medium':'low',evidenceQuality:qualityCounts,
+      citations:[...feedbackCitations,...studyCitations,...competitorCitations,...externalCitations,...(salesCitation?[salesCitation]:[])],
       whyExists:`${unique.length} unique, relevant feedback record${unique.length===1?'':'s'} and ${marketSummary} support this requirement. Low-quality and duplicate feedback does not contribute to the count.`,
       rankBasis:`Feedback frequency: ${unique.length} (${frequencyScore}/100 normalized). Market intelligence: ${marketScore}/100. Planning estimate: ${months} months with about ${peopleNeeded} people. Against the PM’s ${config.months}-month target, ${config.people}-person team and ${config.importance}/10 deadline importance, time-to-market fit is ${fitScore}/100.${historicalBonus?` Relevant demo-cycle memory adds ${historicalBonus} points.`:''}`
     };
@@ -164,7 +180,7 @@ export function buildModel(records,config,statuses={},context={},overrides={}) {
   }).filter(g=>g.requirements.length).sort((a,b)=>b.requirements[0].score-a.requirements[0].score);
 }
 
-export function validateCitations(groups,evidence,context={}){const ids=new Set([...evidence,...(context.studies||[]),...(context.sales||[]),...(context.external||[])].map(r=>r.evidenceId));return groups.flatMap(g=>g.requirements).every(r=>r.citations.length&&r.citations.every(c=>ids.has(c.evidenceId)))}
+export function validateCitations(groups,evidence,context={}){const ids=new Set([...evidence,...(context.studies||[]),...(context.sales||[]),...(context.competitors||[]),...(context.external||[])].map(r=>r.evidenceId));return groups.flatMap(g=>g.requirements).every(r=>r.citations.length&&r.citations.every(c=>ids.has(c.evidenceId)))}
 
 export function draftEmail(r,c){return `Subject: Feasibility review — ${r.feature}\n\nHello ${r.owner.name} team,\n\nFor the ${c.vehicle} in ${c.market}, we are evaluating this requirement:\n“${r.statement}”\n\nWhy it exists: ${r.whyExists}\nEvidence: ${r.evidenceCount} cited records; ${r.citations[0].file}, ${r.citations[0].sheet}, row ${r.citations[0].row} (plus ${Math.max(0,r.citations.length-1)} additional citations).\n\nPlanning context: ${c.months}-month target, ${c.people} people, deadline importance ${c.importance}/10. The ${r.estimatedMonths}-month estimate shown in PM is a planning estimate, not a feasibility conclusion.\n\nCould you confirm whether this requirement is feasible, feasible with conditions, or not feasible? Please identify constraints, timing implications, and any recommended wording changes.\n\nThank you.`}
 

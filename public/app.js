@@ -1,6 +1,10 @@
 import { buildModel, draftEmail, gmailComposeUrl, validateCitations } from './engine.js';
+import { DECISION_EVENT_TYPES, decisionReason, isRecordedDecision } from '../src/decision-memory.mjs';
+import { createReportPdf } from './pdf-report.js';
 
-const state = { evidence: [], context: null, historical: [], groups: [], selected: 0, config: null, statuses: JSON.parse(localStorage.getItem('requirement-statuses') || '{}'), overrides: JSON.parse(localStorage.getItem('requirement-overrides') || '{}'), events: JSON.parse(localStorage.getItem('decision-events') || '[]'), activeRequirement: null, openAIConfigured:false, marketInsights:null };
+const storedDecisions=JSON.parse(localStorage.getItem('decision-events')||'[]').filter(isRecordedDecision);
+localStorage.setItem('decision-events',JSON.stringify(storedDecisions));
+const state = { evidence: [], context: null, historical: [], groups: [], selected: 0, config: null, statuses: JSON.parse(localStorage.getItem('requirement-statuses') || '{}'), overrides: JSON.parse(localStorage.getItem('requirement-overrides') || '{}'), events: storedDecisions, activeRequirement: null, openAIConfigured:false };
 const $ = id => document.getElementById(id);
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const statusKey = feature => `${state.config.vehicle}|${state.config.market}|${feature}`;
@@ -8,11 +12,11 @@ const statusMap = () => Object.fromEntries(Object.entries(state.statuses).filter
 const overrideMap = () => Object.fromEntries(Object.entries(state.overrides).filter(([key]) => key.startsWith(`${state.config.vehicle}|${state.config.market}|`)).map(([key,value]) => [key.split('|').slice(2).join('|'),value]));
 
 async function init() {
-  initOrbitSweepGradient();
   $('importance').addEventListener('input', e => $('importance-output').value = `${e.target.value} / 10`);
   $('vehicle').addEventListener('change', populateMarkets);
   $('config-form').addEventListener('submit', event => { event.preventDefault(); if (state.evidence.length) generate(); });
-  $('edit-config').addEventListener('click', () => { $('setup').classList.remove('hidden'); $('workspace').classList.add('hidden'); });
+  $('edit-config').addEventListener('click', () => showView('overview'));
+  document.querySelector('[data-home]').addEventListener('click', event => { event.preventDefault(); showView('overview'); });
   $('rename-group').addEventListener('click', renameGroup);
   $('recalibrate-group').addEventListener('click', () => recalibrateGroup(state.groups[state.selected]?.name, 'PM requested a fresh ranking'));
   $('split-group').addEventListener('click', splitGroup);
@@ -21,7 +25,6 @@ async function init() {
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
   document.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click',()=>downloadReport(b.dataset.report)));
   $('memory-search').addEventListener('input',e=>renderMemory(e.target.value));
-  $('generate-market-insights').addEventListener('click',generateMarketInsights);
   await loadDecisionEvents();
   renderMemory();
   await checkOpenAIStatus();
@@ -30,12 +33,11 @@ async function init() {
   const [payload,context,history] = await Promise.all([response.json(),contextResponse.json(),historyResponse.json()]);
   state.evidence = payload.records;
   state.context = context;
-  state.historical = history.decisions.map(decision=>({id:decision.id,type:'historical-decision',title:decision.requirement,description:`${decision.productCycle} · ${decision.decisionStatus}. ${decision.pmReasoning}`,data:decision,actor:'Prior-cycle PM',at:decision.timestamp,provenance:decision.provenance}));
+  state.historical = history.decisions.filter(decision=>/^(approved|rejected)/i.test(decision.decisionStatus)&&String(decision.pmReasoning||'').trim()).map(decision=>({id:decision.id,type:'historical-decision',title:decision.requirement,description:`${decision.productCycle} · ${decision.decisionStatus}. ${decision.pmReasoning}`,data:decision,actor:'Prior-cycle PM',at:decision.timestamp,provenance:decision.provenance}));
   renderMemory();
   populateMarkets();
   $('generate-button').disabled = false;
-  $('generate-button').innerHTML = '<span class="shiny-label">Generate evidence-backed requirements <span class="shiny-arrow" aria-hidden="true">→</span></span>';
-  if(!$('market').classList.contains('hidden'))renderMarketView();
+  $('generate-button').innerHTML = '<span class="shiny-label">Generate requirements <span class="shiny-arrow" aria-hidden="true">→</span></span>';
 }
 
 function initOrbitSweepGradient(){
@@ -93,10 +95,11 @@ function populateMarkets(){
 }
 
 async function loadDecisionEvents(){
-  try{const response=await fetch('/api/decision-events'),payload=await readApiResponse(response);const known=new Set(state.events.map(event=>event.id));state.events.push(...payload.events.filter(event=>!known.has(event.id)))}catch{}
+  try{const response=await fetch('/api/decision-events'),payload=await readApiResponse(response);const known=new Set(state.events.map(event=>event.id));state.events.push(...payload.events.filter(event=>isRecordedDecision(event)&&!known.has(event.id)))}catch{}
 }
 
 function addEvent(type, title, description, data={},actor='PM') {
+  if(!DECISION_EVENT_TYPES.has(type)||!String(data.rationale||'').trim())return;
   const event={ id: crypto.randomUUID(), type, title, description, data, actor, at: new Date().toISOString(), provenance:'Append-only application event' };
   state.events.unshift(event);
   localStorage.setItem('decision-events', JSON.stringify(state.events));
@@ -112,33 +115,37 @@ function generate(event) {
   state.groups = buildModel(state.evidence, state.config, statusMap(), state.context, overrideMap());
   state.selected = 0;
   addEvent('project-created', 'Product context evaluated', `${state.config.vehicle} · ${state.config.market} · ${state.config.months} months · ${state.config.people} people · deadline importance ${state.config.importance}/10`, state.config);
-  addEvent('ranking-calculated', 'Requirements generated and ranked', `${state.groups.length} groups created from customer feedback, market studies, sales intelligence, and PM delivery constraints.`,{groups:state.groups.map(group=>({name:group.name,requirements:group.requirements.map(requirement=>({id:requirement.id,statement:requirement.statement,rank:requirement.rank,score:requirement.score,citations:requirement.citations.map(citation=>citation.evidenceId)}))}))});
+  addEvent('ranking-calculated', 'Requirements generated and ranked', `${state.groups.length} groups created from customer feedback, market studies, sales planning, cited competitor evidence, and PM delivery constraints.`,{groups:state.groups.map(group=>({name:group.name,requirements:group.requirements.map(requirement=>({id:requirement.id,statement:requirement.statement,rank:requirement.rank,score:requirement.score,citations:requirement.citations.map(citation=>citation.evidenceId)}))}))});
   showView('workspace');
   render();
 }
 
 function showView(view) {
-  ['setup','workspace','memory','market'].forEach(id=>$(id).classList.add('hidden'));
-  if(view==='memory'){$('memory').classList.remove('hidden');setTimeout(()=>$('memory-search').focus(),0)}
-  else if(view==='market'){$('market').classList.remove('hidden');renderMarketView()}
-  else if(state.config){$('workspace').classList.remove('hidden')}
-  else{$('setup').classList.remove('hidden')}
-  document.querySelectorAll('.nav').forEach(n => n.classList.toggle('active', n.dataset.view === view));
+  ['setup','workspace','memory'].forEach(id=>$(id).classList.add('hidden'));
+  let activeView=view;
+  if(view==='overview')$('setup').classList.remove('hidden');
+  else if(view==='memory'){$('memory').classList.remove('hidden');setTimeout(()=>$('memory-search').focus(),0)}
+  else if(state.config)$('workspace').classList.remove('hidden');
+  else{$('setup').classList.remove('hidden');activeView='overview'}
+  document.querySelectorAll('.nav').forEach(n => n.classList.toggle('active', n.dataset.view === activeView));
 }
 
 function render() {
   const c=state.config, group=state.groups[state.selected];
-  $('project-title').textContent = `${c.vehicle} requirement strategy · ${c.market}`;
+  const marketLabel=({US:'United States',GB:'United Kingdom',DE:'Germany',CN:'China'})[c.market]||c.market;
+  $('project-title').textContent = `${c.vehicle} requirement strategy · ${marketLabel}`;
   $('context-chips').innerHTML = `<div class="context-metric"><small>Time to market</small><strong>${c.months}<span> months</span></strong></div><div class="context-metric"><small>Team</small><strong>${c.people}<span> people</span></strong></div><div class="context-metric"><small>Deadline</small><strong>${c.importance}<span>/10</span></strong></div>`;
   const relevant=state.evidence.filter(r=>r.vehicle===c.vehicle&&r.market===c.market), low=relevant.filter(r=>r.quality==='low').length;
-  const sources=state.context?.manifest?.length||0,marketCitations=state.groups.flatMap(item=>item.requirements).flatMap(requirement=>requirement.citations).filter(citation=>citation.sourceType!=='customer_feedback'),studySignals=new Set(marketCitations.filter(citation=>citation.sourceType==='market_study').map(citation=>citation.evidenceId)).size,salesSignals=new Set(marketCitations.filter(citation=>citation.sourceType==='sales_volume').map(citation=>citation.evidenceId)).size;
-  $('integrity').innerHTML = `<span class="status-dot"></span><strong>Citations verified</strong><span>${relevant.length.toLocaleString()} contextual feedback rows</span><span>${low.toLocaleString()} low-quality excluded</span><span>${studySignals} market-study signals used</span><span>${salesSignals} sales plans used</span><span>${sources} source files</span><span>Frequency deduplicated</span>`;
+  const sources=state.context?.manifest?.length||0,marketCitations=state.groups.flatMap(item=>item.requirements).flatMap(requirement=>requirement.citations).filter(citation=>citation.sourceType!=='customer_feedback'),studySignals=new Set(marketCitations.filter(citation=>citation.sourceType==='market_study').map(citation=>citation.evidenceId)).size,salesSignals=new Set(marketCitations.filter(citation=>citation.sourceType==='sales_volume').map(citation=>citation.evidenceId)).size,competitorSignals=new Set(marketCitations.filter(citation=>['competitor_feedback','competitor_equipment','industry_study'].includes(citation.sourceType)).map(citation=>citation.evidenceId)).size;
+  $('integrity').innerHTML = `<span class="status-dot"></span><strong>Evidence workspace</strong><span>${relevant.length.toLocaleString()} contextual feedback records</span><span>${studySignals+salesSignals} market signals</span><span>${competitorSignals} competitor signals</span><span>${sources} source files</span><span>${low.toLocaleString()} low-quality excluded</span>`;
   $('group-list').innerHTML = state.groups.map((g,i)=>`<button class="group-button ${i===state.selected?'active':''}" data-group="${i}"><strong>${escapeHtml(g.name)}</strong><span>${g.requirements.length} supported requirement${g.requirements.length===1?'':'s'}</span></button>`).join('');
   document.querySelectorAll('[data-group]').forEach(b=>b.onclick=()=>{state.selected=Number(b.dataset.group);render()});
   if (!group) { $('group-title').textContent='No supported groups'; $('group-description').textContent='Try another vehicle or market.'; $('requirements').innerHTML=''; return; }
-  const linkedEvidence=group.requirements.reduce((sum,r)=>sum+r.evidenceCount,0),marketLinks=group.requirements.reduce((sum,r)=>sum+r.marketEvidenceCount,0),outcomeCount=new Set(group.requirements.map(r=>r.outcome)).size;
-  $('group-title').textContent=group.name; $('group-description').innerHTML=`<div><small>Outcome clusters</small><strong>${outcomeCount}</strong></div><div><small>Cited evidence</small><strong>${linkedEvidence}</strong></div><div><small>Market-intelligence links</small><strong>${marketLinks}</strong></div>`; $('req-count').textContent=group.requirements.length;
-  $('requirements').innerHTML=group.requirements.map(r=>{const approved=['approved','approved-conditional'].includes(r.status),statusBadge=['not-checked','awaiting'].includes(r.status)?'':`<span class="badge ${r.status}">${r.status.replaceAll('-',' ')}</span>`;return `<article class="requirement"><div class="rank"><span>${r.rank}</span></div><div class="requirement-main"><span class="outcome">${escapeHtml(r.outcome)}</span><h3>${escapeHtml(r.statement)}</h3><div class="meta"><span><strong>${r.evidenceCount}</strong> cited records</span><span><strong>${r.marketEvidenceCount}</strong> market signals</span><span>TTM <strong>${r.fitScore}/100</strong></span><span>${escapeHtml(r.owner.name)}</span>${statusBadge}</div><details class="card-reasoning"><summary>Why this exists · Why this rank</summary><p>${escapeHtml(r.whyExists)}</p><p>${escapeHtml(r.whyRanked)}</p></details></div><div class="actions"><button class="evidence-link" data-detail="${r.id}">Evidence & reasoning</button><button class="primary-card-action" data-validate="${r.id}">Check feasibility</button>${approved?`<button class="approval-state" disabled>✓ Approved</button>`:`<button class="decision-action approve-action" data-approve="${r.id}">Approve</button>`}<button class="decision-action reject-action" data-reject="${r.id}">Reject</button><button class="icon-action" data-delete="${r.id}" title="Delete requirement" aria-label="Delete requirement">×</button><button class="icon-action" data-up="${r.id}" title="Move up" aria-label="Move requirement up">↑</button><button class="icon-action" data-down="${r.id}" title="Move down" aria-label="Move requirement down">↓</button><button class="move-action" data-move="${r.id}">Move</button></div></article>`}).join('');
+  const linkedEvidence=group.requirements.reduce((sum,r)=>sum+r.evidenceCount,0),marketLinks=group.requirements.reduce((sum,r)=>sum+r.marketEvidenceCount,0);
+  $('group-title').textContent=group.name;
+  $('group-description').innerHTML=`<span>Ranked by customer impact</span><span title="${linkedEvidence} cited records · ${marketLinks} market signals">Evidence-led priority</span>`;
+  $('req-count').textContent=String(group.requirements.length).padStart(2,'0');
+  $('requirements').innerHTML=group.requirements.map((r,index)=>{const approved=['approved','approved-conditional'].includes(r.status),statusBadge=['not-checked','awaiting'].includes(r.status)?'':`<span class="badge ${r.status}">${r.status.replaceAll('-',' ')}</span>`;return `<article class="requirement"><div class="rank"><span>${String(r.rank).padStart(2,'0')}</span></div><div class="requirement-main"><div class="requirement-label"><span class="outcome">${escapeHtml(r.outcome)}</span>${statusBadge}</div><h3>${escapeHtml(r.statement)}</h3><div class="meta"><span>${r.evidenceCount} cited records</span><span>${r.marketEvidenceCount} market signals</span><span>Priority ${r.fitScore} /100</span><span>${escapeHtml(r.owner.name)}</span></div></div><div class="actions"><button class="primary-card-action" data-validate="${r.id}">Check feasibility</button>${approved?`<button class="approval-state" disabled title="Approved" aria-label="Approved">✓</button>`:`<button class="decision-action approve-action" data-approve="${r.id}" title="Approve requirement" aria-label="Approve requirement">Approve</button>`}<button class="decision-action reject-action" data-reject="${r.id}" title="Reject requirement" aria-label="Reject requirement">Reject</button></div><details class="card-reasoning" ${index===0?'open':''}><summary><span>Evidence & reasoning</span><i aria-hidden="true"></i></summary><div class="reasoning-panel"><section><strong>Customer impact</strong><p>${escapeHtml(r.whyExists)}</p></section><section><strong>Ranking rationale</strong><p>${escapeHtml(r.whyRanked)}</p></section><div class="reasoning-tools"><button class="evidence-link" data-detail="${r.id}">View cited sources</button><button data-up="${r.id}">Move up</button><button data-down="${r.id}">Move down</button><button data-move="${r.id}">Move group</button><button class="delete-action" data-delete="${r.id}">Delete</button></div></div></details></article>`}).join('');
   document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>openDetail(findRequirement(b.dataset.detail)));
   document.querySelectorAll('[data-validate]').forEach(b=>b.onclick=()=>openValidation(findRequirement(b.dataset.validate)));
   document.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>openDetail(findRequirement(b.dataset.approve),'approve'));
@@ -153,7 +160,7 @@ function render() {
 const findRequirement=id=>state.groups.flatMap(g=>g.requirements).find(r=>r.id===id);
 function openDetail(r,intent=''){
   const decisionPrompt=intent==='approve'?'Optionally record why you approved this requirement.':intent==='reject'?'Optionally record why you rejected this requirement.':intent==='delete'?'Optionally record why you removed this requirement.':'An optional note can add context to the audit trail.';
-  $('detail-content').innerHTML=`<div class="dialog-body"><p class="eyebrow">RANK #${r.rank} · ${escapeHtml(r.group)} · ${escapeHtml(r.outcome)}</p><h2>${escapeHtml(r.statement)}</h2><div class="edit-requirement"><textarea id="requirement-edit">${escapeHtml(r.statement)}</textarea><button id="save-requirement" class="secondary">Save edited wording</button></div><div class="evidence-box"><h3>WHY THIS REQUIREMENT EXISTS</h3><p>${escapeHtml(r.problem)}</p><p>${escapeHtml(r.whyExists)}</p><p><strong>Evidence confidence:</strong> ${escapeHtml(r.confidence)} · feedback quality ${Object.entries(r.evidenceQuality).map(([key,value])=>`${key}: ${value}`).join(', ')||'market-intelligence requirement'}</p></div><div class="evidence-box"><h3>WHY THIS REQUIREMENT HAS THIS RANK</h3><p>${escapeHtml(r.whyRanked)}</p></div><h3>Verifiable source evidence</h3>${r.citations.map(c=>`<div class="citation"><a href="/sources/${encodeURIComponent(c.file)}" target="_blank" rel="noopener"><code>${escapeHtml(c.file)} › ${escapeHtml(c.sheet)} › row ${c.row} · ${escapeHtml(c.column)}</code></a><p>${escapeHtml(c.excerpt)}</p></div>`).join('')}<div class="decision-box ${intent?'decision-intent':''}"><h3>Decision note · saved to Decision Memory</h3><p class="decision-help">${escapeHtml(decisionPrompt)} This records your reasoning; it is not asking another PM for approval.</p><textarea id="pm-rationale" placeholder="Write a short decision note..."></textarea><div class="decision-actions"><button id="record-rationale" class="secondary">🎙 Dictate note</button><button id="delete-requirement" class="secondary ${intent==='delete'?'intent-action':''}">Delete</button><button id="reject-requirement" class="secondary ${intent==='reject'?'intent-action':''}">Reject & recalibrate group</button><button id="approve-requirement" class="primary ${intent==='approve'?'intent-action':''}">${r.status==='conditional'?'Approve with conditions':'Approve requirement'} <span>→</span></button></div></div></div>`;
+  $('detail-content').innerHTML=`<div class="dialog-body"><p class="eyebrow">RANK #${r.rank} · ${escapeHtml(r.group)} · ${escapeHtml(r.outcome)}</p><h2>${escapeHtml(r.statement)}</h2><div class="edit-requirement"><textarea id="requirement-edit">${escapeHtml(r.statement)}</textarea><button id="save-requirement" class="secondary">Save edited wording</button></div><div class="evidence-box"><h3>WHY THIS REQUIREMENT EXISTS</h3><p>${escapeHtml(r.problem)}</p><p>${escapeHtml(r.whyExists)}</p><p><strong>Evidence confidence:</strong> ${escapeHtml(r.confidence)} · feedback quality ${Object.entries(r.evidenceQuality).map(([key,value])=>`${key}: ${value}`).join(', ')||'non-feedback evidence only'}</p></div><div class="evidence-box"><h3>WHY THIS REQUIREMENT HAS THIS RANK</h3><p>${escapeHtml(r.whyRanked)}</p></div><h3>Verifiable source evidence</h3>${r.citations.map(c=>`<div class="citation"><a href="/sources/${encodeURIComponent(c.file)}" target="_blank" rel="noopener"><code>${escapeHtml(c.file)} › ${escapeHtml(c.sheet)} › row ${c.row} · ${escapeHtml(c.column)}</code></a>${c.url&&/^https?:\/\//i.test(c.url)?`<a class="external-source" href="${escapeHtml(c.url)}" target="_blank" rel="noopener">Open original external source ↗</a>`:''}<p>${escapeHtml(c.excerpt)}</p></div>`).join('')}<div class="decision-box ${intent?'decision-intent':''}"><h3>Decision note · saved to Decision Memory</h3><p class="decision-help">${escapeHtml(decisionPrompt)} This records your reasoning; it is not asking another PM for approval.</p><textarea id="pm-rationale" placeholder="Write a short decision note..."></textarea><div class="decision-actions"><button id="record-rationale" class="secondary">🎙 Dictate note</button><button id="delete-requirement" class="secondary ${intent==='delete'?'intent-action':''}">Delete</button><button id="reject-requirement" class="secondary ${intent==='reject'?'intent-action':''}">Reject & recalibrate group</button><button id="approve-requirement" class="primary ${intent==='approve'?'intent-action':''}">${r.status==='conditional'?'Approve with conditions':'Approve requirement'} <span>→</span></button></div></div></div>`;
   $('detail-dialog').showModal();
   $('pm-rationale').placeholder='Optional decision note…';
   $('save-requirement').onclick=()=>editRequirement(r);
@@ -329,9 +336,11 @@ async function interpretStakeholderResponse(r){
     result.stakeholderResponse=responseText;
     const detail=[result.conditions?.length?`<p><strong>Conditions:</strong> ${escapeHtml(result.conditions.join('; '))}</p>`:'',result.constraints?.length?`<p><strong>Constraints:</strong> ${escapeHtml(result.constraints.join('; '))}</p>`:'',result.time_impact?`<p><strong>Timing:</strong> ${escapeHtml(result.time_impact)}</p>`:'',result.suggested_modification?`<p><strong>Suggested change:</strong> ${escapeHtml(result.suggested_modification)}</p>`:''].join('');
     const approvable=['feasible','conditional'].includes(result.status);
-    $('interpretation').innerHTML=`<div class="evidence-box"><h3>OPENAI INTERPRETATION · YOUR CONFIRMATION REQUIRED</h3><p>Status: <strong>${escapeHtml(result.status.replaceAll('-',' '))}</strong> · ${Math.round(result.confidence*100)}% confidence</p><p>${escapeHtml(result.summary)}</p>${detail}<p class="model-trace">Model: ${escapeHtml(result.model)} · Response: ${escapeHtml(result.responseId||'not returned')}</p>${approvable?'<label class="approval-rationale"><strong>Decision note · saved to Decision Memory</strong><textarea id="approval-rationale" placeholder="Why are you approving this requirement?"></textarea></label>':''}<div class="interpret-actions"><button id="confirm-response" class="secondary" ${result.status==='unclear'?'disabled':''}>${result.status==='unclear'?'Clarification required':result.status==='not-feasible'?'Confirm rejection & recalibrate group':'Confirm feasibility only'}</button>${approvable?'<button id="confirm-approve" class="primary">Approve requirement <span>→</span></button>':''}</div></div>`;
+    const rejectionNote=result.status==='not-feasible'?'<label class="approval-rationale"><strong>Rejection reason · saved to Decision Memory</strong><textarea id="rejection-rationale" placeholder="Why is this requirement being rejected?"></textarea></label>':'';
+    $('interpretation').innerHTML=`<div class="evidence-box"><h3>OPENAI INTERPRETATION · YOUR CONFIRMATION REQUIRED</h3><p>Status: <strong>${escapeHtml(result.status.replaceAll('-',' '))}</strong> · ${Math.round(result.confidence*100)}% confidence</p><p>${escapeHtml(result.summary)}</p>${detail}<p class="model-trace">Model: ${escapeHtml(result.model)} · Response: ${escapeHtml(result.responseId||'not returned')}</p>${approvable?'<label class="approval-rationale"><strong>Approval reason · saved to Decision Memory</strong><textarea id="approval-rationale" placeholder="Why are you approving this requirement?"></textarea></label>':rejectionNote}<div class="interpret-actions"><button id="confirm-response" class="secondary" ${result.status==='unclear'?'disabled':''}>${result.status==='unclear'?'Clarification required':result.status==='not-feasible'?'Confirm rejection & recalibrate group':'Confirm feasibility only'}</button>${approvable?'<button id="confirm-approve" class="primary">Approve requirement <span>→</span></button>':''}</div></div>`;
     if(approvable)$('approval-rationale').placeholder='Optional decision note…';
-    if(result.status!=='unclear')$('confirm-response').onclick=()=>confirmResponse(r,result);
+    if(result.status==='not-feasible')$('confirm-response').onclick=()=>{const rationale=$('rejection-rationale').value.trim()||`PM rejected this requirement after confirming the stakeholder response: ${result.summary}`;confirmResponse(r,result,{rationale})};
+    else if(result.status!=='unclear')$('confirm-response').onclick=()=>confirmResponse(r,result);
     if(approvable)$('confirm-approve').onclick=()=>{const rationale=$('approval-rationale').value.trim()||'PM approved this requirement after reviewing the interpreted engineering response.';confirmResponse(r,result,{approve:true,rationale})};
   }catch(error){$('interpretation').innerHTML=`<div class="api-error"><strong>OpenAI interpretation failed.</strong><br>${escapeHtml(error.message)}</div>`}
   finally{button.disabled=false;button.textContent='Process Feedback & Recalibrate'}
@@ -339,6 +348,7 @@ async function interpretStakeholderResponse(r){
 
 function confirmResponse(r,result,{approve=false,rationale=''}={}){
   if(result.status==='unclear'){alert('The response is unclear. Ask the stakeholder for a feasibility conclusion before confirming.');return}
+  if(!approve&&result.status==='not-feasible'&&!rationale)rationale=`PM rejected this requirement after confirming the stakeholder response: ${result.summary}`;
   const before=state.groups.map(g=>({group:g.name,requirements:g.requirements.map(x=>({feature:x.feature,rank:x.rank,score:x.score,status:x.status}))}));
   const finalStatus=approve?(result.status==='conditional'?'approved-conditional':'approved'):result.status;
   state.statuses[statusKey(r.feature)]=finalStatus;
@@ -347,7 +357,8 @@ function confirmResponse(r,result,{approve=false,rationale=''}={}){
   const after=state.groups.map(g=>({group:g.name,requirements:g.requirements.map(x=>({feature:x.feature,rank:x.rank,score:x.score,status:x.status}))}));
   addEvent('interpretation-confirmed',`PM confirmed: ${result.status.replaceAll('-',' ')}`,`${r.feature}. Stakeholder response: ${result.summary}`,{before,after,model:result.model,responseId:result.responseId,confidence:result.confidence,stakeholderResponse:result.stakeholderResponse,supportingQuotes:result.supporting_quotes,conditions:result.conditions,constraints:result.constraints,timeImpact:result.time_impact,suggestedModification:result.suggested_modification},'Engineering response · OpenAI interpretation · PM confirmation');
   addEvent('requirements-recalculated','Affected group ranking recalculated','The previous group ranking remains preserved in this event. No requirement was silently replaced.',{before,after});
-  if(approve)addEvent(finalStatus==='approved-conditional'?'requirement-approved-with-conditions':'requirement-approved',finalStatus==='approved-conditional'?'Requirement approved with conditions':'Requirement approved',`${r.feature}: ${rationale}`,{requirementId:r.id,citations:r.citations.map(c=>c.evidenceId),humanDecision:true});
+  if(approve)addEvent(finalStatus==='approved-conditional'?'requirement-approved-with-conditions':'requirement-approved',finalStatus==='approved-conditional'?'Requirement approved with conditions':'Requirement approved',`${r.feature}: ${rationale}`,{requirementId:r.id,statement:r.statement,status:finalStatus,citations:r.citations.map(c=>c.evidenceId),humanDecision:true,rationale});
+  else if(result.status==='not-feasible')addEvent('requirement-rejected','Requirement rejected',`${r.feature}: ${rationale}`,{requirementId:r.id,statement:r.statement,status:'not-feasible',citations:r.citations.map(c=>c.evidenceId),humanDecision:true,rationale,stakeholderResponse:result.stakeholderResponse});
   $('validation-dialog').close();render();
   if(!approve&&['feasible','conditional'].includes(result.status)){
     const updated=state.groups.flatMap(g=>g.requirements).find(item=>item.feature===r.feature);
@@ -355,103 +366,35 @@ function confirmResponse(r,result,{approve=false,rationale=''}={}){
   }
 }
 
-function marketContext(){
-  return state.config||{vehicle:$('vehicle').value,market:$('market').value,months:Number($('months').value),importance:Number($('importance').value)};
-}
-
-const intelligenceMarket=market=>['GB','DE'].includes(market)?'EU':market;
-const studyAppliesToMarket=(row,market)=>String(row.sheet||'').toUpperCase().split(/[_-]/).includes(intelligenceMarket(market));
-const isStudyMeasure=row=>{const keys=Object.keys(row.cells||{});return keys.length===1&&keys[0]==='A'&&String(row.cells.A||'').length>3&&!/sample|base|total|mean|median|standard|percent/i.test(row.cells.A)};
-const sourceHref=file=>`/sources/${encodeURIComponent(file)}`;
-
-function internalMarketSnapshot(context){
-  const relevantFeedback=state.evidence.filter(row=>row.vehicle===context.vehicle&&row.market===context.market&&row.quality!=='low');
-  const uniqueFeedback=[...new Map(relevantFeedback.map(row=>[row.feedbackId,row])).values()];
-  const studies=(state.context?.studies||[]).filter(row=>studyAppliesToMarket(row,context.market)&&isStudyMeasure(row));
-  const sales=(state.context?.sales||[]).find(row=>String(row.vehicle||'').split('_').includes(context.vehicle)&&row.market===intelligenceMarket(context.market));
-  const byFeature=new Map();
-  for(const row of uniqueFeedback){
-    if(!row.feature)continue;
-    if(!byFeature.has(row.feature))byFeature.set(row.feature,[]);
-    byFeature.get(row.feature).push(row);
-  }
-  const themes=[...byFeature].sort((a,b)=>b[1].length-a[1].length).slice(0,6);
-  return {uniqueFeedback,studies,sales,themes};
-}
-
-function renderInternalMarketSnapshot(context){
-  const {uniqueFeedback,studies,sales,themes}=internalMarketSnapshot(context);
-  const studyItems=studies.slice(0,8).map(row=>`<li><span>${escapeHtml(row.cells.A)}</span><a href="${sourceHref(row.sourceFile)}" target="_blank" rel="noopener">${escapeHtml(row.sourceFile)} · ${escapeHtml(row.sheet)} · row ${row.row}</a></li>`).join('');
-  const themeItems=themes.map(([feature,rows])=>{const row=rows[0];return `<li><span><strong>${escapeHtml(feature)}</strong><em>${rows.length} unique feedback record${rows.length===1?'':'s'}</em></span><a href="${sourceHref(row.sourceFile)}" target="_blank" rel="noopener">${escapeHtml(row.sourceFile)} · ${escapeHtml(row.sheet)} · row ${row.row}</a></li>`}).join('');
-  const salesDelta=sales&&Number(sales.volume2025)?Math.round((Number(sales.volume2030)-Number(sales.volume2025))/Number(sales.volume2025)*100):null;
-  const salesValue=sales?`${Number(sales.volume2025).toLocaleString()} → ${Number(sales.volume2030).toLocaleString()}`:'No matching plan';
-  const salesDetail=sales?`2025 to 2030 planned volume${salesDelta===null?'':` · ${salesDelta>=0?'+':''}${salesDelta}%`}`:'No vehicle-and-market sales row was found.';
-  const salesCitation=sales?`<a href="${sourceHref(sales.sourceFile)}" target="_blank" rel="noopener">${escapeHtml(sales.sourceFile)} · ${escapeHtml(sales.sheet)} · row ${sales.row}</a>`:'<span class="market-no-source">No citation available</span>';
-  return `<section class="internal-market" aria-label="Ingested market evidence">
-    <div class="market-section-title"><div><p class="eyebrow">INGESTED MARKET EVIDENCE</p><h2>Current evidence snapshot</h2></div><span>Available without OpenAI</span></div>
-    <div class="market-kpis">
-      <article><small>Customer feedback</small><strong>${uniqueFeedback.length.toLocaleString()}</strong><p>Unique, relevant records for this vehicle and market</p></article>
-      <article><small>Study measures</small><strong>${studies.length.toLocaleString()}</strong><p>Market-matched customer-study topics</p></article>
-      <article><small>Sales plan</small><strong>${salesValue}</strong><p>${escapeHtml(salesDetail)}</p>${salesCitation}</article>
-    </div>
-    <div class="market-evidence-grid">
-      <article><h3>Most frequent customer themes</h3><p>Deduplicated feedback signals already used in requirement generation.</p>${themeItems?`<ol>${themeItems}</ol>`:'<div class="market-no-data">No contextual customer-feedback records were found.</div>'}</article>
-      <article><h3>Customer-study signals</h3><p>Market-matched measures available to requirement ranking, each linked to its exact source location.</p>${studyItems?`<ol>${studyItems}</ol>`:'<div class="market-no-data">No customer-study measures matched this market.</div>'}</article>
-    </div>
-  </section>`;
-}
-
-function renderCitedReport(report,citations){
-  const usable=[...(citations||[])].filter(c=>Number.isInteger(c.startIndex)&&Number.isInteger(c.endIndex)&&c.startIndex>=0&&c.endIndex>c.startIndex&&c.endIndex<=report.length&&/^https?:\/\//i.test(c.url)).sort((a,b)=>a.startIndex-b.startIndex);
-  let html='',cursor=0;
-  for(const citation of usable){if(citation.startIndex<cursor)continue;html+=escapeHtml(report.slice(cursor,citation.startIndex));html+=`<a class="inline-citation" href="${escapeHtml(citation.url)}" target="_blank" rel="noopener">${escapeHtml(report.slice(citation.startIndex,citation.endIndex)||citation.title)}</a>`;cursor=citation.endIndex}
-  html+=escapeHtml(report.slice(cursor));return html.replace(/\n/g,'<br>');
-}
-
-function renderMarketView(){
-  const context=marketContext(),marketNames={US:'United States',GB:'United Kingdom',DE:'Germany',CN:'China'};
-  $('market-context').textContent=`${context.vehicle} · ${marketNames[context.market]||context.market} · ingested evidence and current external research`;
-  const button=$('generate-market-insights');button.disabled=!state.openAIConfigured;button.innerHTML=state.openAIConfigured?'Research current market <span>→</span>':'OpenAI key required';
-  $('market-status').innerHTML=state.openAIConfigured?'<span class="status-dot"></span><strong>Internal evidence ready.</strong> Live web research is configured and will be shown separately with URL citations.':'<span class="status-dot status-dot-muted"></span><strong>Internal evidence ready.</strong> Add OPENAI_API_KEY on the PM server to enable cited competitor web research.';
-  if(!state.context){$('market-results').innerHTML='<div class="market-loading"><span></span><h2>Loading market evidence</h2><p>The ingested customer studies and sales plans are being prepared.</p></div>';return}
-  const internalSnapshot=renderInternalMarketSnapshot(context);
-  const matchesContext=state.marketInsights?.context?.vehicle===context.vehicle&&state.marketInsights?.context?.market===context.market;
-  if(!matchesContext){$('market-results').innerHTML=internalSnapshot+`<section class="external-market-empty"><div><p class="eyebrow">LIVE EXTERNAL RESEARCH</p><h2>No external report for this context yet</h2><p>${state.openAIConfigured?'Run current-market research to add competitor analysis and cited web signals.':'The internal market evidence above remains available. Configure the server API key when live competitor research is needed.'}</p></div></section>`;return}
-  const insight=state.marketInsights,uniqueSources=[...new Map(insight.citations.map(source=>[source.url,source])).values()];
-  $('market-results').innerHTML=internalSnapshot+`<article class="market-report"><div class="market-report-meta"><span>Live web intelligence</span><span>${new Date(insight.researchedAt).toLocaleString()}</span><span>${escapeHtml(insight.model)}</span><span>${(insight.candidates||[]).length} requirement candidates applied</span></div><div class="market-report-copy">${renderCitedReport(insight.report,insight.citations)}</div><div class="market-sources"><h2>Verified web sources</h2>${uniqueSources.map((source,index)=>`<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener"><span>${String(index+1).padStart(2,'0')}</span><strong>${escapeHtml(source.title)}</strong><small>${escapeHtml(new URL(source.url).hostname)}</small></a>`).join('')}</div></article>`;
-}
-
-async function generateMarketInsights(){
-  if(!state.openAIConfigured)return;
-  const button=$('generate-market-insights'),context=marketContext();button.disabled=true;button.textContent='Researching the current market…';
-  $('market-results').innerHTML='<div class="market-loading"><span></span><h2>Searching current competitor and market sources</h2><p>Claims without verifiable URL citations will not be accepted.</p></div>';
-  try{
-    const response=await fetch('/api/market-intelligence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(context)});
-    state.marketInsights=await readApiResponse(response);state.marketInsights.context={...context};
-    state.context={...(state.context||{}),external:(state.marketInsights.candidates||[])};
-    if(state.config?.vehicle===context.vehicle&&state.config?.market===context.market){state.groups=buildModel(state.evidence,state.config,statusMap(),state.context,overrideMap());state.selected=Math.min(state.selected,Math.max(0,state.groups.length-1));render()}
-    renderMarketView();
-    addEvent('market-intelligence-researched','External market intelligence refreshed',`${context.vehicle} · ${context.market}: ${state.marketInsights.citations.length} cited web references produced ${(state.marketInsights.candidates||[]).length} grounded requirement candidates and recalibrated the matching product cycle.`,{vehicle:context.vehicle,market:context.market,model:state.marketInsights.model,responseId:state.marketInsights.responseId,extractionResponseId:state.marketInsights.extractionResponseId,candidates:state.marketInsights.candidates,citations:state.marketInsights.citations.map(c=>({title:c.title,url:c.url}))},'PM · OpenAI web search');
-  }catch(error){$('market-results').innerHTML=renderInternalMarketSnapshot(context)+`<div class="api-error market-error"><strong>Live market research failed.</strong><br>${escapeHtml(error.message)}<br><small>The ingested market evidence above is still available.</small></div>`}
-  finally{button.disabled=false;button.innerHTML='Research current market <span>→</span>'}
-}
-
 function renderMemory(query=$('memory-search')?.value||''){
-  const all=[...state.events,...state.historical].sort((a,b)=>new Date(b.at)-new Date(a.at)),needle=query.trim().toLowerCase();
+  const all=[...state.events.filter(isRecordedDecision),...state.historical].sort((a,b)=>new Date(b.at)-new Date(a.at)),needle=query.trim().toLowerCase();
   const events=needle?all.filter(event=>JSON.stringify(event).toLowerCase().includes(needle)):all;
   $('event-count').textContent=all.length;
-  $('timeline').innerHTML=events.length?events.map(e=>{const audit=e.data&&(e.data.before||e.data.after||e.data.groups||e.data.model||e.data.citations||e.type==='historical-decision')?`<details><summary>Inspect before / after and source data</summary><pre>${escapeHtml(JSON.stringify(e.data,null,2))}</pre></details>`:'';return `<div class="event"><time>${new Date(e.at).toLocaleString()}</time><div class="event-dot"></div><article><p class="eyebrow">${escapeHtml(e.type.replaceAll('-',' '))} · ${escapeHtml(e.actor||'Historical record')}</p><h3>${escapeHtml(e.title)}</h3><p>${escapeHtml(e.description)}</p>${audit}</article></div>`}).join(''):`<p>${needle?'No decision-memory events match this search.':'No decisions recorded yet. Generate a product cycle to begin the audit trail.'}</p>`;
+  $('timeline').innerHTML=events.length?events.map(e=>{const historical=e.type==='historical-decision',status=historical?e.data.decisionStatus:e.type==='requirement-rejected'?'Rejected':e.type==='requirement-approved-with-conditions'?'Approved with conditions':'Approved',requirement=e.data.statement||e.data.before?.statement||e.data.requirement||e.title,reason=decisionReason(e),audit=e.data?.citations||e.data?.supportingEvidence?`<details><summary>Inspect supporting evidence</summary><pre>${escapeHtml(JSON.stringify({citations:e.data.citations||e.data.supportingEvidence,provenance:e.provenance},null,2))}</pre></details>`:'';return `<div class="event"><time>${new Date(e.at).toLocaleString()}</time><div class="event-dot"></div><article><p class="eyebrow">${escapeHtml(status)} · ${escapeHtml(e.actor||'PM')}</p><h3>${escapeHtml(requirement)}</h3><p><strong>Reason:</strong> ${escapeHtml(reason)}</p>${audit}</article></div>`}).join(''):`<p>${needle?'No approved or rejected requirements match this search.':'No requirements have been approved or rejected yet.'}</p>`;
 }
 
 function downloadReport(kind){
   if(!state.config||!state.groups.length){alert('Generate a product cycle before exporting a report.');return}
   const all=state.groups.flatMap(group=>group.requirements.map(requirement=>({...requirement,group:group.name}))),approved=all.filter(r=>['approved','approved-conditional'].includes(r.status));
-  const header=`PM · ${kind.toUpperCase()} REPORT\n${state.config.vehicle} · ${state.config.market}\nTarget: ${state.config.months} months · ${state.config.people} people · deadline importance ${state.config.importance}/10\nGenerated: ${new Date().toISOString()}\n\n`;
-  let body;
-  if(kind==='technical')body=approved.length?approved.map(r=>`${r.group} / ${r.feature}\nRequirement: ${r.statement}\nResponsible entity: ${r.owner.name}\nDecision status: ${r.status}\nEvidence: ${r.citations.map(c=>`${c.file}, ${c.sheet}, row ${c.row}`).join('; ')}\n`).join('\n'):'No requirements have received PM approval.';
-  else if(kind==='gtm')body=approved.length?approved.map(r=>`${r.outcome}: ${r.statement}\nSupported by ${r.evidenceCount} cited feedback and market-intelligence records for ${state.config.market}.\n`).join('\n'):'No approved requirements are available for GTM reporting.';
-  else body=state.groups.map(g=>`${g.name}\n${g.requirements.map(r=>`#${r.rank} [${r.status}] ${r.statement} — score ${r.score}, ${r.evidenceCount} cited records`).join('\n')}`).join('\n\n')+`\n\nDECISION EVENTS\n${state.events.map(e=>`${e.at} · ${e.actor||'PM'} · ${e.type} · ${e.title}: ${e.description}`).join('\n')}`;
-  const blob=new Blob([header+body],{type:'text/plain'}),url=URL.createObjectURL(blob),anchor=document.createElement('a');anchor.href=url;anchor.download=`PM-${kind}-${state.config.vehicle}-${state.config.market}.txt`;anchor.click();URL.revokeObjectURL(url);
+  const market=({US:'United States',GB:'United Kingdom',DE:'Germany',CN:'China'})[state.config.market]||state.config.market;
+  const humanStatus=status=>status.replaceAll('-',' ').replace(/\b\w/g,letter=>letter.toUpperCase());
+  const sources=requirement=>{const unique=[...new Set(requirement.citations.map(c=>`${c.file} / ${c.sheet}`))],shown=unique.slice(0,4);return `${shown.join('; ')}${unique.length>shown.length?` (+${unique.length-shown.length} more sources)`:''}`};
+  const requirementItem=requirement=>({kicker:`#${requirement.rank}  ·  ${requirement.outcome}  ·  ${humanStatus(requirement.status)}`,title:requirement.statement,details:[`Priority: ${requirement.fitScore}/100  |  Responsible entity: ${requirement.owner.name}`,`Evidence: ${requirement.evidenceCount} cited records, including ${requirement.marketEvidenceCount} market signals.`]});
+  let title,subtitle,sections;
+  if(kind==='technical'){
+    title='TECHNICAL REQUIREMENT REPORT';subtitle='Approved requirements prepared for responsible engineering entities';
+    sections=state.groups.map(group=>({title:group.name,items:group.requirements.filter(r=>['approved','approved-conditional'].includes(r.status)).map(r=>({kicker:`${r.feature}  ·  ${humanStatus(r.status)}`,title:r.statement,details:[`Responsible entity: ${r.owner.name}`,`Evidence basis: ${r.evidenceCount} cited records and ${r.marketEvidenceCount} market signals.`,`Representative sources: ${sources(r)}`]}))})).filter(section=>section.items.length);
+    if(!sections.length)sections=[{title:'Approved requirements',empty:'No requirements have received PM approval.',items:[]}];
+  }else if(kind==='gtm'){
+    title='GO-TO-MARKET REQUIREMENT REPORT';subtitle=`Approved customer outcomes for ${market}`;
+    sections=[{title:'Approved market proposition',items:approved.map(r=>({kicker:`${r.group}  ·  ${r.outcome}`,title:r.statement,details:[`Customer evidence: ${r.evidenceCount} cited records.`,`Market intelligence: ${r.marketEvidenceCount} signals support this requirement for ${market}.`]})),empty:'No approved requirements are available for GTM reporting.'}];
+  }else{
+    title='PM REQUIREMENT REPORT';subtitle='Evidence-led product-cycle priorities and recorded decisions';
+    sections=state.groups.map(group=>({title:group.name,items:group.requirements.map(requirementItem)}));
+    const decisions=[...state.events.filter(isRecordedDecision),...state.historical].sort((a,b)=>new Date(b.at)-new Date(a.at));
+    sections.push({title:'Decision record',items:decisions.map(event=>({kicker:`${event.actor||'PM'}  ·  ${new Date(event.at).toLocaleDateString()}`,title:event.data.statement||event.data.requirement||event.title,details:[`Decision: ${event.type==='requirement-rejected'||/rejected/i.test(event.data?.decisionStatus||'')?'Rejected':'Approved'}`,`Reason: ${decisionReason(event)}`]})),empty:'No requirements have been approved or rejected yet.'});
+  }
+  const pdf=createReportPdf({title,subtitle,metadata:[{label:'Vehicle',value:state.config.vehicle},{label:'Market',value:market},{label:'Delivery context',value:`${state.config.months} months / ${state.config.people} people`},{label:'Approved',value:`${approved.length} of ${all.length} requirements`}],sections}),blob=new Blob([pdf],{type:'application/pdf'}),url=URL.createObjectURL(blob),anchor=document.createElement('a'),safe=value=>String(value).replace(/[<>:"/\\|?*\u0000-\u001F]/g,'-').replace(/\s+/g,'-');anchor.href=url;anchor.download=`PM-${kind}-${safe(state.config.vehicle)}-${safe(state.config.market)}.pdf`;anchor.click();URL.revokeObjectURL(url);
   addEvent('report-generated',`${kind.toUpperCase()} report generated`,`${approved.length} approved requirements included.`);
 }
 init().catch(error=>{document.body.innerHTML=`<main class="memory"><h1>Unable to load evidence</h1><p>${escapeHtml(error.message)}</p></main>`});

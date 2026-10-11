@@ -2,12 +2,13 @@ import { createServer } from 'node:http';
 import { appendFile, readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { classifyStakeholderResponse, draftStakeholderEmail, outcomeToStatus, researchMarketIntelligence } from './src/openai.mjs';
+import { DECISION_EVENT_TYPES, isRecordedDecision } from './src/decision-memory.mjs';
 
 const root = new URL('.', import.meta.url).pathname.replace(/^\/(.:)/, '$1');
 const port = Number(process.env.PORT || 4173);
 const apiVersion = 'pm-api-2';
 const decisionEventsPath = join(root, 'data', 'decision-events.ndjson');
-const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp' };
+const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp' };
 
 const sendJson = (res, status, value) => { res.writeHead(status, { 'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store' }); res.end(JSON.stringify(value)); };
 const readJson = req => new Promise((resolve, reject) => {
@@ -30,7 +31,7 @@ createServer(async (req, res) => {
   if (pathname === '/api/decision-events' && req.method === 'GET') {
     try {
       const lines=(await readFile(decisionEventsPath,'utf8')).split(/\r?\n/).filter(Boolean);
-      sendJson(res,200,{events:lines.map(line=>JSON.parse(line))});
+      sendJson(res,200,{events:lines.map(line=>JSON.parse(line)).filter(isRecordedDecision)});
     } catch (error) {
       if(error.code==='ENOENT')sendJson(res,200,{events:[]});else sendJson(res,500,{error:'Decision memory could not be read.'});
     }
@@ -40,6 +41,8 @@ createServer(async (req, res) => {
     try {
       const event=await readJson(req);
       if(!event.id||!event.type||!event.title||!event.at)throw new Error('Decision event is incomplete.');
+      if(!DECISION_EVENT_TYPES.has(event.type))throw new Error('Decision Memory only accepts requirement approvals and rejections.');
+      if(!String(event.data?.rationale||'').trim())throw new Error('An approval or rejection reason is required.');
       const immutableEvent={id:String(event.id),type:String(event.type),title:String(event.title),description:String(event.description||''),actor:String(event.actor||'PM'),data:event.data||{},at:String(event.at),provenance:'Append-only application event'};
       await appendFile(decisionEventsPath,`${JSON.stringify(immutableEvent)}\n`,'utf8');
       sendJson(res,201,{ok:true,id:immutableEvent.id});

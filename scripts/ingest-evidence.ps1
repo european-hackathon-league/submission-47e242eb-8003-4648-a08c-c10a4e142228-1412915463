@@ -1,5 +1,6 @@
 param(
   [string]$Archive = 'C:\Users\iyert\Downloads\drive-download-20261010T222306Z-1-001.zip',
+  [string]$CompetitorWorkbook = 'C:\Users\iyert\Downloads\competitor_bmw_format.xlsx',
   [string]$Output = 'data\evidence.json'
 )
 
@@ -50,6 +51,30 @@ function Read-XlsxSheet($bytes, $sheetPath = 'xl/worksheets/sheet1.xml') {
   }
 }
 
+function Get-CompetitorFeature([string]$group, [string]$text) {
+  $signal = "$group $text"
+  if ($signal -match 'remote smart parking|surround.?view|parking|camera monitor') { return 'Parking assistance' }
+  if ($signal -match 'digital key') { return 'Digital Key' }
+  if ($signal -match 'head.?up display') { return 'Head-up display' }
+  if ($signal -match 'carplay|android auto|smartphone|connectivity|connected') { return 'Smartphone integration / connectivity' }
+  if ($signal -match 'infotainment|touchscreen|central screen|instrument cluster|display|interface') { return 'Operating system / infotainment' }
+  if ($signal -match 'audio|speaker|sound system') { return 'Audio system' }
+  if ($signal -match 'interior satisfaction|interior quality|interior styling') { return 'Interior design' }
+  if ($signal -match 'seat|lumbar') { return 'Seating comfort' }
+  if ($signal -match 'climate|heating|ventilat|air conditioning') { return 'Cabin climate' }
+  if ($signal -match 'sunroof|panoramic roof') { return 'Panoramic roof' }
+  if ($signal -match 'wheel|tire') { return 'Wheels / Tires' }
+  if ($signal -match 'headlight|taillight|exterior lighting') { return 'Exterior lighting' }
+  if ($signal -match 'brake') { return 'Braking' }
+  if ($signal -match 'steer|suspension|handling|ride comfort') { return 'Steering and handling' }
+  if ($signal -match 'driver assistance|assistance.?alert|collision|lane|cruise|traffic sign|speed limit') { return 'Driver assistance' }
+  if ($signal -match 'electric|battery|charging|range') { return 'Electric range and charging' }
+  if ($signal -match 'acceleration|drivetrain|transmission|engine|horsepower|powertrain') { return 'Powertrain performance' }
+  if ($signal -match 'trunk|cargo|luggage') { return 'Cargo access' }
+  if ($signal -match 'warranty|ownership') { return 'Ownership support' }
+  return ''
+}
+
 if (-not (Test-Path -LiteralPath $Archive)) { throw "Archive not found: $Archive" }
 $outer = [IO.Compression.ZipFile]::OpenRead($Archive)
 try {
@@ -98,6 +123,63 @@ try {
     $manifest.Add([ordered]@{ file = $entry.Name; bytes = $entry.Length; kind = [IO.Path]::GetExtension($entry.Name).TrimStart('.').ToLower(); pageCount = $pageCount; available = $true })
   }
 
+  $competitors = [Collections.Generic.List[object]]::new()
+  $competitorPrices = [Collections.Generic.List[object]]::new()
+  if (Test-Path -LiteralPath $CompetitorWorkbook) {
+    $competitorFile = [IO.Path]::GetFileName($CompetitorWorkbook)
+    $competitorBytes = [IO.File]::ReadAllBytes($CompetitorWorkbook)
+    [IO.File]::WriteAllBytes((Join-Path $sourceDirectory $competitorFile), $competitorBytes)
+    $manifest.Add([ordered]@{ file = $competitorFile; bytes = $competitorBytes.Length; kind = 'xlsx'; pageCount = $null; available = $true })
+
+    foreach ($row in (Read-XlsxSheet $competitorBytes 'xl/worksheets/sheet2.xml') | Select-Object -Skip 1) {
+      $v = $row.Values
+      if (-not $v['A'] -or -not $v['I']) { continue }
+      $feature = Get-CompetitorFeature ([string]$v['K']) "$($v['S']) $($v['I'])"
+      $competitors.Add([ordered]@{
+        evidenceId = "competitor-feedback-$($v['A'])"; sourceFile = $competitorFile; sourceType = 'competitor_feedback'; sheet = 'Feedback_Explorer'; row = $row.Row
+        vehicle = 'G60'; market = [string]$v['E']; feature = $feature; brand = [string]$v['C']; model = [string]$v['D']; modelYear = [string]$v['M']
+        rationale = "$($v['C']) $($v['D']) feedback reports: $($v['I'])"; sourceUrl = [string]$v['P']; sourceLocator = [string]$v['Q']
+        classificationBasis = $(if ($feature) { 'Deterministic keyword mapping from the supplied feedback text and source classification.' } else { 'Unclassified; retained for provenance but excluded from requirement generation.' })
+      })
+    }
+
+    foreach ($row in (Read-XlsxSheet $competitorBytes 'xl/worksheets/sheet4.xml') | Select-Object -Skip 1) {
+      $v = $row.Values
+      if (-not $v['A'] -or -not $v['I']) { continue }
+      $feature = Get-CompetitorFeature ([string]$v['G']) ([string]$v['I'])
+      if (-not $feature) { continue }
+      $competitors.Add([ordered]@{
+        evidenceId = "competitor-option-$($v['A'])"; sourceFile = $competitorFile; sourceType = 'competitor_equipment'; sheet = 'Option_List'; row = $row.Row
+        vehicle = 'G60'; market = [string]$v['F']; feature = $feature; brand = [string]$v['B']; model = [string]$v['C']; modelYear = [string]$v['D']; trim = [string]$v['E']
+        rationale = "$($v['B']) $($v['C']) $($v['E']) lists $($v['I']) as $($v['J']). $($v['O'])"; sourceUrl = [string]$v['P']; sourceLocator = [string]$v['Q']
+        classificationBasis = 'Deterministic mapping from the workbook equipment group and description.'
+      })
+    }
+
+    foreach ($row in (Read-XlsxSheet $competitorBytes 'xl/worksheets/sheet5.xml') | Select-Object -Skip 1) {
+      $v = $row.Values
+      if (-not $v['A']) { continue }
+      $competitorPrices.Add([ordered]@{
+        evidenceId = "competitor-price-$($v['A'])"; sourceFile = $competitorFile; sourceType = 'competitor_price'; sheet = 'Vehicle_Prices'; row = $row.Row
+        vehicle = 'G60'; market = [string]$v['F']; brand = [string]$v['B']; model = [string]$v['C']; modelYear = [string]$v['D']; trim = [string]$v['E']
+        basePrice = [string]$v['G']; configuredPrice = [string]$v['H']; currency = [string]$v['I']; priceBasis = [string]$v['J']; notes = [string]$v['K']; sourceUrl = [string]$v['L']
+      })
+    }
+
+    foreach ($row in (Read-XlsxSheet $competitorBytes 'xl/worksheets/sheet8.xml') | Select-Object -Skip 1) {
+      $v = $row.Values
+      if (-not $v['A'] -or -not $v['D']) { continue }
+      $feature = Get-CompetitorFeature '' ([string]$v['D'])
+      if (-not $feature) { continue }
+      $competitors.Add([ordered]@{
+        evidenceId = "industry-study-$($v['A'])"; sourceFile = $competitorFile; sourceType = 'industry_study'; sheet = 'Industry_Study_Context'; row = $row.Row
+        vehicle = 'G60'; market = 'US'; feature = $feature; brand = 'Industry aggregate'; model = ''; modelYear = [string]$v['C']
+        rationale = "$($v['D']): $($v['E']) $($v['F']). $($v['J'])"; sourceUrl = [string]$v['K']; sourceLocator = "Study-wide sample: $($v['G']); denominator: $($v['I'])"
+        classificationBasis = 'Deterministic mapping from the supplied industry study item.'
+      })
+    }
+  }
+
   $sales = [Collections.Generic.List[object]]::new()
   $salesEntry = $outer.Entries | Where-Object { $_.Name -eq 'sales_volumes.xlsx' }
   $memory = [IO.MemoryStream]::new(); $source = $salesEntry.Open(); $source.CopyTo($memory); $source.Dispose(); $salesBytes = $memory.ToArray(); $memory.Dispose()
@@ -123,7 +205,7 @@ try {
     }
   }
 
-  $contextPayload = [ordered]@{ generatedAt = (Get-Date).ToUniversalTime().ToString('o'); manifest = $manifest; sales = $sales; studies = $studies }
+  $contextPayload = [ordered]@{ generatedAt = (Get-Date).ToUniversalTime().ToString('o'); manifest = $manifest; sales = $sales; studies = $studies; competitors = $competitors; competitorPrices = $competitorPrices }
   $payload = [ordered]@{
     generatedAt = (Get-Date).ToUniversalTime().ToString('o')
     archive = [IO.Path]::GetFileName($Archive)
@@ -137,7 +219,7 @@ try {
   [IO.File]::WriteAllText((Join-Path (Get-Location) $Output), $json, $encoding)
   [IO.File]::WriteAllText((Join-Path (Get-Location) 'data\context.json'), ($contextPayload | ConvertTo-Json -Depth 8 -Compress), $encoding)
   Write-Output "Wrote $($records.Count) evidence records to $Output"
-  Write-Output "Wrote $($sales.Count) sales rows, $($studies.Count) study rows, and $($manifest.Count) source files to data\context.json"
+  Write-Output "Wrote $($sales.Count) sales rows, $($studies.Count) study rows, $($competitors.Count) competitor signals, $($competitorPrices.Count) competitor prices, and $($manifest.Count) source files to data\context.json"
 } finally {
   $outer.Dispose()
 }

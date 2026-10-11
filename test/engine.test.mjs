@@ -91,6 +91,18 @@ test('uses market studies and sales intelligence to create and rank cited requir
   assert.equal(validateCitations(groups,evidence,context),true);
 });
 
+test('uses supplied competitor workbook signals in requirement generation and ranking', () => {
+  const context={competitors:[{evidenceId:'competitor-option-1',sourceFile:'competitor_bmw_format.xlsx',sourceType:'competitor_equipment',sheet:'Option_List',row:2,vehicle:'G60',market:'US',feature:'Parking assistance',rationale:'A comparable vehicle lists surround-view parking assistance.',sourceUrl:'https://example.com/specification',classificationBasis:'Workbook equipment group.'}]};
+  const groups=buildModel([],{vehicle:'G60',market:'US',months:18,people:12,importance:8},{},context);
+  const requirement=groups.flatMap(group=>group.requirements).find(item=>item.feature==='Parking assistance');
+  assert.ok(requirement);
+  assert.equal(requirement.citations[0].sourceType,'competitor_equipment');
+  assert.equal(requirement.citations[0].file,'competitor_bmw_format.xlsx');
+  assert.equal(requirement.citations[0].row,2);
+  assert.ok(requirement.scoreBreakdown.marketIntelligence>0);
+  assert.equal(validateCitations(groups,[],context),true);
+});
+
 test('matches European studies when EU is one segment of a combined sheet name', () => {
   const context={studies:[{evidenceId:'study-eu-1',sourceFile:'studies.xlsx',sourceType:'customer_study',sheet:'CN_EU_2025',row:7,cells:{A:'Interior styling'}}]};
   const groups=buildModel([],{vehicle:'G60',market:'DE',months:18,people:12,importance:8},{},context);
