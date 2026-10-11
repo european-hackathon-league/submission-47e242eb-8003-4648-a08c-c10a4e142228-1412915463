@@ -1,0 +1,1385 @@
+{
+  "notice": "SYNTHETIC DEMO DATA: all identities, decisions, rationales, engineering feedback and outcomes are fabricated. Not actual BMW decisions or evidence.",
+  "project": {
+    "vehicle": "G60",
+    "market": "US"
+  },
+  "events": [
+    {
+      "id": "synthetic-diary-2026-07-01-01",
+      "type": "project-created",
+      "title": "Define the US G60 successor project",
+      "description": "Focus on daily usability, comfort and connectivity for executive-sedan commuters. Demo delivery target: 18 months with 12 people.",
+      "at": "2026-07-01T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Establish one vehicle and market so evidence and decisions remain comparable.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-06-01",
+      "type": "requirement-edited",
+      "title": "Reduce menu navigation for frequently used cabin functions",
+      "description": "Repeated synthetic feedback describes difficulty adjusting settings while driving.",
+      "at": "2026-07-06T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "Favor understandable daily interactions before adding novelty.",
+        "before": {
+          "statement": "Broad feature improvement"
+        },
+        "after": {
+          "statement": "Reduce menu navigation for frequently used cabin functions"
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-06-02",
+      "type": "ranking-changed",
+      "title": "Reprioritize Cabin controls",
+      "description": "Cabin controls moves to rank 1 in the synthetic backlog.",
+      "at": "2026-07-06T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "Favor understandable daily interactions before adding novelty.",
+        "before": {
+          "rank": 5
+        },
+        "after": {
+          "rank": 1
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-06-03",
+      "type": "responsible-entity-corrected",
+      "title": "Assign review owner for Cabin controls",
+      "description": "PM assigns the Product Integration team to review the requirement.",
+      "at": "2026-07-06T10:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-20-01",
+      "type": "requirement-edited",
+      "title": "Improve reconnection after short stops",
+      "description": "Synthetic commuter scenarios report repeated pairing steps.",
+      "at": "2026-07-20T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Smartphone connectivity",
+        "rationale": "Daily reliability creates value across many trips.",
+        "before": {
+          "statement": "Broad feature improvement"
+        },
+        "after": {
+          "statement": "Improve reconnection after short stops"
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-20-02",
+      "type": "ranking-changed",
+      "title": "Reprioritize Smartphone connectivity",
+      "description": "Smartphone connectivity moves to rank 2 in the synthetic backlog.",
+      "at": "2026-07-20T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Smartphone connectivity",
+        "rationale": "Daily reliability creates value across many trips.",
+        "before": {
+          "rank": 5
+        },
+        "after": {
+          "rank": 2
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-20-03",
+      "type": "responsible-entity-corrected",
+      "title": "Assign review owner for Smartphone connectivity",
+      "description": "PM assigns the Digital Experience team to review the requirement.",
+      "at": "2026-07-20T10:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Smartphone connectivity",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-03-01",
+      "type": "requirement-edited",
+      "title": "Prioritize long-trip seating comfort",
+      "description": "Synthetic long-distance users describe pressure and fatigue.",
+      "at": "2026-08-03T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Seating comfort",
+        "rationale": "Comfort supports the executive-sedan customer proposition.",
+        "before": {
+          "statement": "Broad feature improvement"
+        },
+        "after": {
+          "statement": "Prioritize long-trip seating comfort"
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-03-02",
+      "type": "ranking-changed",
+      "title": "Reprioritize Seating comfort",
+      "description": "Seating comfort moves to rank 3 in the synthetic backlog.",
+      "at": "2026-08-03T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Seating comfort",
+        "rationale": "Comfort supports the executive-sedan customer proposition.",
+        "before": {
+          "rank": 5
+        },
+        "after": {
+          "rank": 3
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-03-03",
+      "type": "responsible-entity-corrected",
+      "title": "Assign review owner for Seating comfort",
+      "description": "PM assigns the Product Integration team to review the requirement.",
+      "at": "2026-08-03T10:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Seating comfort",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-03-04",
+      "type": "interpretation-confirmed",
+      "title": "Review feasibility of Seating comfort",
+      "description": "Synthetic engineering assessment: feasible with conditions; validation and dependency review remain open.",
+      "at": "2026-08-03T10:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Seating comfort",
+        "rationale": "Do not treat a planning estimate as confirmed delivery.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-03-05",
+      "type": "requirement-approved-with-conditions",
+      "title": "Conditionally approve Seating comfort",
+      "description": "Include the outcome in the shortlist subject to recorded validation conditions.",
+      "at": "2026-08-03T11:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Seating comfort",
+        "rationale": "Comfort supports the executive-sedan customer proposition.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-17-01",
+      "type": "requirement-edited",
+      "title": "Improve parking confidence in tight spaces",
+      "description": "Synthetic feedback favors predictable low-speed assistance.",
+      "at": "2026-08-17T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Parking assistance",
+        "rationale": "Useful assistance should reduce effort without overstating autonomy.",
+        "before": {
+          "statement": "Broad feature improvement"
+        },
+        "after": {
+          "statement": "Improve parking confidence in tight spaces"
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-17-02",
+      "type": "ranking-changed",
+      "title": "Reprioritize Parking assistance",
+      "description": "Parking assistance moves to rank 1 in the synthetic backlog.",
+      "at": "2026-08-17T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Parking assistance",
+        "rationale": "Useful assistance should reduce effort without overstating autonomy.",
+        "before": {
+          "rank": 5
+        },
+        "after": {
+          "rank": 1
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-17-03",
+      "type": "responsible-entity-corrected",
+      "title": "Assign review owner for Parking assistance",
+      "description": "PM assigns the Digital Experience team to review the requirement.",
+      "at": "2026-08-17T10:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Parking assistance",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-17-04",
+      "type": "interpretation-confirmed",
+      "title": "Review feasibility of Parking assistance",
+      "description": "Synthetic engineering assessment: feasible with conditions; validation and dependency review remain open.",
+      "at": "2026-08-17T10:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Parking assistance",
+        "rationale": "Do not treat a planning estimate as confirmed delivery.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-17-05",
+      "type": "requirement-approved-with-conditions",
+      "title": "Conditionally approve Parking assistance",
+      "description": "Include the outcome in the shortlist subject to recorded validation conditions.",
+      "at": "2026-08-17T11:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Parking assistance",
+        "rationale": "Useful assistance should reduce effort without overstating autonomy.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-01-01",
+      "type": "requirement-edited",
+      "title": "Defer a dedicated passenger screen",
+      "description": "The synthetic review found weak demand relative to integration effort.",
+      "at": "2026-09-01T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Passenger display",
+        "rationale": "Preserve capacity for controls and connectivity.",
+        "before": {
+          "statement": "Broad feature improvement"
+        },
+        "after": {
+          "statement": "Defer a dedicated passenger screen"
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-01-02",
+      "type": "ranking-changed",
+      "title": "Reprioritize Passenger display",
+      "description": "Passenger display moves to rank 2 in the synthetic backlog.",
+      "at": "2026-09-01T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Passenger display",
+        "rationale": "Preserve capacity for controls and connectivity.",
+        "before": {
+          "rank": 5
+        },
+        "after": {
+          "rank": 2
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-01-03",
+      "type": "responsible-entity-corrected",
+      "title": "Assign review owner for Passenger display",
+      "description": "PM assigns the Product Integration team to review the requirement.",
+      "at": "2026-09-01T10:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Passenger display",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-01-04",
+      "type": "requirement-rejected",
+      "title": "Reject passenger-display launch scope",
+      "description": "Exclude a dedicated passenger display from the initial shortlist.",
+      "at": "2026-09-01T10:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Passenger display",
+        "rationale": "Preserve capacity for controls and connectivity.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-14-01",
+      "type": "requirement-edited",
+      "title": "Restore cabin usability to the top priority",
+      "description": "Synthetic engineering feedback narrows the launch scope to existing control surfaces.",
+      "at": "2026-09-14T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "A focused usability outcome fits the demo launch window.",
+        "before": {
+          "statement": "Broad feature improvement"
+        },
+        "after": {
+          "statement": "Restore cabin usability to the top priority"
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-14-02",
+      "type": "ranking-changed",
+      "title": "Reprioritize Cabin controls",
+      "description": "Cabin controls moves to rank 3 in the synthetic backlog.",
+      "at": "2026-09-14T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "A focused usability outcome fits the demo launch window.",
+        "before": {
+          "rank": 5
+        },
+        "after": {
+          "rank": 3
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-14-03",
+      "type": "responsible-entity-corrected",
+      "title": "Assign review owner for Cabin controls",
+      "description": "PM assigns the Digital Experience team to review the requirement.",
+      "at": "2026-09-14T10:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-14-04",
+      "type": "interpretation-confirmed",
+      "title": "Review feasibility of Cabin controls",
+      "description": "Synthetic engineering assessment: feasible with conditions; validation and dependency review remain open.",
+      "at": "2026-09-14T10:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "Do not treat a planning estimate as confirmed delivery.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-14-05",
+      "type": "requirement-approved-with-conditions",
+      "title": "Conditionally approve Cabin controls",
+      "description": "Include the outcome in the shortlist subject to recorded validation conditions.",
+      "at": "2026-09-14T11:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "A focused usability outcome fits the demo launch window.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-28-01",
+      "type": "requirement-edited",
+      "title": "Approve reconnection reliability with validation conditions",
+      "description": "Synthetic stakeholder review supports implementation pending device-matrix checks.",
+      "at": "2026-09-28T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Smartphone connectivity",
+        "rationale": "Accept the customer outcome while retaining validation as a release condition.",
+        "before": {
+          "statement": "Broad feature improvement"
+        },
+        "after": {
+          "statement": "Approve reconnection reliability with validation conditions"
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-28-02",
+      "type": "ranking-changed",
+      "title": "Reprioritize Smartphone connectivity",
+      "description": "Smartphone connectivity moves to rank 1 in the synthetic backlog.",
+      "at": "2026-09-28T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Smartphone connectivity",
+        "rationale": "Accept the customer outcome while retaining validation as a release condition.",
+        "before": {
+          "rank": 5
+        },
+        "after": {
+          "rank": 1
+        }
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-28-03",
+      "type": "responsible-entity-corrected",
+      "title": "Assign review owner for Smartphone connectivity",
+      "description": "PM assigns the Product Integration team to review the requirement.",
+      "at": "2026-09-28T10:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Smartphone connectivity",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-09-01",
+      "type": "requirement-edited",
+      "title": "Clarify Cabin controls acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for cabin controls.",
+      "at": "2026-07-09T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-16-01",
+      "type": "requirement-edited",
+      "title": "Clarify Smartphone connectivity acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for smartphone connectivity.",
+      "at": "2026-07-16T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Smartphone connectivity",
+        "rationale": "Preserve the customer need while making the scope reviewable.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-16-02",
+      "type": "requirement-grouped",
+      "title": "Move Smartphone connectivity into its review domain",
+      "description": "PM groups smartphone connectivity with related requirements.",
+      "at": "2026-07-16T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Smartphone connectivity",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-23-01",
+      "type": "requirement-edited",
+      "title": "Clarify Seating comfort acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for seating comfort.",
+      "at": "2026-07-23T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Seating comfort",
+        "rationale": "Preserve the customer need while making the scope reviewable.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-07-30-01",
+      "type": "requirement-edited",
+      "title": "Clarify Parking assistance acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for parking assistance.",
+      "at": "2026-07-30T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Parking assistance",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-06-01",
+      "type": "requirement-edited",
+      "title": "Clarify Cabin controls acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for cabin controls.",
+      "at": "2026-08-06T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "Preserve the customer need while making the scope reviewable.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-06-02",
+      "type": "requirement-grouped",
+      "title": "Move Cabin controls into its review domain",
+      "description": "PM groups cabin controls with related requirements.",
+      "at": "2026-08-06T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-13-01",
+      "type": "requirement-edited",
+      "title": "Clarify Smartphone connectivity acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for smartphone connectivity.",
+      "at": "2026-08-13T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Smartphone connectivity",
+        "rationale": "Preserve the customer need while making the scope reviewable.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-20-01",
+      "type": "requirement-edited",
+      "title": "Clarify Seating comfort acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for seating comfort.",
+      "at": "2026-08-20T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Seating comfort",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-27-01",
+      "type": "requirement-edited",
+      "title": "Clarify Parking assistance acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for parking assistance.",
+      "at": "2026-08-27T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Parking assistance",
+        "rationale": "Preserve the customer need while making the scope reviewable.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-08-27-02",
+      "type": "requirement-grouped",
+      "title": "Move Parking assistance into its review domain",
+      "description": "PM groups parking assistance with related requirements.",
+      "at": "2026-08-27T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Parking assistance",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-03-01",
+      "type": "requirement-edited",
+      "title": "Clarify Cabin controls acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for cabin controls.",
+      "at": "2026-09-03T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "Preserve the customer need while making the scope reviewable.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-10-01",
+      "type": "requirement-edited",
+      "title": "Clarify Smartphone connectivity acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for smartphone connectivity.",
+      "at": "2026-09-10T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Smartphone connectivity",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-17-01",
+      "type": "requirement-edited",
+      "title": "Clarify Seating comfort acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for seating comfort.",
+      "at": "2026-09-17T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Seating comfort",
+        "rationale": "Preserve the customer need while making the scope reviewable.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-17-02",
+      "type": "requirement-grouped",
+      "title": "Move Seating comfort into its review domain",
+      "description": "PM groups seating comfort with related requirements.",
+      "at": "2026-09-17T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Seating comfort",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-09-24-01",
+      "type": "requirement-edited",
+      "title": "Clarify Parking assistance acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for parking assistance.",
+      "at": "2026-09-24T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Parking assistance",
+        "rationale": "Preserve the customer need while making the scope reviewable.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-01-01",
+      "type": "requirement-edited",
+      "title": "Clarify Cabin controls acceptance wording",
+      "description": "Replace a broad feature label with an atomic customer outcome for cabin controls.",
+      "at": "2026-10-01T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "Cabin controls",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-05-01",
+      "type": "ranking-changed",
+      "title": "Launch scope shifts toward reliability",
+      "description": "Connectivity and cabin controls move ahead of decorative personalization.",
+      "at": "2026-10-05T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "The synthetic launch review favors frequent customer pain points over novelty.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-05-02",
+      "type": "responsible-entity-corrected",
+      "title": "Confirm follow-up owner",
+      "description": "PM assigns the relevant domain lead to track the next review action.",
+      "at": "2026-10-05T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-05-03",
+      "type": "requirement-edited",
+      "title": "Clarify the launch condition",
+      "description": "Separate the approved customer outcome from the unresolved validation condition.",
+      "at": "2026-10-05T10:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Avoid implying engineering sign-off where none is recorded.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-05-04",
+      "type": "ranking-changed",
+      "title": "Update shortlist after review",
+      "description": "Reflect the confirmed scope change in the next review order.",
+      "at": "2026-10-05T10:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Keep the shortlist aligned with the recorded launch decisions.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-05-05",
+      "type": "group-renamed",
+      "title": "Rename launch review group",
+      "description": "PM renames the group to Daily usability and reliability.",
+      "at": "2026-10-05T11:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-06-01",
+      "type": "requirement-approved",
+      "title": "Approve cabin-control usability outcome",
+      "description": "Approve simpler access to frequently used settings, without committing to an unvalidated interface design.",
+      "at": "2026-10-06T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Address the highest-priority daily usability need.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-06-02",
+      "type": "responsible-entity-corrected",
+      "title": "Confirm follow-up owner",
+      "description": "PM assigns the relevant domain lead to track the next review action.",
+      "at": "2026-10-06T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-07-01",
+      "type": "requirement-approved-with-conditions",
+      "title": "Approve connectivity with a device test gate",
+      "description": "Reliable reconnection remains approved; device-matrix validation must finish before release.",
+      "at": "2026-10-07T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Retain the reliability outcome and make the unresolved test gate explicit.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-07-02",
+      "type": "responsible-entity-corrected",
+      "title": "Confirm follow-up owner",
+      "description": "PM assigns the relevant domain lead to track the next review action.",
+      "at": "2026-10-07T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-07-03",
+      "type": "requirement-edited",
+      "title": "Clarify the launch condition",
+      "description": "Separate the approved customer outcome from the unresolved validation condition.",
+      "at": "2026-10-07T10:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Avoid implying engineering sign-off where none is recorded.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-07-04",
+      "type": "ranking-changed",
+      "title": "Update shortlist after review",
+      "description": "Reflect the confirmed scope change in the next review order.",
+      "at": "2026-10-07T10:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Keep the shortlist aligned with the recorded launch decisions.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-07-05",
+      "type": "group-renamed",
+      "title": "Rename launch review group",
+      "description": "PM renames the group to Daily usability and reliability.",
+      "at": "2026-10-07T11:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-08-01",
+      "type": "requirement-rejected",
+      "title": "Defer decorative lighting expansion",
+      "description": "Remove additional lighting variants from the initial release scope.",
+      "at": "2026-10-08T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Protect capacity for usability and connection reliability.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-08-02",
+      "type": "responsible-entity-corrected",
+      "title": "Confirm follow-up owner",
+      "description": "PM assigns the relevant domain lead to track the next review action.",
+      "at": "2026-10-08T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-09-01",
+      "type": "interpretation-confirmed",
+      "title": "Record the launch review outcome",
+      "description": "Cabin usability is approved. Connectivity is conditional. Passenger display and lighting expansion remain deferred. Parking validation is still open.",
+      "at": "2026-10-09T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Close the scope review while keeping outstanding conditions visible.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-09-02",
+      "type": "responsible-entity-corrected",
+      "title": "Confirm follow-up owner",
+      "description": "PM assigns the relevant domain lead to track the next review action.",
+      "at": "2026-10-09T09:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-09-03",
+      "type": "requirement-edited",
+      "title": "Clarify the launch condition",
+      "description": "Separate the approved customer outcome from the unresolved validation condition.",
+      "at": "2026-10-09T10:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Avoid implying engineering sign-off where none is recorded.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-09-04",
+      "type": "ranking-changed",
+      "title": "Update shortlist after review",
+      "description": "Reflect the confirmed scope change in the next review order.",
+      "at": "2026-10-09T10:30:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Keep the shortlist aligned with the recorded launch decisions.",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-09-05",
+      "type": "group-renamed",
+      "title": "Rename launch review group",
+      "description": "PM renames the group to Daily usability and reliability.",
+      "at": "2026-10-09T11:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "",
+        "before": null,
+        "after": null
+      }
+    },
+    {
+      "id": "synthetic-diary-2026-10-10-01",
+      "type": "requirement-edited",
+      "title": "Prepare onboarding handoff",
+      "description": "Current scope: controls approved; connectivity conditional; parking validation open; passenger display and lighting deferred.",
+      "at": "2026-10-10T09:00:00+02:00",
+      "actor": "Synthetic demo PM",
+      "provenance": "Synthetic demo history \u2014 fabricated, not BMW decisions",
+      "data": {
+        "project": {
+          "vehicle": "G60",
+          "market": "US"
+        },
+        "synthetic": true,
+        "feature": "",
+        "rationale": "Give the incoming PM a coherent starting point with open items preserved.",
+        "before": null,
+        "after": null
+      }
+    }
+  ]
+}

@@ -60,6 +60,7 @@ const overrideMap = () => Object.fromEntries(Object.entries(state.overrides).fil
 
 async function init() {
   $('new-feature-button').addEventListener('click',()=>showView('diary'));
+  window.addEventListener('focus',()=>{if(!$('project-diary').classList.contains('hidden'))checkOpenAIStatus().then(renderDiary)});
   $('diary-date').addEventListener('change',()=>{state.diarySummary=null;renderDiary()});
   $('diary-all').addEventListener('click',()=>{$('diary-date').value='';state.diarySummary=null;renderDiary()});
   $('diary-scope').addEventListener('change',()=>{state.diarySummary=null;renderDiary()});
@@ -311,6 +312,9 @@ function populateMarkets(){
 }
 
 async function loadDecisionEvents(){
+  const demo=await fetch('/data/project-diary-demo.json').then(readApiResponse);
+  state.demoDiaryEvents=demo.events;
+
   try{const response=await fetch('/api/project-diary'),payload=await readApiResponse(response);const known=new Set(state.events.map(event=>event.id));state.events.push(...payload.events.filter(event=>isDiaryEvent(event)&&!known.has(event.id)))}catch{}
 }
 
@@ -365,7 +369,7 @@ async function generate(event) {
 function showView(view) {
   ['setup','workspace','memory','project-diary'].forEach(id=>$(id).classList.add('hidden'));
   let activeView=view;
-  if(view==='diary'){$('project-diary').classList.remove('hidden');renderDiary()}
+  if(view==='diary'){$('project-diary').classList.remove('hidden');renderDiary();checkOpenAIStatus().then(renderDiary)}
   else if(view==='overview')$('setup').classList.remove('hidden');
   else if(view==='memory'){$('memory').classList.remove('hidden');setTimeout(()=>$('memory-search').focus(),0)}
   else if(state.config)$('workspace').classList.remove('hidden');
@@ -687,7 +691,7 @@ init().catch(error=>{document.body.innerHTML=`<main class="memory"><h1>Unable to
 function DIARY_EVENT_ALLOWED(type){return isDiaryEvent({id:'check',type,at:new Date().toISOString()})}
 function diaryProject(){return state.config||{vehicle:$('vehicle').value,market:$('market').value}}
 function diaryProjectLabel(){const project=diaryProject();const vehicles={G60:'BMW 5 Series · G60',F70:'BMW 1 Series · F70',G70:'BMW 7 Series · G70'},markets={US:'United States',GB:'United Kingdom',DE:'Germany',CN:'China'};return `${vehicles[project.vehicle]||project.vehicle} · ${markets[project.market]||project.market}`}
-function scopedDiary(){return diaryEntries([...state.events,...state.historical.map(event=>({...event,type:event.data?.decisionStatus?.toLowerCase().includes('reject')?'requirement-rejected':'requirement-approved',data:{...event.data,rationale:event.data.pmReasoning}}))],$('diary-scope').value==='current'?diaryProject():null)}
+function scopedDiary(){return diaryEntries([...state.events,...(state.demoDiaryEvents||[]),...state.historical.map(event=>({...event,type:event.data?.decisionStatus?.toLowerCase().includes('reject')?'requirement-rejected':'requirement-approved',data:{...event.data,rationale:event.data.pmReasoning}}))],$('diary-scope').value==='current'?diaryProject():null)}
 function renderDiary(){
   if(!$('diary-timeline'))return;
   $('diary-scope').querySelector('[value=current]').textContent=diaryProjectLabel();
@@ -706,13 +710,16 @@ function renderDiary(){
   }
   $('diary-graph').innerHTML=cells.join('');$('diary-graph').querySelectorAll('[data-day]').forEach(button=>button.onclick=()=>{$('diary-date').value=$('diary-date').value===button.dataset.day?'':button.dataset.day;state.diarySummary=null;renderDiary()});
   const selected=diaryEntries(events,null,day);
-  $('diary-timeline').innerHTML=selected.length?selected.map(event=>`<article class="diary-entry"><time>${escapeHtml(new Date(event.at).toLocaleString())}</time><h3>${escapeHtml(event.title)}</h3><p>${escapeHtml(event.description)}</p><p class="diary-reason">${escapeHtml(event.data?.rationale?`PM reason: ${event.data.rationale}`:'No written PM rationale recorded.')}</p><details><summary>Recorded details</summary><pre>${escapeHtml(JSON.stringify(event.data,null,2))}</pre></details></article>`).join(''):'<p>No recorded changes for this selection.</p>';
+  $('diary-timeline').innerHTML=selected.length?selected.map(event=>`<article class="diary-entry"><time>${escapeHtml(new Date(event.at).toLocaleString())}</time><h3>${escapeHtml(event.title)}</h3>${event.data?.synthetic?'<small class="diary-demo-badge">Synthetic demo</small>':''}<p>${escapeHtml(event.description)}</p><p class="diary-reason">${escapeHtml(event.data?.rationale?`PM reason: ${event.data.rationale}`:'No written PM rationale recorded.')}</p><details><summary>Recorded details</summary><pre>${escapeHtml(JSON.stringify(event.data,null,2))}</pre></details></article>`).join(''):'<p>No recorded changes for this selection.</p>';
   $('diary-summarize').disabled=!day||!selected.length||!state.openAIConfigured||state.diaryBusy;
   $('diary-summarize').title=!state.openAIConfigured?'Configure OPENAI_API_KEY on the server to enable summaries.':'Analyze all recorded changes for the selected day';
   if($('diary-period').value!=='custom'){const range=diaryRange($('diary-period').value,events);$('diary-start').value=range.start;$('diary-end').value=range.end}
   const from=$('diary-start').value,to=$('diary-end').value,valid=from&&to&&from<=to,rangeEvents=valid?eventsInRange(events,from,to):[];
   $('diary-range-status').textContent=valid?`${from} – ${to} · ${rangeEvents.length} recorded changes`:'Choose a valid start and end date.';
   $('diary-story').disabled=!valid||!rangeEvents.length||!state.openAIConfigured||state.diaryBusy;
+  if(state.diaryBusy)$('diary-range-status').textContent+=' · Generating storyline…';
+  else if(!state.openAIConfigured)$('diary-range-status').textContent+=' · AI unavailable: '+$('ai-status').textContent.trim();
+  else if(valid&&!rangeEvents.length)$('diary-range-status').textContent+=' · Choose a period with recorded changes.';
   $('diary-story').title=state.openAIConfigured?'Summarize all recorded changes in this period':'Configure OPENAI_API_KEY to enable storylines.';
   $('diary-summary').innerHTML=state.diarySummary||'';
 }
@@ -720,9 +727,9 @@ async function summarizeSelectedDay(story=false){
   story=story===true;
   const day=$('diary-date').value,start=$('diary-start').value,end=$('diary-end').value,events=story?eventsInRange(scopedDiary(),start,end):diaryEntries(scopedDiary(),null,day);if((!story&&!day)||!events.length)return;
   const label=story?`${start} – ${end}`:day;
-  state.diaryBusy=true;state.diarySummary='<p>Analyzing the selected day…</p>';renderDiary();
+  state.diaryBusy=true;state.diarySummary=story?'<p>Analyzing the selected timeline…</p>':'<p>Analyzing the selected day…</p>';renderDiary();
   try{
-    const response=await fetch('/api/project-diary/summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({day:story?undefined:day,start:story?start:undefined,end:story?end:undefined,events,project:diaryProject(),onboarding:story&&$('diary-period').value==='onboarding'})});const result=await readApiResponse(response);
+    const response=await fetch('/api/project-diary/summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({day:story?undefined:day,start:story?start:undefined,end:story?end:undefined,timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone,project:$('diary-scope').value==='current'?diaryProject():null,onboarding:story&&$('diary-period').value==='onboarding'})});const result=await readApiResponse(response);
     state.diarySummary=`<section class="diary-summary-card"><h2>${story?'Project storyline':'Biggest decisions'} · ${escapeHtml(label)}</h2>${result.storyline?`<p>${escapeHtml(result.storyline)}</p>`:''}<ol>${result.decisions.map(item=>`<li><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.significance)}</p><small>Recorded events: ${item.eventIds.map(escapeHtml).join(', ')}</small></li>`).join('')}</ol><small>AI summary of ${events.length} recorded changes · ${escapeHtml(result.model)}. Review against the diary below.</small></section>`;
   }catch(error){state.diarySummary=`<p role="alert">${escapeHtml(error.message)}</p>`}
   finally{state.diaryBusy=false;renderDiary()}

@@ -33,3 +33,12 @@ test('onboarding starts at first recorded event and custom ranges include both b
  assert.deepEqual(diaryRange('onboarding',events,new Date(2026,9,11,12)),{start:'2024-06-15',end:'2026-10-11'});
  assert.equal(eventsInRange(events,'2024-06-15','2026-10-11').length,2);
 });
+
+import {readFile} from 'node:fs/promises';
+test('synthetic diary fixture is labelled, unique and covers every demo storyline period',async()=>{
+ const data=JSON.parse(await readFile(new URL('../data/project-diary-demo.json',import.meta.url),'utf8'));
+ assert.match(data.notice,/SYNTHETIC/);assert.equal(new Set(data.events.map(e=>e.id)).size,data.events.length);
+ assert.ok(data.events.every(e=>isDiaryEvent(e)&&e.data.synthetic&&e.data.project.vehicle==='G60'&&e.data.project.market==='US'));
+ for(const preset of ['week','month','quarter','onboarding']){const range=diaryRange(preset,data.events,new Date(2026,9,11,12));assert.ok(eventsInRange(data.events,range.start,range.end).length>0,preset)}
+ assert.ok(data.events.some(e=>!e.data.rationale));
+});

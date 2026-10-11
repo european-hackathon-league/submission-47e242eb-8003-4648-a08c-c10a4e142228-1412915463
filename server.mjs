@@ -1,3 +1,4 @@
+import { summarizeStoredDiary } from './src/diary-summary.mjs';
 import { isDiaryEvent } from './src/project-diary.mjs';
 import { summarizeDiaryDay } from './src/openai.mjs';
 import { createServer } from 'node:http';
@@ -53,7 +54,15 @@ createServer(async (req, res) => {
     return;
   }
   if (pathname === '/api/project-diary/summary' && req.method === 'POST') {
-    try { sendJson(res,200,await summarizeDiaryDay(await readJson(req, 2_000_000))); }
+    try {
+      const request=await readJson(req);
+      let saved=[];try{saved=(await readFile(decisionEventsPath,'utf8')).split(/\r?\n/).filter(Boolean).map(line=>JSON.parse(line))}catch(error){if(error.code!=='ENOENT')throw error}
+      const demo=JSON.parse(await readFile(join(root,'data/project-diary-demo.json'),'utf8'));
+      const historical=JSON.parse(await readFile(join(root,'data/historical-decisions.json'),'utf8'));
+      const history=historical.decisions.map(event=>({id:event.id,at:event.timestamp,type:event.decisionStatus.toLowerCase().includes('reject')?'requirement-rejected':'requirement-approved',title:event.requirement,description:event.outcome,provenance:event.provenance,data:{project:{vehicle:event.vehicle,market:event.market},rationale:event.pmReasoning,synthetic:true}}));
+      const result=await summarizeStoredDiary(request,[...saved,...demo.events,...history],summarizeDiaryDay);
+      sendJson(res,200,result);
+    }
     catch(error) { sendJson(res,/OPENAI_API_KEY/.test(error.message)?503:400,{error:error.message}); }
     return;
   }
