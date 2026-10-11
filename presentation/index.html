@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BMW Product Intelligence — Pitch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --ink: #172230;
+      --muted: #697687;
+      --line: #cbd5df;
+      --panel: #dfe8f1;
+      --blue: #0669d7;
+      --green: #148461;
+      --red: #b42318;
+      --ease: cubic-bezier(.65, 0, .35, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: var(--bg); }
+    body { margin: 0; color: var(--ink); font-family: Inter, Arial, sans-serif; }
+    .reveal { color: var(--ink); font-family: Inter, Arial, sans-serif; font-size: 30px; }
+    .reveal .slides { text-align: left; }
+    .reveal .slides section { width: 1920px; height: 1080px; padding: 0; }
+    .reveal .slides > section, .reveal .slides > section > section { top: 0 !important; }
+    .reveal .slides p { margin: 0; }
+    .reveal h1, .reveal h2, .reveal h3 { margin: 0; color: var(--ink); font-family: Inter, Arial, sans-serif; font-weight: 400; letter-spacing: -.055em; }
+    .reveal ::selection { background: #b8d5f5; }
+
+    .slide {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: .43;
+      background-image: radial-gradient(#b9c7d4 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: linear-gradient(90deg, rgba(0,0,0,.25), transparent 78%);
+      pointer-events: none;
+    }
+    .frame { position: relative; width: 100%; height: 100%; padding: 68px 110px; }
+    .brand { position: absolute; top: 70px; left: 110px; display: flex; align-items: center; gap: 18px; color: var(--ink); font-size: 18px; font-weight: 600; letter-spacing: -.02em; }
+    .brand-mark { width: 32px; height: 32px; border: 1px solid #657688; border-radius: 50%; background: conic-gradient(#f4f7fb 0 25%, #75a6cf 0 50%, #f4f7fb 0 75%, #75a6cf 0); }
+    .slide-count { position: absolute; top: 78px; right: 110px; color: #697687; font-size: 13px; font-weight: 600; letter-spacing: .16em; }
+    .eyebrow { color: #536173; font-size: 15px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
+    .label { color: var(--muted); font-size: 17px; line-height: 1.45; }
+    .rule { width: 100%; height: 1px; background: var(--line); }
+    .accent-rule { width: 42px; height: 3px; background: var(--blue); }
+
+    /* Opening */
+    .opening { background: linear-gradient(115deg, #e4edf4 0%, #f4f7fb 54%, #d4e1ec 100%); }
+    .opening::after { content: ""; position: absolute; width: 1160px; height: 310px; right: -190px; bottom: -150px; border: 1px solid rgba(6,105,215,.22); border-radius: 50%; transform: rotate(-14deg); }
+    .opening-copy { position: absolute; top: 256px; left: 228px; width: 1150px; }
+    .opening .eyebrow { color: var(--blue); }
+    .opening h1 { width: 1100px; margin-top: 30px; font-size: 116px; line-height: .93; }
+    .opening h1 strong { color: var(--blue); font-weight: 400; }
+    .opening .subhead { width: 565px; margin-top: 42px; color: #344252; font-size: 25px; line-height: 1.55; }
+    .opening-meta { position: absolute; bottom: 80px; left: 228px; display: flex; gap: 0; border-top: 1px solid #aabac8; }
+    .opening-meta span { min-width: 188px; padding: 19px 38px 0 0; color: #536173; font-size: 14px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+    .opening-meta span + span { padding-left: 38px; border-left: 1px solid #aabac8; }
+    .arc { position: absolute; right: 178px; top: 266px; width: 400px; height: 400px; border: 1px solid rgba(6,105,215,.38); border-radius: 50%; }
+    .arc::before, .arc::after { content: ""; position: absolute; border: 1px solid rgba(6,105,215,.20); border-radius: 50%; }
+    .arc::before { inset: 58px; }
+    .arc::after { inset: 124px; }
+    .arc-dot { position: absolute; top: 140px; right: 126px; width: 13px; height: 13px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 10px rgba(6,105,215,.10); animation: orbit-drift 5s var(--ease) infinite alternate; }
+    @keyframes orbit-drift { to { transform: translate(-44px, 38px); } }
+
+    /* Shared statement slides */
+    .statement .content { position: absolute; top: 290px; left: 228px; width: 1464px; }
+    .statement h2 { max-width: 1250px; font-size: 88px; line-height: .98; }
+    .statement .label { max-width: 525px; margin-top: 32px; }
+    .statement .side-index { position: absolute; top: 285px; right: 228px; display: grid; gap: 15px; width: 205px; color: #657688; font-size: 15px; }
+    .statement .side-index strong { color: var(--blue); font-size: 17px; font-weight: 600; }
+
+    /* Problem */
+    .problem .content { display: grid; grid-template-columns: 1.18fr .82fr; gap: 135px; align-items: center; }
+    .problem h2 { font-size: 75px; }
+    .problem blockquote { margin: 0; padding-left: 36px; border-left: 3px solid var(--blue); color: #243241; font-size: 42px; font-weight: 400; letter-spacing: -.04em; line-height: 1.24; }
+    .problem cite { display: block; margin-top: 28px; padding-left: 39px; color: var(--muted); font-size: 17px; font-style: normal; }
+    .handover { position: relative; height: 392px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .handover-line { position: absolute; top: 196px; right: 10px; left: 10px; height: 1px; background: #8293a4; }
+    .handover-step { position: absolute; top: 154px; width: 150px; text-align: center; color: #536173; font-size: 14px; line-height: 1.4; }
+    .handover-step::before { content: ""; display: block; width: 18px; height: 18px; margin: 0 auto 14px; border: 2px solid #6e8092; border-radius: 50%; background: var(--bg); }
+    .handover-step.now { left: 0; } .handover-step.gap { left: calc(50% - 75px); } .handover-step.next { right: 0; }
+    .handover-step.gap::before { border-color: var(--blue); box-shadow: 0 0 0 7px rgba(6,105,215,.1); }
+    .handover-step.gap { color: var(--blue); font-weight: 600; }
+
+    /* Evidence */
+    .evidence .content { position: absolute; top: 258px; left: 228px; right: 228px; }
+    .evidence-heading { display: flex; align-items: end; justify-content: space-between; }
+    .evidence h2 { max-width: 875px; font-size: 82px; line-height: .98; }
+    .data-total { padding-bottom: 7px; color: var(--blue); font-size: 25px; font-weight: 600; }
+    .signal-grid { display: grid; grid-template-columns: 1.03fr .82fr 1.15fr; margin-top: 72px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .signal-grid article { min-height: 296px; padding: 37px 36px 32px 0; }
+    .signal-grid article + article { padding-left: 42px; border-left: 1px solid var(--line); }
+    .signal-number { color: var(--ink); font-size: 83px; font-weight: 400; letter-spacing: -.065em; line-height: 1; }
+    .signal-number.blue { color: var(--blue); }
+    .signal-grid h3 { margin-top: 23px; font-size: 17px; font-weight: 600; letter-spacing: 0; }
+    .signal-grid p { max-width: 370px; margin-top: 13px; color: var(--muted); font-size: 16px; line-height: 1.55; }
+    .feedback-quote { position: relative; color: #243241; font-size: 24px; line-height: 1.45; letter-spacing: -.025em; }
+    .feedback-quote::before { content: "“"; color: var(--blue); font-size: 64px; line-height: 0; vertical-align: -.38em; }
+    .evidence-source { margin-top: 26px; color: #657688; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+
+    /* Requirement */
+    .requirement .content { position: absolute; top: 244px; left: 228px; right: 228px; }
+    .requirement .heading-row { display: flex; justify-content: space-between; align-items: end; }
+    .requirement h2 { max-width: 820px; font-size: 78px; line-height: .98; }
+    .requirement-card { display: grid; grid-template-columns: 380px 1fr; gap: 0; margin-top: 72px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .requirement-card aside { padding: 38px 36px 36px 0; }
+    .requirement-card aside p { color: #536173; font-size: 15px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; }
+    .requirement-card aside strong { display: block; margin-top: 19px; color: var(--blue); font-size: 42px; font-weight: 400; letter-spacing: -.045em; }
+    .requirement-main { padding: 35px 0 37px 48px; border-left: 1px solid var(--line); }
+    .requirement-main h3 { max-width: 910px; font-size: 48px; line-height: 1.16; }
+    .proof-line { display: flex; align-items: center; gap: 21px; margin-top: 35px; color: #536173; font-size: 15px; }
+    .proof-line i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    .decision-path { display: flex; margin-top: 62px; border-left: 1px solid var(--line); }
+    .decision-path div { width: 25%; padding: 0 27px; }
+    .decision-path div + div { border-left: 1px solid var(--line); }
+    .decision-path span { display: block; color: #6f7e8f; font-size: 13px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
+    .decision-path strong { display: block; margin-top: 13px; color: #263544; font-size: 17px; font-weight: 500; line-height: 1.35; }
+
+    /* Live demo */
+    #live-demo { background: var(--bg); }
+    #live-demo::before { display: none; }
+    #live-demo .demo-hud { position: absolute; z-index: 4; top: 0; right: 0; left: 0; height: 74px; display: flex; align-items: center; justify-content: space-between; padding: 0 42px; background: rgba(247,249,252,.94); border-bottom: 1px solid var(--line); pointer-events: none; }
+    .demo-hud p { color: #536173; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+    .demo-status { display: inline-flex; align-items: center; gap: 9px; color: var(--green); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+    .demo-status i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.4s var(--ease) infinite; }
+    @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(20,132,97,.13); } }
+    .demo-next { position: fixed; z-index: 20; right: 44px; bottom: 38px; display: none; align-items: center; gap: 15px; padding: 15px 18px; background: var(--blue); border: 1px solid var(--blue); border-radius: 2px; color: #fff; font: 600 13px Inter, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; box-shadow: 0 8px 24px rgba(6,105,215,.22); transition: background .18s ease, transform .18s ease; }
+    .demo-next:hover { background: #075fbf; transform: translateY(-2px); }
+    body.on-demo .demo-next { display: inline-flex; }
+    .demo-fallback { position: absolute; inset: 74px 0 0; z-index: 2; display: grid; place-items: center; background: var(--bg); }
+    .demo-fallback[hidden] { display: none; }
+    .demo-fallback-inner { width: 660px; padding: 42px; border-top: 2px solid var(--blue); background: #fff; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .demo-fallback h2 { margin-top: 19px; font-size: 43px; line-height: 1.05; }
+    .demo-fallback p { margin-top: 20px; color: var(--muted); font-size: 18px; line-height: 1.55; }
+    .demo-fallback code { display: block; margin-top: 30px; padding: 15px; background: #edf2f8; color: var(--blue); font: 600 18px "SFMono-Regular", Consolas, monospace; }
+
+    /* Memory */
+    .memory .content { position: absolute; top: 228px; left: 228px; right: 228px; }
+    .memory h2 { max-width: 890px; font-size: 82px; line-height: .98; }
+    .memory-layout { display: grid; grid-template-columns: 1.05fr .95fr; gap: 122px; margin-top: 73px; }
+    .memory-list { border-top: 1px solid var(--line); }
+    .memory-event { display: grid; grid-template-columns: 122px 30px 1fr; gap: 20px; padding: 25px 0; border-bottom: 1px solid var(--line); }
+    .memory-event time { color: #687789; font-size: 14px; font-weight: 600; letter-spacing: .06em; }
+    .memory-dot { width: 10px; height: 10px; margin-top: 4px; border-radius: 50%; background: var(--blue); }
+    .memory-event strong { display: block; color: #23313f; font-size: 19px; font-weight: 600; }
+    .memory-event p { margin-top: 8px; color: var(--muted); font-size: 15px; line-height: 1.45; }
+    .memory-event.new .memory-dot { background: var(--green); }
+    .memory-side { padding: 37px; background: var(--panel); border-left: 3px solid var(--blue); }
+    .memory-side .eyebrow { color: var(--blue); }
+    .memory-side h3 { margin-top: 20px; font-size: 38px; line-height: 1.12; }
+    .memory-side p { margin-top: 22px; color: #405061; font-size: 18px; line-height: 1.55; }
+    .memory-side .revisit { display: inline-flex; align-items: center; gap: 10px; margin-top: 31px; color: var(--green); font-size: 14px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
+    .revisit i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+    /* Closing */
+    .closing { background: linear-gradient(120deg, #071b2c 0%, #102c43 56%, #162b42 100%); }
+    .closing::before { opacity: .25; background-image: radial-gradient(#6f9fbe 1px, transparent 1px); mask-image: none; }
+    .closing .brand { color: #f4f7fb; }
+    .closing .brand-mark { border-color: #b4c8d8; background: conic-gradient(#eaf3fa 0 25%, #5b9ed0 0 50%, #eaf3fa 0 75%, #5b9ed0 0); }
+    .closing .slide-count { color: #adc1d0; }
+    .closing .content { position: absolute; top: 294px; left: 228px; width: 1320px; }
+    .closing .eyebrow { color: #77b8e7; }
+    .closing h2 { margin-top: 29px; color: #fff; font-size: 103px; line-height: .93; }
+    .closing h2 strong { color: #77b8e7; font-weight: 400; }
+    .closing .closing-sub { width: 600px; margin-top: 38px; color: #c5d4df; font-size: 24px; line-height: 1.55; }
+    .closing-line { position: absolute; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid rgba(209,229,244,.25); }
+    .closing-line span { padding: 27px 0 27px 228px; color: #abc0cf; font-size: 15px; font-weight: 500; }
+    .closing-line span + span { padding-left: 48px; border-left: 1px solid rgba(209,229,244,.25); }
+
+    .reveal .slides section .fragment { transition: opacity .65s var(--ease), transform .65s var(--ease); }
+    .fragment.rise { transform: translateY(20px); } .fragment.rise.visible { transform: translateY(0); }
+    .fragment.in { transform: scale(.97); } .fragment.in.visible { transform: scale(1); }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-auto-animate data-transition="fade">
+        <div class="slide opening">
+          <div class="frame">
+            <div class="opening-copy">
+              <p class="eyebrow">BMW Product Intelligence</p>
+              <h1>Would BMW make<br>this <strong>decision</strong> today?</h1>
+              <p class="subhead">A product strategy workspace that turns evidence into decisions the next PM can understand, challenge, and revisit.</p>
+            </div>
+            <div class="arc"><i class="arc-dot"></i></div>
+            <div class="opening-meta"><span>5 Series · G60</span><span>United States</span><span>18 months</span></div>
+          </div>
+          <aside class="notes">[0:00–0:15] “BMW product decisions live longer than the people who make them. Our question is simple: would BMW make the same decision today?”</aside>
+        </div>
+      </section>
+
+      <section data-auto-animate data-transition="fade">
+        <div class="slide problem statement">
+          <div class="frame">
+            <p class="brand" data-id="brand"><i class="brand-mark"></i>BMW Product Intelligence</p>
+            <p class="slide-count">01 / 06</p>
+            <div class="content">
+              <div>
+                <p class="eyebrow">The handover problem</p>
+                <h2>Decisions outlive their authors.</h2>
+                <blockquote class="fragment rise">“I have too much data to look at, and zero memory of why the previous PM made their design choices.”</blockquote>
+                <cite class="fragment rise">Senior product manager interview</cite>
+              </div>
+              <div class="handover fragment in">
+                <i class="handover-line"></i>
+                <div class="handover-step now">G60<br>decision made</div>
+                <div class="handover-step gap">Reasoning<br>lost</div>
+                <div class="handover-step next">New PM<br>inherits it</div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">[0:15–0:35] “This is the handover gap. A new PM inherits a specification, but the trade-offs and assumptions behind it have disappeared.”</aside>
+        </div>
+      </section>
+
+      <section data-auto-animate data-transition="fade">
+        <div class="slide evidence">
+          <div class="frame">
+            <p class="brand" data-id="brand"><i class="brand-mark"></i>BMW Product Intelligence</p>
+            <p class="slide-count">02 / 06</p>
+            <div class="content">
+              <div class="evidence-heading">
+                <div><p class="eyebrow">The G60 signal</p><h2>Evidence is abundant.<br>Context is scarce.</h2></div>
+                <p class="data-total">BMW 5 Series · US</p>
+              </div>
+              <div class="signal-grid">
+                <article data-id="signal-records"><p class="signal-number">4,365</p><h3>US feedback records</h3><p>Customer input spans product experience, equipment, quality and use.</p></article>
+                <article data-id="signal-friction"><p class="signal-number blue">1,217</p><h3>Marked “Difficult to Use”</h3><p>Signals that deserve more weight than a generic wish list.</p></article>
+                <article class="fragment rise"><p class="feedback-quote">the electronics are very complicated and difficult to understand. Manual buttons and wheel controls reduce distraction.</p><p class="evidence-source">G60 customer feedback · United States</p></article>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">[0:35–0:55] “For the G60 in the United States, we have 4,365 feedback records. 1,217 are classified as difficult to use. The point is not another dashboard; it is helping the PM turn this evidence into a defensible customer requirement.” Source: G60_feedback_hackathon.xlsx, US filter.</aside>
+        </div>
+      </section>
+
+      <section data-auto-animate data-transition="fade">
+        <div class="slide requirement">
+          <div class="frame">
+            <p class="brand" data-id="brand"><i class="brand-mark"></i>BMW Product Intelligence</p>
+            <p class="slide-count">03 / 06</p>
+            <div class="content">
+              <div class="heading-row"><div><p class="eyebrow">One requirement, fully traceable</p><h2>Make the trade-off visible.</h2></div><p class="label">The PM remains in control.</p></div>
+              <div class="requirement-card">
+                <aside><p>Customer outcome</p><strong>Less distraction.<br>More confidence.</strong></aside>
+                <div class="requirement-main">
+                  <h3>Enable essential driving and comfort functions through intuitive, low-distraction interaction.</h3>
+                  <p class="proof-line"><i></i><span>Linked to the G60 feedback pattern, target market and product focus.</span></p>
+                </div>
+              </div>
+              <div class="decision-path fragment rise">
+                <div><span>01</span><strong>Evidence</strong></div>
+                <div><span>02</span><strong>Context</strong></div>
+                <div><span>03</span><strong>PM decision</strong></div>
+                <div><span>04</span><strong>Decision memory</strong></div>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">[0:55–1:15] “The system turns evidence into a customer-facing requirement, while keeping the logic exposed: evidence, context, the PM’s decision, and the reason it was made.”</aside>
+        </div>
+      </section>
+
+      <section id="live-demo" data-background-color="#f4f7fb" data-background-interactive data-transition="fade">
+        <div class="slide">
+          <div class="demo-hud"><p>BMW Product Intelligence · Live workspace</p><span id="demo-status" class="demo-status"><i></i>Connecting</span></div>
+          <div id="demo-fallback" class="demo-fallback" hidden>
+            <div class="demo-fallback-inner"><p class="eyebrow">Live demo unavailable</p><h2>Start the workspace, then return to this slide.</h2><p>The deck will connect automatically when the app is running.</p><code>npm start</code></div>
+          </div>
+        </div>
+        <aside class="notes">[1:15–2:20] “Now I will make this decision in the workspace. I set the vehicle, market and delivery context; generate grounded requirements; inspect a cited recommendation; then approve or reject it with a reason. Rejection recalibrates the group while keeping the decision trail.” [CLICK NEXT BUTTON AFTER DEMO]</aside>
+      </section>
+
+      <section data-auto-animate data-transition="fade">
+        <div class="slide memory">
+          <div class="frame">
+            <p class="brand" data-id="brand"><i class="brand-mark"></i>BMW Product Intelligence</p>
+            <p class="slide-count">05 / 06</p>
+            <div class="content">
+              <p class="eyebrow">Decision memory</p>
+              <h2>Keep the why.<br>Revisit the decision.</h2>
+              <div class="memory-layout">
+                <div class="memory-list">
+                  <div class="memory-event"><time>Today</time><i class="memory-dot"></i><div><strong>PM approves a requirement</strong><p>Decision context and rationale are attached to the evidence.</p></div></div>
+                  <div class="memory-event"><time>Next cycle</time><i class="memory-dot"></i><div><strong>New PM opens the record</strong><p>The prior trade-off is understandable before it is reused.</p></div></div>
+                  <div class="memory-event new"><time>New signal</time><i class="memory-dot"></i><div><strong>Changed evidence triggers review</strong><p>The PM sees what changed and decides whether to retain or revise it.</p></div></div>
+                </div>
+                <aside class="memory-side fragment rise"><p class="eyebrow">The difference</p><h3>Memory becomes active.</h3><p>It preserves the original decision and gives the next PM a clear reason to challenge it.</p><span class="revisit"><i></i> Ready to revisit</span></aside>
+              </div>
+            </div>
+          </div>
+          <aside class="notes">[2:20–2:40] “The competitive edge is not storing a note. It is preserving an evidence-backed decision so the next PM can see whether the underlying assumptions are still true.”</aside>
+        </div>
+      </section>
+
+      <section data-auto-animate data-transition="fade">
+        <div class="slide closing">
+          <div class="frame">
+            <p class="brand" data-id="brand"><i class="brand-mark"></i>BMW Product Intelligence</p>
+            <p class="slide-count">06 / 06</p>
+            <div class="content">
+              <p class="eyebrow">The 7-year question</p>
+              <h2>BMW does not<br>lose the <strong>why.</strong></h2>
+              <p class="closing-sub">From evidence to a decision BMW can defend today—and revisit when the world changes.</p>
+            </div>
+          </div>
+          <div class="closing-line"><span>Evidence-linked</span><span>PM-controlled</span><span>Built for the next cycle</span></div>
+          <aside class="notes">[2:40–3:00] “BMW Product Intelligence turns an inherited decision into a transparent starting point for the next product cycle. Evidence-linked, PM-controlled, and ready to be revisited. Thank you.”</aside>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <button id="demo-next" class="demo-next" type="button">Continue <span>→</span></button>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+  <script>
+    const DEMO_URL = new URLSearchParams(location.search).get('demo') || 'http://localhost:4173/';
+    const demoSlide = document.getElementById('live-demo');
+    const demoFallback = document.getElementById('demo-fallback');
+    const demoStatus = document.getElementById('demo-status');
+
+    Reveal.initialize({
+      width: 1920,
+      height: 1080,
+      margin: 0,
+      minScale: 0.1,
+      maxScale: 2,
+      center: true,
+      hash: true,
+      controls: false,
+      progress: true,
+      slideNumber: false,
+      transition: 'fade',
+      transitionSpeed: 'slow',
+      backgroundTransition: 'fade',
+      autoAnimateDuration: 1,
+      autoAnimateEasing: 'cubic-bezier(.65, 0, .35, 1)',
+      autoAnimateUnmatched: true,
+      plugins: [ RevealNotes ]
+    });
+
+    async function connectDemo() {
+      try {
+        await fetch(DEMO_URL, { mode: 'no-cors', signal: AbortSignal.timeout(1600) });
+        demoSlide.setAttribute('data-background-iframe', DEMO_URL);
+        demoSlide.setAttribute('data-background-interactive', '');
+        demoFallback.hidden = true;
+        demoStatus.innerHTML = '<i></i>Live';
+      } catch {
+        demoFallback.hidden = false;
+        demoStatus.textContent = 'Offline';
+      }
+      Reveal.sync();
+    }
+
+    Reveal.on('slidechanged', event => {
+      document.body.classList.toggle('on-demo', event.currentSlide.id === 'live-demo');
+    });
+
+    document.getElementById('demo-next').addEventListener('click', () => {
+      window.focus();
+      Reveal.next();
+    });
+
+    connectDemo();
+  </script>
+</body>
+</html>

@@ -1,0 +1,460 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-11T01:10:06+00:00",
+  "title": "Design System: BMW Product Strategy AI",
+  "extensions": {
+    "colorMeta": {
+      "bmw-blue": {
+        "role": "primary",
+        "displayName": "BMW Blue",
+        "canonical": "#1c69d4",
+        "tonalRamp": [
+          "oklch(15.0% 0.090 258.3)",
+          "oklch(26.0% 0.115 258.3)",
+          "oklch(37.0% 0.140 258.3)",
+          "oklch(48.0% 0.165 258.3)",
+          "oklch(59.0% 0.171 258.3)",
+          "oklch(70.0% 0.147 258.3)",
+          "oklch(82.0% 0.119 258.3)",
+          "oklch(95.0% 0.090 258.3)"
+        ]
+      },
+      "bmw-blue-active": {
+        "role": "primary",
+        "displayName": "BMW Blue Pressed",
+        "canonical": "#0653b6",
+        "tonalRamp": [
+          "oklch(15.0% 0.085 258.5)",
+          "oklch(26.0% 0.109 258.5)",
+          "oklch(37.0% 0.132 258.5)",
+          "oklch(48.0% 0.156 258.5)",
+          "oklch(59.0% 0.162 258.5)",
+          "oklch(70.0% 0.139 258.5)",
+          "oklch(82.0% 0.113 258.5)",
+          "oklch(95.0% 0.085 258.5)"
+        ]
+      },
+      "m-red": {
+        "role": "secondary",
+        "displayName": "M Red",
+        "canonical": "#e22718",
+        "tonalRamp": [
+          "oklch(15.0% 0.111 29.8)",
+          "oklch(26.0% 0.141 29.8)",
+          "oklch(37.0% 0.171 29.8)",
+          "oklch(48.0% 0.202 29.8)",
+          "oklch(59.0% 0.210 29.8)",
+          "oklch(70.0% 0.180 29.8)",
+          "oklch(82.0% 0.147 29.8)",
+          "oklch(95.0% 0.111 29.8)"
+        ]
+      },
+      "rose": {
+        "role": "secondary",
+        "displayName": "Rejection Rose",
+        "canonical": "#ffb3ab",
+        "tonalRamp": [
+          "oklch(15.0% 0.045 25.9)",
+          "oklch(26.0% 0.057 25.9)",
+          "oklch(37.0% 0.070 25.9)",
+          "oklch(48.0% 0.082 25.9)",
+          "oklch(59.0% 0.086 25.9)",
+          "oklch(70.0% 0.073 25.9)",
+          "oklch(82.0% 0.060 25.9)",
+          "oklch(95.0% 0.045 25.9)"
+        ]
+      },
+      "amber": {
+        "role": "tertiary",
+        "displayName": "Assumption Amber",
+        "canonical": "#f2c46d",
+        "tonalRamp": [
+          "oklch(15.0% 0.059 81.9)",
+          "oklch(26.0% 0.075 81.9)",
+          "oklch(37.0% 0.091 81.9)",
+          "oklch(48.0% 0.107 81.9)",
+          "oklch(59.0% 0.112 81.9)",
+          "oklch(70.0% 0.096 81.9)",
+          "oklch(82.0% 0.078 81.9)",
+          "oklch(95.0% 0.059 81.9)"
+        ]
+      },
+      "amber-ink": {
+        "role": "tertiary",
+        "displayName": "Amber Ink",
+        "canonical": "#2a1d05",
+        "tonalRamp": [
+          "oklch(15.0% 0.021 80.2)",
+          "oklch(26.0% 0.027 80.2)",
+          "oklch(37.0% 0.033 80.2)",
+          "oklch(48.0% 0.039 80.2)",
+          "oklch(59.0% 0.040 80.2)",
+          "oklch(70.0% 0.035 80.2)",
+          "oklch(82.0% 0.028 80.2)",
+          "oklch(95.0% 0.021 80.2)"
+        ]
+      },
+      "night": {
+        "role": "neutral",
+        "displayName": "Keynote Night",
+        "canonical": "#0a1726",
+        "tonalRamp": [
+          "oklch(15.0% 0.018 253.1)",
+          "oklch(26.0% 0.023 253.1)",
+          "oklch(37.0% 0.027 253.1)",
+          "oklch(48.0% 0.032 253.1)",
+          "oklch(59.0% 0.034 253.1)",
+          "oklch(70.0% 0.029 253.1)",
+          "oklch(82.0% 0.024 253.1)",
+          "oklch(95.0% 0.018 253.1)"
+        ]
+      },
+      "petrol": {
+        "role": "neutral",
+        "displayName": "Keynote Petrol",
+        "canonical": "#035970",
+        "tonalRamp": [
+          "oklch(15.0% 0.040 223.5)",
+          "oklch(26.0% 0.051 223.5)",
+          "oklch(37.0% 0.062 223.5)",
+          "oklch(48.0% 0.073 223.5)",
+          "oklch(59.0% 0.076 223.5)",
+          "oklch(70.0% 0.065 223.5)",
+          "oklch(82.0% 0.053 223.5)",
+          "oklch(95.0% 0.040 223.5)"
+        ]
+      },
+      "ice": {
+        "role": "neutral",
+        "displayName": "Ice",
+        "canonical": "#c3e7f0",
+        "tonalRamp": [
+          "oklch(15.0% 0.020 214.5)",
+          "oklch(26.0% 0.025 214.5)",
+          "oklch(37.0% 0.031 214.5)",
+          "oklch(48.0% 0.036 214.5)",
+          "oklch(59.0% 0.038 214.5)",
+          "oklch(70.0% 0.032 214.5)",
+          "oklch(82.0% 0.026 214.5)",
+          "oklch(95.0% 0.020 214.5)"
+        ]
+      },
+      "mist": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#c8d7e0",
+        "tonalRamp": [
+          "oklch(15.0% 0.010 233.9)",
+          "oklch(26.0% 0.013 233.9)",
+          "oklch(37.0% 0.016 233.9)",
+          "oklch(48.0% 0.019 233.9)",
+          "oklch(59.0% 0.019 233.9)",
+          "oklch(70.0% 0.017 233.9)",
+          "oklch(82.0% 0.014 233.9)",
+          "oklch(95.0% 0.010 233.9)"
+        ]
+      },
+      "steel": {
+        "role": "neutral",
+        "displayName": "Steel",
+        "canonical": "#85acb9",
+        "tonalRamp": [
+          "oklch(15.0% 0.023 220.3)",
+          "oklch(26.0% 0.029 220.3)",
+          "oklch(37.0% 0.036 220.3)",
+          "oklch(48.0% 0.042 220.3)",
+          "oklch(59.0% 0.044 220.3)",
+          "oklch(70.0% 0.038 220.3)",
+          "oklch(82.0% 0.031 220.3)",
+          "oklch(95.0% 0.023 220.3)"
+        ]
+      },
+      "slate": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "canonical": "#548d9e",
+        "tonalRamp": [
+          "oklch(15.0% 0.033 219.0)",
+          "oklch(26.0% 0.041 219.0)",
+          "oklch(37.0% 0.050 219.0)",
+          "oklch(48.0% 0.059 219.0)",
+          "oklch(59.0% 0.062 219.0)",
+          "oklch(70.0% 0.053 219.0)",
+          "oklch(82.0% 0.043 219.0)",
+          "oklch(95.0% 0.033 219.0)"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15.0% 0.000 89.9)",
+          "oklch(26.0% 0.000 89.9)",
+          "oklch(37.0% 0.000 89.9)",
+          "oklch(48.0% 0.000 89.9)",
+          "oklch(59.0% 0.000 89.9)",
+          "oklch(70.0% 0.000 89.9)",
+          "oklch(82.0% 0.000 89.9)",
+          "oklch(95.0% 0.000 89.9)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgba(255, 255, 255, 0.92)"
+      },
+      "line-soft": {
+        "role": "neutral",
+        "displayName": "Soft Hairline",
+        "canonical": "rgba(200, 215, 224, 0.28)"
+      }
+    },
+    "typographyMeta": {
+      "display-xl": {
+        "displayName": "Display XL",
+        "purpose": "Title slide headline only."
+      },
+      "display-lg": {
+        "displayName": "Display L",
+        "purpose": "Problem statement slide headline."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Every product slide headline; uppercase, ends in a period."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Requirement ranks and funnel counts; tabular figures."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Requirement and source names."
+      },
+      "statement": {
+        "displayName": "Statement",
+        "purpose": "PM quote and voice transcript, light white."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "One-sentence line under each headline, mist."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Reasoning, group names, provenance, meta."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Uppercase labels on buttons; tiles at 17px/600."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase field labels, rail steps, status, context chips."
+      },
+      "tag": {
+        "displayName": "Tag",
+        "purpose": "Evidence, assumption, rejected, AI and gap tags."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-keynote",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Exponential ease-out for every transition, entrance, and auto-animate morph."
+      },
+      {
+        "name": "auto-animate",
+        "value": "0.85s",
+        "purpose": "Slide-to-slide morph of headline, rows, rail progress and head."
+      },
+      {
+        "name": "rise-in",
+        "value": "0.9s, translateY(18px) + blur(6px) to rest, 0.12s stagger",
+        "purpose": "Entrance on forward navigation only."
+      },
+      {
+        "name": "control-state",
+        "value": "0.2s to 0.25s",
+        "purpose": "Hover and press on buttons, tiles, row actions."
+      },
+      {
+        "name": "ground-drift",
+        "value": "48s ease-in-out alternate, scale 1 to 1.08",
+        "purpose": "Slow drift of the keynote ground image."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "all durations 0.01ms",
+        "purpose": "prefers-reduced-motion collapses every animation and transition."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "stage",
+        "value": "1280x720 fixed, scaled by reveal.js"
+      }
+    ],
+    "assets": [
+      {
+        "name": "keynote-ground",
+        "path": "presentation/assets/keynote-ground.webp",
+        "purpose": "The only background; navy to petrol to plum keynote image."
+      },
+      {
+        "name": "concept-car",
+        "path": "presentation/assets/concept-car.webp",
+        "purpose": "Keynote AI concept sedan; bleeds into the ground through gradient masks."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one filled BMW blue action per slide; square, uppercase, trailing arrow.",
+      "html": "<div class=\"ds-ground\"><button class=\"ds-btn\">Generate requirements <svg class=\"ds-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h13M13 6.5l5.5 5.5-5.5 5.5\"/></svg></button></div>",
+      "css": ".ds-ground{background:var(--night, #0a1726);padding:24px;font-family:'Saira Semi Condensed','Arial Narrow',sans-serif;color:var(--white, #ffffff);} .ds-ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:square;stroke-linejoin:miter;flex:none;} .ds-btn{display:inline-flex;align-items:center;gap:10px;height:48px;padding:0 28px;font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:16px;letter-spacing:1.2px;text-transform:uppercase;background:var(--bmw-blue, #1c69d4);color:#fff;border:0;border-radius:0;cursor:pointer;transition:background-color .25s cubic-bezier(.16,1,.3,1),transform .25s cubic-bezier(.16,1,.3,1);} .ds-btn:hover{background:var(--bmw-blue-active, #0653b6);} .ds-btn:active{background:var(--bmw-blue-active, #0653b6);transform:translateY(1px);} .ds-btn:focus-visible{outline:2px solid var(--ice, #c3e7f0);outline-offset:3px;}"
+    },
+    {
+      "name": "Objective Tiles",
+      "kind": "chip",
+      "refersTo": "tile",
+      "description": "Single-choice hairline tiles inside a 1.5px frame; selected takes a 2px white border and a faint wash.",
+      "html": "<div class=\"ds-ground\"><div class=\"ds-box\"><div class=\"ds-label\">Target market</div><div class=\"ds-tiles\"><button class=\"ds-tile\">Europe</button><button class=\"ds-tile\">China</button><button class=\"ds-tile ds-sel\">United States</button></div></div></div>",
+      "css": ".ds-ground{background:var(--night, #0a1726);padding:24px;font-family:'Saira Semi Condensed','Arial Narrow',sans-serif;color:var(--white, #ffffff);} .ds-box{border:1.5px solid var(--line, rgba(255,255,255,0.92));padding:18px 20px 20px;} .ds-label{font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--steel, #85acb9);margin-bottom:14px;} .ds-tiles{display:flex;flex-wrap:wrap;gap:8px;} .ds-tile{font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:600;font-size:17px;letter-spacing:.6px;text-transform:uppercase;padding:9px 14px;border:1px solid var(--line-soft, rgba(200,215,224,0.28));background:transparent;color:var(--mist, #c8d7e0);border-radius:0;cursor:pointer;transition:border-color .25s,background-color .25s,color .25s;} .ds-tile:hover{border-color:var(--line, rgba(255,255,255,0.92));color:#fff;} .ds-tile:focus-visible{outline:2px solid var(--ice, #c3e7f0);outline-offset:3px;} .ds-tile.ds-sel{border:2px solid #fff;padding:8px 13px;color:#fff;background:rgba(255,255,255,.08);}"
+    },
+    {
+      "name": "Evidence Tags",
+      "kind": "chip",
+      "refersTo": "tag-evidence",
+      "description": "Every reason opens with one: evidence, assumption, evidence gap, rejected, AI.",
+      "html": "<div class=\"ds-ground\"><span class=\"ds-tag ds-tag-ev\">Evidence</span><span class=\"ds-tag ds-tag-as\">Assumption</span><span class=\"ds-tag ds-tag-gap\">Evidence gap</span><span class=\"ds-tag ds-tag-rj\">Rejected</span><span class=\"ds-tag ds-tag-ai\">Red team</span></div>",
+      "css": ".ds-ground{background:var(--night, #0a1726);padding:24px;font-family:'Saira Semi Condensed','Arial Narrow',sans-serif;color:var(--white, #ffffff);} .ds-tag{display:inline-block;margin-right:8px;padding:2px 7px 1px;font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;vertical-align:1px;}.ds-tag-ev{color:#0a1726;background:var(--ice, #c3e7f0);} .ds-tag-as{color:#2a1d05;background:var(--amber, #f2c46d);} .ds-tag-rj{color:#fff;background:var(--m-red, #e22718);} .ds-tag-ai{color:#fff;background:var(--bmw-blue, #1c69d4);} .ds-tag-gap{color:var(--ice, #c3e7f0);border:1px solid var(--ice, #c3e7f0);padding:1px 6px 0;}"
+    },
+    {
+      "name": "Row Actions",
+      "kind": "button",
+      "refersTo": "row-action",
+      "description": "Square 36px hairline approve / challenge / reject; reject turns M red.",
+      "html": "<div class=\"ds-ground\"><div class=\"ds-actions\"><button class=\"ds-act\" aria-label=\"Approve\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4.5 12.5l5 5 10-11\"/></svg></button><button class=\"ds-act\" aria-label=\"Challenge\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 20h16M12 4v16M5 8h14M5 8l-2.5 6h5L5 8zM19 8l-2.5 6h5L19 8z\"/></svg></button><button class=\"ds-act ds-act-no\" aria-label=\"Reject\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6 6l12 12M18 6L6 18\"/></svg></button></div></div>",
+      "css": ".ds-ground{background:var(--night, #0a1726);padding:24px;font-family:'Saira Semi Condensed','Arial Narrow',sans-serif;color:var(--white, #ffffff);} .ds-ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:square;stroke-linejoin:miter;flex:none;} .ds-act{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line-soft, rgba(200,215,224,0.28));background:transparent;color:var(--mist, #c8d7e0);border-radius:0;cursor:pointer;transition:border-color .2s cubic-bezier(.16,1,.3,1),color .2s cubic-bezier(.16,1,.3,1),background-color .2s cubic-bezier(.16,1,.3,1);}.ds-act:hover{border-color:var(--line, rgba(255,255,255,0.92));color:#fff;} .ds-act-no:hover{border-color:var(--m-red, #e22718);color:var(--m-red, #e22718);} .ds-act:focus-visible{outline:2px solid var(--ice, #c3e7f0);outline-offset:3px;} .ds-act-pressed{background:var(--m-red, #e22718);border-color:var(--m-red, #e22718);color:#fff;} .ds-actions{display:flex;gap:6px;}"
+    },
+    {
+      "name": "Requirement Row",
+      "kind": "custom",
+      "refersTo": "requirement-row",
+      "description": "Signature table row: rank, name and group, tagged reason, authorship glyph, actions. Rejected variant shown.",
+      "html": "<div class=\"ds-ground\"><div class=\"ds-table\"><div class=\"ds-row\"><div class=\"ds-rank\">1</div><div><span class=\"ds-name\">Aerodynamic exterior package</span><span class=\"ds-grp\">Exterior design</span></div><div class=\"ds-why\"><span class=\"ds-tag ds-tag-ev\">Evidence</span><b>144 of 157</b> exterior-design mentions are likes.</div><svg class=\"ds-glyph\" viewBox=\"0 0 96 96\" aria-hidden=\"true\"><g id=\"Icons\"><path d=\"M72.994 59.6 72.994 50.488C72.9918 48.5622 71.4308 47.0017 69.505 47L64.994 47 64.994 42 53.66 42 53.66 39 56.605 39C59.5801 38.9972 61.9912 36.5861 61.994 33.611L61.994 22.389C61.9912 19.4139 59.5801 17.0028 56.605 17L48.994 17 48.994 13.858C51.133 13.3057 52.4193 11.124 51.867 8.98502 51.3147 6.84603 49.133 5.55975 46.994 6.11203 44.855 6.66432 43.5687 8.84603 44.121 10.985 44.4848 12.394 45.585 13.4942 46.994 13.858L46.994 17 39.382 17C36.4073 17.0033 33.9968 19.4143 33.994 22.389L33.994 33.611C33.9968 36.5857 36.4073 38.9967 39.382 39L42.66 39 42.66 42 30.994 42 30.994 47.993 24.648 47.993C23.8268 47.9925 23.1611 47.3272 23.16 46.506L23.16 37.393C26.1466 36.839 28.1187 33.9688 27.5647 30.9822 27.3822 29.9985 26.9349 29.0833 26.271 28.335L24.777 29.665C26.0604 31.1105 25.929 33.3226 24.4835 34.606 23.0381 35.8894 20.8259 35.758 19.5425 34.3126 18.3726 32.9949 18.3647 31.013 19.524 29.686L18.018 28.369C16.0209 30.6578 16.2573 34.1321 18.5461 36.1292 19.2885 36.777 20.1912 37.2135 21.16 37.393L21.16 46.506C21.1622 48.4313 22.7227 49.9913 24.648 49.993L30.994 49.993 30.994 71.025C26.3106 71.3037 22.7399 75.3262 23.0186 80.0096 23.2855 84.4956 27.0001 87.9976 31.494 88L64.494 88C69.1857 87.9975 72.987 84.1921 72.9844 79.5004 72.982 75.0065 69.48 71.2919 64.994 71.025L64.994 49 69.505 49C70.3265 49.0011 70.9923 49.6665 70.994 50.488L70.994 59.6C68.0074 60.1539 66.0353 63.0241 66.5892 66.0108 66.7716 66.994 67.2185 67.9088 67.882 68.657L69.376 67.327C68.0929 65.8813 68.2247 63.6691 69.6704 62.386 71.1161 61.1029 73.3283 61.2347 74.6114 62.6804 75.7811 63.9983 75.7886 65.9803 74.629 67.307L76.135 68.623C78.1317 66.3339 77.8947 62.8596 75.6056 60.8629 74.8638 60.2158 73.9619 59.7797 72.994 59.6ZM45.994 10C45.994 8.89543 46.8894 8 47.994 8 49.0986 8 49.994 8.89543 49.994 10 49.994 11.1046 49.0986 12 47.994 12 46.8894 12.0006 45.9936 11.1056 45.993 10.001 45.993 10.0007 45.993 10.0003 45.993 10ZM32.994 59.07 41.169 59.07 44.427 52.145 47.488 63.873 51.619 55.373 54.219 61.543 56.235 59.482C56.5019 59.2373 56.8454 59.0927 57.207 59.073L62.991 59.073 62.991 71 32.991 71ZM39.382 37C37.5116 36.9972 35.9962 35.4814 35.994 33.611L35.994 22.389C35.9962 20.5186 37.5116 19.0028 39.382 19L56.605 19C58.4756 19.0028 59.9912 20.5184 59.994 22.389L59.994 33.611C59.9912 35.4816 58.4756 36.9972 56.605 37L39.382 37ZM44.66 39 51.66 39 51.66 42 44.66 42ZM42.66 44 62.994 44 62.994 57.07 57.21 57.07C56.3525 57.0876 55.5306 57.416 54.897 57.994L51.747 50.528 48.056 58.128 44.968 46.3 39.9 57.07 32.994 57.07 32.994 44ZM70.994 79.5C70.9896 83.088 68.082 85.9956 64.494 86L31.494 86C27.9041 86 24.994 83.0899 24.994 79.5 24.994 75.9101 27.9041 73 31.494 73L64.494 73C68.082 73.0044 70.9896 75.912 70.994 79.5Z\" stroke-width=\"1.0002\"/><path d=\"M57.293 28C57.293 25.6252 55.3678 23.7 52.993 23.7 50.6182 23.7 48.693 25.6252 48.693 28 48.693 30.3748 50.6182 32.3 52.993 32.3 55.3678 32.3 57.293 30.3748 57.293 28ZM52.993 31C51.3361 31 49.993 29.6569 49.993 28 49.993 26.3431 51.3361 25 52.993 25 54.6499 25 55.993 26.3431 55.993 28 55.993 29.6569 54.6499 31 52.993 31Z\" stroke-width=\"1.0002\"/><circle cx=\"52.993\" cy=\"28\" r=\"1.5\" stroke-width=\"1.0002\"/><path d=\"M42.993 23.7C40.6182 23.7 38.693 25.6252 38.693 28 38.693 30.3748 40.6182 32.3 42.993 32.3 45.3678 32.3 47.293 30.3748 47.293 28 47.293 25.6252 45.3678 23.7 42.993 23.7ZM42.993 31C41.3361 31 39.993 29.6569 39.993 28 39.993 26.3431 41.3361 25 42.993 25 44.6499 25 45.993 26.3431 45.993 28 45.993 29.6569 44.6499 31 42.993 31Z\" stroke-width=\"1.0002\"/><circle cx=\"42.993\" cy=\"28\" r=\"1.5\" stroke-width=\"1.0002\"/><circle cx=\"47.994\" cy=\"79.5\" r=\"2\" stroke-width=\"1.0002\"/><circle cx=\"33.494\" cy=\"79.5\" r=\"2\" stroke-width=\"1.0002\"/><circle cx=\"62.494\" cy=\"79.5\" r=\"2\" stroke-width=\"1.0002\"/></g></svg><div class=\"ds-actions\"><button class=\"ds-act\" aria-label=\"Approve\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4.5 12.5l5 5 10-11\"/></svg></button><button class=\"ds-act\" aria-label=\"Challenge\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 20h16M12 4v16M5 8h14M5 8l-2.5 6h5L5 8zM19 8l-2.5 6h5L19 8z\"/></svg></button><button class=\"ds-act ds-act-no\" aria-label=\"Reject\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6 6l12 12M18 6L6 18\"/></svg></button></div></div><div class=\"ds-row ds-rej\"><div class=\"ds-rank\">2</div><div><span class=\"ds-name\">High-performance brakes<span class=\"ds-strike\"></span></span><span class=\"ds-grp\">Driving dynamics</span></div><div class=\"ds-why\"><span class=\"ds-tag ds-tag-rj\">Rejected</span>By the PM. Reason is being captured.</div><svg class=\"ds-glyph\" viewBox=\"0 0 96 96\" aria-hidden=\"true\"><g id=\"Icons\"><path d=\"M28.882 30.3C29.516 30.308 30.24 30.307 31.015 30.3 31.1834 39.1294 38.4776 46.1506 47.307 45.9822 55.945 45.8174 62.89 38.821 62.991 30.182 63.282 29.196 65.134 22.461 62.909 18.202 61.4765 15.1978 58.3916 13.3361 55.066 13.469 53.431 12.175 46.576 7.553 36.937 12.104 29.037 15.831 28.808 24.004 28.818 25.231L27.918 29.076C27.792 29.6137 28.1258 30.1518 28.6636 30.2777 28.7345 30.2943 28.8071 30.3032 28.88 30.304ZM47 44C39.3669 43.9892 33.1471 37.8699 33.012 30.238 36.751 30.083 41.162 29.598 43.937 28.287 47.568 26.573 52.157 22.712 53.601 21.458 54.9872 22.097 56.2143 23.0355 57.194 24.206 58.0128 25.2068 58.7215 26.2927 59.308 27.445 59.776 28.28 60.308 29.224 60.986 30.271 60.8337 37.8895 54.62 43.989 47 44ZM30.794 25.558C30.8141 25.4718 30.8228 25.3834 30.82 25.295 30.81 24.969 30.638 17.283 37.791 13.906 40.1161 12.7569 42.6687 12.1419 45.262 12.106 48.4733 12.0637 51.5941 13.1698 54.062 15.225 54.2895 15.44 54.604 15.5368 54.913 15.487 57.5477 15.2505 60.0435 16.7075 61.133 19.118 62.381 21.507 62.021 25.085 61.583 27.407 61.395 27.079 61.219 26.765 61.05 26.464 60.3985 25.1898 59.6105 23.9901 58.7 22.886 57.382 21.2426 55.6183 20.0139 53.62 19.347 53.3009 19.2704 52.9646 19.3553 52.72 19.574 52.664 19.624 47.101 24.584 43.088 26.474 39.831 28.011 33.652 28.274 30.157 28.296Z\"/><path d=\"M76.533 59.525C71.9429 55.9913 66.6845 53.4244 61.075 51.979 59.783 51.592 58.482 51.258 57.209 50.986L56.702 50.877 56.321 51.23C52.246 55 49.484 55 48 55 46.516 55 43.731 55 39.676 51.28L39.297 50.932 38.797 51.038C37.572 51.296 36.278 51.611 34.94 51.976 29.3979 53.6002 24.1705 56.1502 19.479 59.518 17.3279 61.2033 16.0501 63.7678 16 66.5L16 82 18 82 18 66.5C18.0441 64.391 19.0303 62.4126 20.688 61.108 25.1778 57.8941 30.1771 55.46 35.476 53.908 36.586 53.608 37.676 53.336 38.711 53.108 42.6 56.527 45.584 57 48 57 50.416 57 53.384 56.521 57.29 53.051 58.351 53.291 59.43 53.574 60.513 53.899 65.8678 55.2721 70.8893 57.7148 75.275 61.08 76.952 62.3851 77.9527 64.3755 78 66.5L78 82 80 82 80 66.5C79.9516 63.772 78.6784 61.2106 76.533 59.525Z\"/></g></svg><div class=\"ds-actions\"><span class=\"ds-act ds-act-pressed\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6 6l12 12M18 6L6 18\"/></svg></span></div></div></div></div>",
+      "css": ".ds-ground{background:var(--night, #0a1726);padding:24px;font-family:'Saira Semi Condensed','Arial Narrow',sans-serif;color:var(--white, #ffffff);} .ds-ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:square;stroke-linejoin:miter;flex:none;} .ds-glyph{width:22px;height:22px;fill:currentColor;color:var(--mist, #c8d7e0);flex:none;} .ds-tag{display:inline-block;margin-right:8px;padding:2px 7px 1px;font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;vertical-align:1px;}.ds-tag-ev{color:#0a1726;background:var(--ice, #c3e7f0);} .ds-tag-as{color:#2a1d05;background:var(--amber, #f2c46d);} .ds-tag-rj{color:#fff;background:var(--m-red, #e22718);} .ds-tag-ai{color:#fff;background:var(--bmw-blue, #1c69d4);} .ds-tag-gap{color:var(--ice, #c3e7f0);border:1px solid var(--ice, #c3e7f0);padding:1px 6px 0;} .ds-act{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line-soft, rgba(200,215,224,0.28));background:transparent;color:var(--mist, #c8d7e0);border-radius:0;cursor:pointer;transition:border-color .2s cubic-bezier(.16,1,.3,1),color .2s cubic-bezier(.16,1,.3,1),background-color .2s cubic-bezier(.16,1,.3,1);}.ds-act:hover{border-color:var(--line, rgba(255,255,255,0.92));color:#fff;} .ds-act-no:hover{border-color:var(--m-red, #e22718);color:var(--m-red, #e22718);} .ds-act:focus-visible{outline:2px solid var(--ice, #c3e7f0);outline-offset:3px;} .ds-act-pressed{background:var(--m-red, #e22718);border-color:var(--m-red, #e22718);color:#fff;} .ds-actions{display:flex;justify-content:flex-end;gap:6px;} .ds-table{border-top:1.5px solid var(--line, rgba(255,255,255,0.92));} .ds-row{display:grid;grid-template-columns:54px 240px 1fr 30px 128px;align-items:center;gap:18px;height:70px;padding:0 14px 0 6px;border-bottom:1px solid var(--line-soft, rgba(200,215,224,0.28));color:#fff;} .ds-rank{font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:38px;line-height:1;text-align:center;font-variant-numeric:tabular-nums;} .ds-name{position:relative;display:inline-block;font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:21px;line-height:1.1;} .ds-grp{display:block;margin-top:3px;font-size:15px;color:var(--steel, #85acb9);} .ds-why{font-size:15px;line-height:1.35;color:var(--mist, #c8d7e0);} .ds-why b{color:#fff;font-variant-numeric:tabular-nums;} .ds-rej{background:rgba(226,39,24,.16);color:var(--rose, #ffb3ab);} .ds-rej .ds-rank,.ds-rej .ds-name{color:var(--rose, #ffb3ab);} .ds-strike{position:absolute;left:-3px;top:50%;height:2px;width:calc(100% + 6px);background:var(--m-red, #e22718);}"
+    },
+    {
+      "name": "Process Rail",
+      "kind": "nav",
+      "refersTo": "process-rail",
+      "description": "Six-step BMW process along the bottom of every product slide; square head advances.",
+      "html": "<div class=\"ds-ground\"><div class=\"ds-rail\"><ol><li class=\"ds-done\">Situation analysis</li><li class=\"ds-done\">Structure &amp; context</li><li class=\"ds-on\">Requirements</li><li>Prioritization</li><li>Documentation</li><li>One car</li></ol><div class=\"ds-line\"><span class=\"ds-prog\" style=\"width:41.67%\"></span><span class=\"ds-head\" style=\"left:41.67%\"></span></div></div></div>",
+      "css": ".ds-ground{background:var(--night, #0a1726);padding:24px;font-family:'Saira Semi Condensed','Arial Narrow',sans-serif;color:var(--white, #ffffff);} .ds-rail ol{display:grid;grid-template-columns:repeat(6,1fr);margin:0;padding:0;list-style:none;} .ds-rail li{font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.4px;text-transform:uppercase;color:rgba(200,215,224,.62);transition:color .6s cubic-bezier(.16,1,.3,1);} .ds-rail li.ds-done{color:var(--steel, #85acb9);} .ds-rail li.ds-on{color:#fff;} .ds-line{position:relative;height:2px;margin-top:10px;background:rgba(255,255,255,.18);} .ds-line::after{content:'';position:absolute;right:-2px;top:-5px;border-left:9px solid rgba(255,255,255,.35);border-top:6px solid transparent;border-bottom:6px solid transparent;} .ds-prog{position:absolute;left:0;top:0;height:2px;background:#fff;transition:width .85s cubic-bezier(.16,1,.3,1);} .ds-head{position:absolute;top:-4px;width:10px;height:10px;background:#fff;margin-left:-5px;transition:left .85s cubic-bezier(.16,1,.3,1);}"
+    },
+    {
+      "name": "Authorship Glyphs",
+      "kind": "custom",
+      "refersTo": "authorship",
+      "description": "Keynote robot (AI proposes) and person (PM decides) glyphs; together mark a jointly owned item.",
+      "html": "<div class=\"ds-ground\"><span class=\"ds-authors\"><svg class=\"ds-glyph\" viewBox=\"0 0 96 96\" aria-hidden=\"true\"><g id=\"Icons\"><path d=\"M72.994 59.6 72.994 50.488C72.9918 48.5622 71.4308 47.0017 69.505 47L64.994 47 64.994 42 53.66 42 53.66 39 56.605 39C59.5801 38.9972 61.9912 36.5861 61.994 33.611L61.994 22.389C61.9912 19.4139 59.5801 17.0028 56.605 17L48.994 17 48.994 13.858C51.133 13.3057 52.4193 11.124 51.867 8.98502 51.3147 6.84603 49.133 5.55975 46.994 6.11203 44.855 6.66432 43.5687 8.84603 44.121 10.985 44.4848 12.394 45.585 13.4942 46.994 13.858L46.994 17 39.382 17C36.4073 17.0033 33.9968 19.4143 33.994 22.389L33.994 33.611C33.9968 36.5857 36.4073 38.9967 39.382 39L42.66 39 42.66 42 30.994 42 30.994 47.993 24.648 47.993C23.8268 47.9925 23.1611 47.3272 23.16 46.506L23.16 37.393C26.1466 36.839 28.1187 33.9688 27.5647 30.9822 27.3822 29.9985 26.9349 29.0833 26.271 28.335L24.777 29.665C26.0604 31.1105 25.929 33.3226 24.4835 34.606 23.0381 35.8894 20.8259 35.758 19.5425 34.3126 18.3726 32.9949 18.3647 31.013 19.524 29.686L18.018 28.369C16.0209 30.6578 16.2573 34.1321 18.5461 36.1292 19.2885 36.777 20.1912 37.2135 21.16 37.393L21.16 46.506C21.1622 48.4313 22.7227 49.9913 24.648 49.993L30.994 49.993 30.994 71.025C26.3106 71.3037 22.7399 75.3262 23.0186 80.0096 23.2855 84.4956 27.0001 87.9976 31.494 88L64.494 88C69.1857 87.9975 72.987 84.1921 72.9844 79.5004 72.982 75.0065 69.48 71.2919 64.994 71.025L64.994 49 69.505 49C70.3265 49.0011 70.9923 49.6665 70.994 50.488L70.994 59.6C68.0074 60.1539 66.0353 63.0241 66.5892 66.0108 66.7716 66.994 67.2185 67.9088 67.882 68.657L69.376 67.327C68.0929 65.8813 68.2247 63.6691 69.6704 62.386 71.1161 61.1029 73.3283 61.2347 74.6114 62.6804 75.7811 63.9983 75.7886 65.9803 74.629 67.307L76.135 68.623C78.1317 66.3339 77.8947 62.8596 75.6056 60.8629 74.8638 60.2158 73.9619 59.7797 72.994 59.6ZM45.994 10C45.994 8.89543 46.8894 8 47.994 8 49.0986 8 49.994 8.89543 49.994 10 49.994 11.1046 49.0986 12 47.994 12 46.8894 12.0006 45.9936 11.1056 45.993 10.001 45.993 10.0007 45.993 10.0003 45.993 10ZM32.994 59.07 41.169 59.07 44.427 52.145 47.488 63.873 51.619 55.373 54.219 61.543 56.235 59.482C56.5019 59.2373 56.8454 59.0927 57.207 59.073L62.991 59.073 62.991 71 32.991 71ZM39.382 37C37.5116 36.9972 35.9962 35.4814 35.994 33.611L35.994 22.389C35.9962 20.5186 37.5116 19.0028 39.382 19L56.605 19C58.4756 19.0028 59.9912 20.5184 59.994 22.389L59.994 33.611C59.9912 35.4816 58.4756 36.9972 56.605 37L39.382 37ZM44.66 39 51.66 39 51.66 42 44.66 42ZM42.66 44 62.994 44 62.994 57.07 57.21 57.07C56.3525 57.0876 55.5306 57.416 54.897 57.994L51.747 50.528 48.056 58.128 44.968 46.3 39.9 57.07 32.994 57.07 32.994 44ZM70.994 79.5C70.9896 83.088 68.082 85.9956 64.494 86L31.494 86C27.9041 86 24.994 83.0899 24.994 79.5 24.994 75.9101 27.9041 73 31.494 73L64.494 73C68.082 73.0044 70.9896 75.912 70.994 79.5Z\" stroke-width=\"1.0002\"/><path d=\"M57.293 28C57.293 25.6252 55.3678 23.7 52.993 23.7 50.6182 23.7 48.693 25.6252 48.693 28 48.693 30.3748 50.6182 32.3 52.993 32.3 55.3678 32.3 57.293 30.3748 57.293 28ZM52.993 31C51.3361 31 49.993 29.6569 49.993 28 49.993 26.3431 51.3361 25 52.993 25 54.6499 25 55.993 26.3431 55.993 28 55.993 29.6569 54.6499 31 52.993 31Z\" stroke-width=\"1.0002\"/><circle cx=\"52.993\" cy=\"28\" r=\"1.5\" stroke-width=\"1.0002\"/><path d=\"M42.993 23.7C40.6182 23.7 38.693 25.6252 38.693 28 38.693 30.3748 40.6182 32.3 42.993 32.3 45.3678 32.3 47.293 30.3748 47.293 28 47.293 25.6252 45.3678 23.7 42.993 23.7ZM42.993 31C41.3361 31 39.993 29.6569 39.993 28 39.993 26.3431 41.3361 25 42.993 25 44.6499 25 45.993 26.3431 45.993 28 45.993 29.6569 44.6499 31 42.993 31Z\" stroke-width=\"1.0002\"/><circle cx=\"42.993\" cy=\"28\" r=\"1.5\" stroke-width=\"1.0002\"/><circle cx=\"47.994\" cy=\"79.5\" r=\"2\" stroke-width=\"1.0002\"/><circle cx=\"33.494\" cy=\"79.5\" r=\"2\" stroke-width=\"1.0002\"/><circle cx=\"62.494\" cy=\"79.5\" r=\"2\" stroke-width=\"1.0002\"/></g></svg> <svg class=\"ds-glyph\" viewBox=\"0 0 96 96\" aria-hidden=\"true\"><g id=\"Icons\"><path d=\"M28.882 30.3C29.516 30.308 30.24 30.307 31.015 30.3 31.1834 39.1294 38.4776 46.1506 47.307 45.9822 55.945 45.8174 62.89 38.821 62.991 30.182 63.282 29.196 65.134 22.461 62.909 18.202 61.4765 15.1978 58.3916 13.3361 55.066 13.469 53.431 12.175 46.576 7.553 36.937 12.104 29.037 15.831 28.808 24.004 28.818 25.231L27.918 29.076C27.792 29.6137 28.1258 30.1518 28.6636 30.2777 28.7345 30.2943 28.8071 30.3032 28.88 30.304ZM47 44C39.3669 43.9892 33.1471 37.8699 33.012 30.238 36.751 30.083 41.162 29.598 43.937 28.287 47.568 26.573 52.157 22.712 53.601 21.458 54.9872 22.097 56.2143 23.0355 57.194 24.206 58.0128 25.2068 58.7215 26.2927 59.308 27.445 59.776 28.28 60.308 29.224 60.986 30.271 60.8337 37.8895 54.62 43.989 47 44ZM30.794 25.558C30.8141 25.4718 30.8228 25.3834 30.82 25.295 30.81 24.969 30.638 17.283 37.791 13.906 40.1161 12.7569 42.6687 12.1419 45.262 12.106 48.4733 12.0637 51.5941 13.1698 54.062 15.225 54.2895 15.44 54.604 15.5368 54.913 15.487 57.5477 15.2505 60.0435 16.7075 61.133 19.118 62.381 21.507 62.021 25.085 61.583 27.407 61.395 27.079 61.219 26.765 61.05 26.464 60.3985 25.1898 59.6105 23.9901 58.7 22.886 57.382 21.2426 55.6183 20.0139 53.62 19.347 53.3009 19.2704 52.9646 19.3553 52.72 19.574 52.664 19.624 47.101 24.584 43.088 26.474 39.831 28.011 33.652 28.274 30.157 28.296Z\"/><path d=\"M76.533 59.525C71.9429 55.9913 66.6845 53.4244 61.075 51.979 59.783 51.592 58.482 51.258 57.209 50.986L56.702 50.877 56.321 51.23C52.246 55 49.484 55 48 55 46.516 55 43.731 55 39.676 51.28L39.297 50.932 38.797 51.038C37.572 51.296 36.278 51.611 34.94 51.976 29.3979 53.6002 24.1705 56.1502 19.479 59.518 17.3279 61.2033 16.0501 63.7678 16 66.5L16 82 18 82 18 66.5C18.0441 64.391 19.0303 62.4126 20.688 61.108 25.1778 57.8941 30.1771 55.46 35.476 53.908 36.586 53.608 37.676 53.336 38.711 53.108 42.6 56.527 45.584 57 48 57 50.416 57 53.384 56.521 57.29 53.051 58.351 53.291 59.43 53.574 60.513 53.899 65.8678 55.2721 70.8893 57.7148 75.275 61.08 76.952 62.3851 77.9527 64.3755 78 66.5L78 82 80 82 80 66.5C79.9516 63.772 78.6784 61.2106 76.533 59.525Z\"/></g></svg></span> <span class=\"ds-by\"><svg class=\"ds-glyph ds-sm\" viewBox=\"0 0 96 96\" aria-hidden=\"true\"><g id=\"Icons\"><path d=\"M28.882 30.3C29.516 30.308 30.24 30.307 31.015 30.3 31.1834 39.1294 38.4776 46.1506 47.307 45.9822 55.945 45.8174 62.89 38.821 62.991 30.182 63.282 29.196 65.134 22.461 62.909 18.202 61.4765 15.1978 58.3916 13.3361 55.066 13.469 53.431 12.175 46.576 7.553 36.937 12.104 29.037 15.831 28.808 24.004 28.818 25.231L27.918 29.076C27.792 29.6137 28.1258 30.1518 28.6636 30.2777 28.7345 30.2943 28.8071 30.3032 28.88 30.304ZM47 44C39.3669 43.9892 33.1471 37.8699 33.012 30.238 36.751 30.083 41.162 29.598 43.937 28.287 47.568 26.573 52.157 22.712 53.601 21.458 54.9872 22.097 56.2143 23.0355 57.194 24.206 58.0128 25.2068 58.7215 26.2927 59.308 27.445 59.776 28.28 60.308 29.224 60.986 30.271 60.8337 37.8895 54.62 43.989 47 44ZM30.794 25.558C30.8141 25.4718 30.8228 25.3834 30.82 25.295 30.81 24.969 30.638 17.283 37.791 13.906 40.1161 12.7569 42.6687 12.1419 45.262 12.106 48.4733 12.0637 51.5941 13.1698 54.062 15.225 54.2895 15.44 54.604 15.5368 54.913 15.487 57.5477 15.2505 60.0435 16.7075 61.133 19.118 62.381 21.507 62.021 25.085 61.583 27.407 61.395 27.079 61.219 26.765 61.05 26.464 60.3985 25.1898 59.6105 23.9901 58.7 22.886 57.382 21.2426 55.6183 20.0139 53.62 19.347 53.3009 19.2704 52.9646 19.3553 52.72 19.574 52.664 19.624 47.101 24.584 43.088 26.474 39.831 28.011 33.652 28.274 30.157 28.296Z\"/><path d=\"M76.533 59.525C71.9429 55.9913 66.6845 53.4244 61.075 51.979 59.783 51.592 58.482 51.258 57.209 50.986L56.702 50.877 56.321 51.23C52.246 55 49.484 55 48 55 46.516 55 43.731 55 39.676 51.28L39.297 50.932 38.797 51.038C37.572 51.296 36.278 51.611 34.94 51.976 29.3979 53.6002 24.1705 56.1502 19.479 59.518 17.3279 61.2033 16.0501 63.7678 16 66.5L16 82 18 82 18 66.5C18.0441 64.391 19.0303 62.4126 20.688 61.108 25.1778 57.8941 30.1771 55.46 35.476 53.908 36.586 53.608 37.676 53.336 38.711 53.108 42.6 56.527 45.584 57 48 57 50.416 57 53.384 56.521 57.29 53.051 58.351 53.291 59.43 53.574 60.513 53.899 65.8678 55.2721 70.8893 57.7148 75.275 61.08 76.952 62.3851 77.9527 64.3755 78 66.5L78 82 80 82 80 66.5C79.9516 63.772 78.6784 61.2106 76.533 59.525Z\"/></g></svg>PM · 5 Series G60 successor</span></div>",
+      "css": ".ds-ground{background:var(--night, #0a1726);padding:24px;font-family:'Saira Semi Condensed','Arial Narrow',sans-serif;color:var(--white, #ffffff); display:flex;gap:24px;align-items:center;} .ds-glyph{width:22px;height:22px;fill:currentColor;color:var(--mist, #c8d7e0);flex:none;} .ds-sm{width:18px;height:18px;} .ds-authors{display:inline-flex;gap:4px;} .ds-by{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--steel, #85acb9);}"
+    },
+    {
+      "name": "Status Pill",
+      "kind": "chip",
+      "refersTo": "status",
+      "description": "Head-row state: pulsing square while working, ice line and text when the set is compatible.",
+      "html": "<div class=\"ds-ground\"><span class=\"ds-status\"><span class=\"ds-pulse\"></span>Recalibrating</span> <span class=\"ds-status ds-ok\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4.5 12.5l5 5 10-11\"/></svg>Set is compatible</span></div>",
+      "css": ".ds-ground{background:var(--night, #0a1726);padding:24px;font-family:'Saira Semi Condensed','Arial Narrow',sans-serif;color:var(--white, #ffffff); display:flex;gap:12px;} .ds-ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:square;stroke-linejoin:miter;flex:none;} .ds-status{font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:14px;letter-spacing:1.4px;text-transform:uppercase;display:inline-flex;align-items:center;gap:10px;padding:9px 14px;border:1px solid var(--line-soft, rgba(200,215,224,0.28));color:var(--mist, #c8d7e0);} .ds-pulse{width:8px;height:8px;background:var(--ice, #c3e7f0);animation:ds-pulse 1.2s ease-in-out infinite;} .ds-ok{border-color:var(--ice, #c3e7f0);color:var(--ice, #c3e7f0);} @keyframes ds-pulse{0%,100%{opacity:.25}50%{opacity:1}} @media (prefers-reduced-motion:reduce){.ds-pulse{animation:none;}}"
+    },
+    {
+      "name": "Verdict Bar",
+      "kind": "card",
+      "refersTo": "verdict-bar",
+      "description": "The only solid surface: white bar closing a red-team debate, with a five-bar confidence meter.",
+      "html": "<div class=\"ds-ground\"><div class=\"ds-verdict\"><span class=\"ds-label\">Verdict</span><div><strong>Hold at #4.</strong> <span>Fix the operating concept before adding screen size.</span></div><div class=\"ds-conf\"><span class=\"ds-label\">Confidence</span><span class=\"ds-bars\"><i class=\"ds-f\"></i><i></i><i></i><i></i><i></i></span></div></div></div>",
+      "css": ".ds-ground{background:var(--night, #0a1726);padding:24px;font-family:'Saira Semi Condensed','Arial Narrow',sans-serif;color:var(--white, #ffffff);} .ds-verdict{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;padding:14px 20px;background:#fff;color:var(--night, #0a1726);} .ds-label{font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--petrol, #035970);} .ds-verdict strong{font-family:'Saira Condensed','Arial Narrow',sans-serif;font-weight:800;font-size:26px;text-transform:uppercase;} .ds-verdict div span{font-size:16px;color:#23384a;} .ds-conf{display:flex;align-items:center;gap:10px;} .ds-bars{display:flex;gap:3px;} .ds-bars i{width:14px;height:18px;background:rgba(10,23,38,.15);} .ds-bars i.ds-f{background:var(--m-red, #e22718);}"
+    },
+    {
+      "name": "Voice Capture",
+      "kind": "button",
+      "refersTo": "voice-capture",
+      "description": "The single circular control: BMW blue mic with listening ripples; turns white when saved.",
+      "html": "<div class=\"ds-ground\"><button class=\"ds-mic\" aria-label=\"Record rationale\"><svg class=\"ds-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 3h6v11H9zM5.5 11.5a6.5 6.5 0 0013 0M12 18v3M8.5 21h7\"/></svg></button></div>",
+      "css": ".ds-ground{background:var(--night, #0a1726);padding:24px;font-family:'Saira Semi Condensed','Arial Narrow',sans-serif;color:var(--white, #ffffff); display:grid;place-items:center;padding:40px;} .ds-ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:square;stroke-linejoin:miter;flex:none;} .ds-mic{width:112px;height:112px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;background:var(--bmw-blue, #1c69d4);color:#fff;position:relative;transition:background-color .4s cubic-bezier(.16,1,.3,1);} .ds-mic .ds-ico{width:40px;height:40px;stroke-width:1.8;} .ds-mic::before{content:'';position:absolute;inset:-14px;border-radius:50%;border:1.5px solid rgba(255,255,255,.5);opacity:0;} .ds-mic:hover::before{animation:ds-ripple 2s ease-out infinite;} .ds-mic:focus-visible{outline:2px solid var(--ice, #c3e7f0);outline-offset:3px;} @keyframes ds-ripple{from{opacity:.9;transform:scale(.85)}to{opacity:0;transform:scale(1.5)}} @media (prefers-reduced-motion:reduce){.ds-mic::before{animation:none!important;}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Keynote, Continued",
+    "overview": "This system is BMW's own product-management keynote carried forward into software. The ground is the keynote's own atmospheric image (navy into petrol into plum), not a colour we chose, and every surface on it is drawn the way the keynote draws \"The Process\": white hairline rectangles with square corners, bold condensed uppercase headlines that end in a period, and a light condensed voice for everything that explains. The product content (ranked requirements, evidence, rejections, voice-captured reasons) lives inside that drawing language, so a BMW PM reads it as the next slide of their own deck rather than a vendor dashboard.\n\nDensity is a keynote stage, not an app screen: a fixed 1280 by 720 canvas, a 56px gutter, one idea per slide, and a persistent process rail along the bottom that says where in BMW's process the viewer stands. Colour is spent on meaning only. BMW blue is the action and the AI's fresh proposal, M red is rejection and weakness, ice and amber split evidence from assumption. Everything else is white, ice, mist, steel, and slate on the ground.\n\nAuthorship is visible everywhere. A robot glyph marks what the AI proposed and a person glyph marks what the PM decided, both drawn from the keynote's own icon set. The system rejects the generic SaaS dark dashboard: no rounded glowing cards, no drop-shadowed panels, no gradient fills on surfaces.",
+    "keyCharacteristics": [
+      "The keynote ground image as the only background; surfaces are hairline outlines on it, never filled cards.",
+      "Square corners everywhere except the voice-capture control.",
+      "Condensed uppercase display headlines ending in a period; light semi-condensed body.",
+      "Colour carries meaning: blue acts, red rejects, ice is evidence, amber is assumption.",
+      "Robot and person glyphs mark who authored every item.",
+      "A process rail on every product slide, advancing with the story."
+    ],
+    "rules": [
+      {
+        "name": "The Meaning-Only Colour Rule",
+        "body": "Blue means act or newly proposed by the AI, red means rejected or weak, ice means evidence, amber means assumption. No hue appears for decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Blue Button Rule",
+        "body": "A slide carries at most one filled BMW blue button. Every other control is a hairline outline.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ground Is Given Rule",
+        "body": "The background is the keynote's own image (assets/keynote-ground.webp) over night. Never replace it with a CSS gradient or a flat fill, and never paint surfaces over it with opaque panels.",
+        "section": "colors"
+      },
+      {
+        "name": "The Keynote Headline Rule",
+        "body": "Product headlines are condensed, bold, uppercase, set tight (0.95 leading, 0 tracking), and end with a period, like a keynote statement. Headlines never sit under a small label or kicker.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight Contrast Rule",
+        "body": "Explanation is light (300) and decisions are bold (700). Inside a light sentence, the decisive figure is bolded in white (\"144 of 157\").",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "Every count and rank uses tabular numerals.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Lift Rule",
+        "body": "No drop shadows on surfaces, buttons, rows, or images. A surface that needs emphasis changes its tint or its line, not its height.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** set every slide on the keynote ground image (assets/keynote-ground.webp) over night.",
+      "**Do** draw surfaces as white hairline rectangles: 1.5px for frames, 1px soft hairline for subdivisions, square corners.",
+      "**Do** end product headlines with a period, in Saira Condensed 700 uppercase.",
+      "**Do** open every piece of AI reasoning with an Evidence, Assumption, or Evidence gap tag.",
+      "**Do** mark authorship with the robot glyph (AI proposes) or the person glyph (PM decides).",
+      "**Do** keep the process rail on every product slide and advance it with the story.",
+      "**Do** use tabular numerals for every count and rank, and bold the decisive figure in white."
+    ],
+    "donts": [
+      "**Don't** round corners on frames, buttons, tiles, tags, or rows; the circle belongs to the voice-capture control alone.",
+      "**Don't** add drop shadows or glows to surfaces; emphasise with tint or line weight.",
+      "**Don't** place more than one filled BMW blue button on a slide.",
+      "**Don't** use M red for anything other than rejection or weakness.",
+      "**Don't** fill surfaces with opaque or gradient card backgrounds over the ground; the only solid surface is the white verdict bar.",
+      "**Don't** put a small label or kicker above a headline.",
+      "**Don't** substitute a CSS gradient for the keynote ground image."
+    ]
+  }
+}
