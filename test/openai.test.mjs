@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyStakeholderResponse, draftStakeholderEmail, outcomeToStatus, researchMarketIntelligence } from '../src/openai.mjs';
+import { classifyReportAudiences, classifyStakeholderResponse, draftStakeholderEmail, outcomeToStatus, researchMarketIntelligence, synthesizeRequirements } from '../src/openai.mjs';
 
 test('uses OpenAI structured output and returns auditable classification metadata', async () => {
   let request;
@@ -35,6 +35,49 @@ test('creates a grounded editable email from PM notes', async () => {
   assert.equal(result.subject,'Review cargo access timing');
   assert.match(result.body,/timing impact/);
   assert.equal(request.text.format.type,'json_schema');
+});
+
+test('synthesizes requirement wording only from attached evidence IDs', async () => {
+  let request;
+  const fetchImpl=async(url,options)=>{request=JSON.parse(options.body);return {ok:true,json:async()=>({id:'resp_wording',status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({requirements:[{requirement_id:'req-cargo',statement:'Improve cargo access so customers can load luggage with less difficulty.',evidence_ids:['evidence-1']}]})}]}]})}};
+  const result=await synthesizeRequirements({productContext:{vehicle:'G60',market:'US'},requirements:[{id:'req-cargo',feature:'Cargo access',group:'Exterior & Utility',outcome:'Cargo usability',fallback_statement:'Improve cargo access.',evidence:[{evidence_id:'evidence-1',source_type:'customer_feedback',excerpt:'Customers report that cargo access makes luggage loading difficult.'}]}]},{apiKey:'test-key',fetchImpl});
+  assert.equal(result.requirements[0].statement,'Improve cargo access so customers can load luggage with less difficulty.');
+  assert.deepEqual(result.requirements[0].evidenceIds,['evidence-1']);
+  assert.equal(result.responseId,'resp_wording');
+  assert.equal(request.text.format.type,'json_schema');
+  assert.equal(request.text.format.strict,true);
+});
+
+test('drops synthesized wording with unsupported claims or evidence IDs', async () => {
+  const fetchImpl=async()=>({ok:true,json:async()=>({id:'resp_unsupported',status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({requirements:[{requirement_id:'req-cargo',statement:'Increase cargo access width by 25 millimeters.',evidence_ids:['not-supplied']}]})}]}]})});
+  const result=await synthesizeRequirements({requirements:[{id:'req-cargo',feature:'Cargo access',fallback_statement:'Improve cargo access.',evidence:[{evidence_id:'evidence-1',source_type:'customer_feedback',excerpt:'Customers report difficult cargo access.'}]}]},{apiKey:'test-key',fetchImpl});
+  assert.deepEqual(result.requirements,[]);
+});
+
+test('classifies every requirement into one primary department with strict structured output', async () => {
+  let request;
+  const fetchImpl=async(url,options)=>{request=JSON.parse(options.body);return {ok:true,json:async()=>({id:'resp_routing',status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({assignments:[
+    {requirement_id:'req-chassis',audience:'technical',rationale:'Chassis Engineering must validate the implementation.'},
+    {requirement_id:'req-brand',audience:'gtm',rationale:'The requirement defines a customer-facing brand proposition.'}
+  ]})}]}]})}};
+  const result=await classifyReportAudiences({productContext:{vehicle:'G60',market:'US'},requirements:[
+    {requirement_id:'req-chassis',feature:'Ride isolation',group:'Driving & Powertrain',outcome:'Ride comfort',statement:'Reduce disruptive road impacts.',responsible_entity:'Chassis Engineering'},
+    {requirement_id:'req-brand',feature:'Exterior character',group:'Exterior & Utility',outcome:'Brand expression',statement:'Retain a recognizable BMW exterior character.',responsible_entity:'Body Engineering'}
+  ]},{apiKey:'test-key',fetchImpl});
+  assert.equal(result.assignments.length,2);
+  assert.deepEqual(result.assignments[1],{requirementId:'req-brand',audience:'gtm',technical:false,gtm:true,rationale:'The requirement defines a customer-facing brand proposition.'});
+  assert.equal(result.responseId,'resp_routing');
+  assert.equal(request.text.format.type,'json_schema');
+  assert.equal(request.text.format.strict,true);
+});
+
+test('rejects invalid audience assignments instead of trusting model output', async () => {
+  const fetchImpl=async()=>({ok:true,json:async()=>({id:'resp_invalid_routing',status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify({assignments:[
+    {requirement_id:'req-known',audience:'neither',rationale:'No audience.'},
+    {requirement_id:'req-unknown',audience:'technical',rationale:'Not supplied.'}
+  ]})}]}]})});
+  const result=await classifyReportAudiences({requirements:[{requirement_id:'req-known',statement:'Provide clear charging status.',feature:'Charging status'}]},{apiKey:'test-key',fetchImpl});
+  assert.deepEqual(result.assignments,[]);
 });
 
 test('uses required web search and returns citation positions for market intelligence', async () => {

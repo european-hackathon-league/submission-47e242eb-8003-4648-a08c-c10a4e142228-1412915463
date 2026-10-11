@@ -1,14 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title description">
   <title id="title">BMW</title>
+  <desc id="description">BMW roundel in white, gray, and blue</desc>
+  <circle cx="60" cy="60" r="57" fill="#fff" stroke="#6f7072" stroke-width="4"/>
   <defs>
-    <radialGradient id="rim" cx="35%" cy="25%" r="80%"><stop offset="0" stop-color="#5e6267"/><stop offset=".34" stop-color="#161719"/><stop offset="1" stop-color="#030303"/></radialGradient>
+    <clipPath id="inner-circle">
+      <circle cx="60" cy="65" r="35"/>
+    </clipPath>
   </defs>
-  <circle cx="60" cy="60" r="57" fill="url(#rim)" stroke="#bac2c8" stroke-width="2"/>
-  <circle cx="60" cy="65" r="36" fill="#fff" stroke="#9aa1a6" stroke-width="2"/>
-  <path d="M60 29a36 36 0 0 0-36 36h36zM60 65v36a36 36 0 0 0 36-36z" fill="#159bd3"/>
-  <path d="M60 29v36h36A36 36 0 0 0 60 29zM60 65H24a36 36 0 0 0 36 36z" fill="#f6f7f8"/>
-  <path d="M60 29v72M24 65h72" stroke="#17191b" stroke-width="2"/>
-  <text x="23" y="39" fill="white" font-family="Arial,sans-serif" font-size="17" font-weight="700" transform="rotate(-42 23 39)">B</text>
-  <text x="52" y="21" fill="white" font-family="Arial,sans-serif" font-size="17" font-weight="700">M</text>
-  <text x="88" y="39" fill="white" font-family="Arial,sans-serif" font-size="17" font-weight="700" transform="rotate(42 88 39)">W</text>
+  <g clip-path="url(#inner-circle)">
+    <rect x="25" y="30" width="35" height="35" fill="#0869b2"/>
+    <rect x="60" y="30" width="35" height="35" fill="#fff"/>
+    <rect x="25" y="65" width="35" height="35" fill="#fff"/>
+    <rect x="60" y="65" width="35" height="35" fill="#0869b2"/>
+  </g>
+  <circle cx="60" cy="65" r="35" fill="none" stroke="#6f7072" stroke-width="3"/>
+  <path d="M60 30v70M25 65h70" fill="none" stroke="#6f7072" stroke-width="1.5"/>
+  <text x="24" y="39" fill="#6f7072" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle" transform="rotate(-42 24 39)">B</text>
+  <text x="60" y="24" fill="#6f7072" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle">M</text>
+  <text x="96" y="39" fill="#6f7072" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle" transform="rotate(42 96 39)">W</text>
 </svg>

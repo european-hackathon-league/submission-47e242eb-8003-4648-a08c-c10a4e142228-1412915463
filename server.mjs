@@ -1,12 +1,12 @@
 import { createServer } from 'node:http';
 import { appendFile, readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
-import { classifyStakeholderResponse, draftStakeholderEmail, outcomeToStatus, researchMarketIntelligence } from './src/openai.mjs';
+import { classifyReportAudiences, classifyStakeholderResponse, draftStakeholderEmail, outcomeToStatus, researchMarketIntelligence, synthesizeRequirements } from './src/openai.mjs';
 import { DECISION_EVENT_TYPES, isRecordedDecision } from './src/decision-memory.mjs';
 
 const root = new URL('.', import.meta.url).pathname.replace(/^\/(.:)/, '$1');
 const port = Number(process.env.PORT || 4173);
-const apiVersion = 'pm-api-2';
+const apiVersion = 'pm-api-5';
 const decisionEventsPath = join(root, 'data', 'decision-events.ndjson');
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp' };
 
@@ -63,6 +63,22 @@ createServer(async (req, res) => {
   if (pathname === '/api/draft-email' && req.method === 'POST') {
     try {
       sendJson(res, 200, await draftStakeholderEmail(await readJson(req)));
+    } catch (error) {
+      sendJson(res, /OPENAI_API_KEY/.test(error.message) ? 503 : 502, { error:error.message });
+    }
+    return;
+  }
+  if (pathname === '/api/synthesize-requirements' && req.method === 'POST') {
+    try {
+      sendJson(res, 200, await synthesizeRequirements(await readJson(req)));
+    } catch (error) {
+      sendJson(res, /OPENAI_API_KEY/.test(error.message) ? 503 : 502, { error:error.message });
+    }
+    return;
+  }
+  if (pathname === '/api/classify-report-audiences' && req.method === 'POST') {
+    try {
+      sendJson(res, 200, await classifyReportAudiences(await readJson(req)));
     } catch (error) {
       sendJson(res, /OPENAI_API_KEY/.test(error.message) ? 503 : 502, { error:error.message });
     }

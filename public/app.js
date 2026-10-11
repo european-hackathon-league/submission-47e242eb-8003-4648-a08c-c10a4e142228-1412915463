@@ -1,10 +1,11 @@
 import { buildModel, draftEmail, gmailComposeUrl, validateCitations } from './engine.js';
 import { DECISION_EVENT_TYPES, decisionReason, isRecordedDecision } from '../src/decision-memory.mjs';
 import { createReportPdf } from './pdf-report.js';
+import { mergeReportAudienceAssignments, partitionReportRequirements } from '../src/report-routing.mjs';
 
 const storedDecisions=JSON.parse(localStorage.getItem('decision-events')||'[]').filter(isRecordedDecision);
 localStorage.setItem('decision-events',JSON.stringify(storedDecisions));
-const state = { evidence: [], context: null, historical: [], groups: [], selected: 0, config: null, statuses: JSON.parse(localStorage.getItem('requirement-statuses') || '{}'), overrides: JSON.parse(localStorage.getItem('requirement-overrides') || '{}'), events: storedDecisions, activeRequirement: null, openAIConfigured:false };
+const state = { evidence: [], context: null, historical: [], groups: [], selected: 0, config: null, statuses: JSON.parse(localStorage.getItem('requirement-statuses') || '{}'), overrides: JSON.parse(localStorage.getItem('requirement-overrides') || '{}'), events: storedDecisions, activeRequirement: null, openAIConfigured:false, wordingError:'', reportRouting:null };
 const $ = id => document.getElementById(id);
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const statusKey = feature => `${state.config.vehicle}|${state.config.market}|${feature}`;
@@ -23,7 +24,7 @@ async function init() {
   $('merge-group').addEventListener('click', mergeGroup);
   document.querySelectorAll('.nav').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
   document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
-  document.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click',()=>downloadReport(b.dataset.report)));
+  document.querySelectorAll('[data-report]').forEach(button=>button.addEventListener('click',()=>downloadReport(button.dataset.report,button)));
   $('memory-search').addEventListener('input',e=>renderMemory(e.target.value));
   await loadDecisionEvents();
   renderMemory();
@@ -65,7 +66,7 @@ async function checkOpenAIStatus(){
   try{
     const response=await fetch('/api/health');
     const status=await readApiResponse(response);
-    if(status.apiVersion!=='pm-api-2')throw new Error('An outdated PM server is running. Stop it and restart “node server.mjs”.');
+    if(status.apiVersion!=='pm-api-5')throw new Error('An outdated PM server is running. Stop it and restart “node server.mjs”.');
     state.openAIConfigured=Boolean(status.openaiConfigured);
     $('ai-status').innerHTML=`<span></span> ${status.openaiConfigured?`OpenAI ready · ${escapeHtml(status.model)}`:'OpenAI key required'}`;
     $('ai-status').classList.toggle('offline',!status.openaiConfigured);
@@ -107,17 +108,39 @@ function addEvent(type, title, description, data={},actor='PM') {
   renderMemory();
 }
 
-function generate(event) {
+function groundingEvidence(requirement){
+  const feedback=requirement.citations.filter(citation=>citation.sourceType==='customer_feedback').slice(0,3),market=requirement.citations.filter(citation=>citation.sourceType!=='customer_feedback').slice(0,3),selected=[...feedback,...market];
+  for(const citation of requirement.citations){if(selected.length>=6)break;if(!selected.includes(citation))selected.push(citation)}
+  return selected.map(citation=>({evidence_id:citation.evidenceId,source_type:citation.sourceType,excerpt:String(citation.excerpt||'').slice(0,280)}));
+}
+
+async function synthesizeGroundedWording(groups){
+  if(!state.openAIConfigured)return 0;
+  const overrides=overrideMap(),requirements=groups.flatMap(group=>group.requirements.filter(requirement=>!overrides[requirement.feature]&&requirement.wordingSource!=='openai-grounded').map(requirement=>({id:requirement.id,feature:requirement.feature,group:group.name,outcome:requirement.outcome,fallback_statement:requirement.statement,evidence:groundingEvidence(requirement)}))).filter(requirement=>requirement.evidence.length);
+  if(!requirements.length)return 0;
+  const response=await fetch('/api/synthesize-requirements',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({productContext:state.config,requirements})}),result=await readApiResponse(response),byId=new Map(result.requirements.map(requirement=>[requirement.requirementId,requirement]));
+  let applied=0;
+  for(const requirement of groups.flatMap(group=>group.requirements)){
+    const wording=byId.get(requirement.id);if(!wording||overrides[requirement.feature])continue;
+    requirement.statement=wording.statement;requirement.wordingSource='openai-grounded';requirement.wordingEvidenceIds=wording.evidenceIds;requirement.wordingModel=result.model;requirement.wordingResponseId=result.responseId;applied+=1;
+  }
+  return applied;
+}
+
+async function generate(event) {
   event?.preventDefault();
+  const button=$('generate-button');button.disabled=true;button.innerHTML='<span class="shiny-label">Grounding requirement wording…</span>';state.wordingError='';
   state.config = { vehicle:$('vehicle').value, market:$('market').value, months:Number($('months').value), people:Number($('people').value), importance:Number($('importance').value) };
   const historicalEvidenceIds=state.historical.filter(event=>event.data.vehicle===state.config.vehicle&&event.data.market===state.config.market).flatMap(event=>event.data.supportingEvidence||[]);
   state.config.historyFeatures=[...new Set(historicalEvidenceIds.map(id=>state.evidence.find(record=>record.evidenceId===id)?.feature).filter(Boolean))];
   state.groups = buildModel(state.evidence, state.config, statusMap(), state.context, overrideMap());
   state.selected = 0;
+  try{await synthesizeGroundedWording(state.groups)}catch(error){state.wordingError=error.message}
   addEvent('project-created', 'Product context evaluated', `${state.config.vehicle} · ${state.config.market} · ${state.config.months} months · ${state.config.people} people · deadline importance ${state.config.importance}/10`, state.config);
   addEvent('ranking-calculated', 'Requirements generated and ranked', `${state.groups.length} groups created from customer feedback, market studies, sales planning, cited competitor evidence, and PM delivery constraints.`,{groups:state.groups.map(group=>({name:group.name,requirements:group.requirements.map(requirement=>({id:requirement.id,statement:requirement.statement,rank:requirement.rank,score:requirement.score,citations:requirement.citations.map(citation=>citation.evidenceId)}))}))});
   showView('workspace');
   render();
+  button.disabled=false;button.innerHTML='<span class="shiny-label">Generate requirements <span class="shiny-arrow" aria-hidden="true">→</span></span>';
 }
 
 function showView(view) {
@@ -137,7 +160,8 @@ function render() {
   $('context-chips').innerHTML = `<div class="context-metric"><small>Time to market</small><strong>${c.months}<span> months</span></strong></div><div class="context-metric"><small>Team</small><strong>${c.people}<span> people</span></strong></div><div class="context-metric"><small>Deadline</small><strong>${c.importance}<span>/10</span></strong></div>`;
   const relevant=state.evidence.filter(r=>r.vehicle===c.vehicle&&r.market===c.market), low=relevant.filter(r=>r.quality==='low').length;
   const sources=state.context?.manifest?.length||0,marketCitations=state.groups.flatMap(item=>item.requirements).flatMap(requirement=>requirement.citations).filter(citation=>citation.sourceType!=='customer_feedback'),studySignals=new Set(marketCitations.filter(citation=>citation.sourceType==='market_study').map(citation=>citation.evidenceId)).size,salesSignals=new Set(marketCitations.filter(citation=>citation.sourceType==='sales_volume').map(citation=>citation.evidenceId)).size,competitorSignals=new Set(marketCitations.filter(citation=>['competitor_feedback','competitor_equipment','industry_study'].includes(citation.sourceType)).map(citation=>citation.evidenceId)).size;
-  $('integrity').innerHTML = `<span class="status-dot"></span><strong>Evidence workspace</strong><span>${relevant.length.toLocaleString()} contextual feedback records</span><span>${studySignals+salesSignals} market signals</span><span>${competitorSignals} competitor signals</span><span>${sources} source files</span><span>${low.toLocaleString()} low-quality excluded</span>`;
+  const wordingState=state.wordingError?`<span class="wording-warning" title="${escapeHtml(state.wordingError)}">Deterministic wording fallback</span>`:state.openAIConfigured?'<span>Grounded wording validated</span>':'';
+  $('integrity').innerHTML = `<span class="status-dot"></span><strong>Evidence workspace</strong><span>${relevant.length.toLocaleString()} contextual feedback records</span><span>${studySignals+salesSignals} market signals</span><span>${competitorSignals} competitor signals</span><span>${sources} source files</span><span>${low.toLocaleString()} low-quality excluded</span>${wordingState}`;
   $('group-list').innerHTML = state.groups.map((g,i)=>`<button class="group-button ${i===state.selected?'active':''}" data-group="${i}"><strong>${escapeHtml(g.name)}</strong><span>${g.requirements.length} supported requirement${g.requirements.length===1?'':'s'}</span></button>`).join('');
   document.querySelectorAll('[data-group]').forEach(b=>b.onclick=()=>{state.selected=Number(b.dataset.group);render()});
   if (!group) { $('group-title').textContent='No supported groups'; $('group-description').textContent='Try another vehicle or market.'; $('requirements').innerHTML=''; return; }
@@ -207,7 +231,9 @@ function commitDecision(r,status,rationale){
 function recalibrateGroup(groupName,reason='PM requested a fresh ranking',rejectedFeature=''){
   const index=state.groups.findIndex(group=>group.name===groupName);if(index<0)return;
   const current=state.groups[index],before=current.requirements.map(r=>({id:r.id,feature:r.feature,rank:r.rank,score:r.score,status:r.status}));
+  const knownWording=new Map(state.groups.flatMap(group=>group.requirements).filter(requirement=>requirement.wordingSource==='openai-grounded').map(requirement=>[requirement.id,{statement:requirement.statement,wordingSource:requirement.wordingSource,wordingEvidenceIds:requirement.wordingEvidenceIds,wordingModel:requirement.wordingModel,wordingResponseId:requirement.wordingResponseId}]));
   const rebuilt=buildModel(state.evidence,state.config,statusMap(),state.context,overrideMap());
+  for(const requirement of rebuilt.flatMap(group=>group.requirements)){const wording=knownWording.get(requirement.id);if(wording&&!state.overrides[statusKey(requirement.feature)])Object.assign(requirement,wording)}
   let replacement=rebuilt.find(group=>group.name===groupName);
   if(!replacement){
     const remainingFeatures=new Set(current.requirements.map(r=>r.feature).filter(feature=>feature!==rejectedFeature));
@@ -219,6 +245,7 @@ function recalibrateGroup(groupName,reason='PM requested a fresh ranking',reject
   const after=replacement?.requirements.map(r=>({id:r.id,feature:r.feature,rank:r.rank,score:r.score,status:r.status}))||[];
   addEvent('group-recalibrated','Requirement group recalibrated',`${groupName}: ${reason}. ${before.length} → ${after.length} ranked requirements.`,{group:groupName,rejectedFeature,before,after});
   render();
+  if(replacement&&state.openAIConfigured)synthesizeGroundedWording([replacement]).then(applied=>{if(applied){state.wordingError='';render()}}).catch(error=>{state.wordingError=error.message;render()});
 }
 
 function renameGroup(){
@@ -373,7 +400,7 @@ function renderMemory(query=$('memory-search')?.value||''){
   $('timeline').innerHTML=events.length?events.map(e=>{const historical=e.type==='historical-decision',status=historical?e.data.decisionStatus:e.type==='requirement-rejected'?'Rejected':e.type==='requirement-approved-with-conditions'?'Approved with conditions':'Approved',requirement=e.data.statement||e.data.before?.statement||e.data.requirement||e.title,reason=decisionReason(e),audit=e.data?.citations||e.data?.supportingEvidence?`<details><summary>Inspect supporting evidence</summary><pre>${escapeHtml(JSON.stringify({citations:e.data.citations||e.data.supportingEvidence,provenance:e.provenance},null,2))}</pre></details>`:'';return `<div class="event"><time>${new Date(e.at).toLocaleString()}</time><div class="event-dot"></div><article><p class="eyebrow">${escapeHtml(status)} · ${escapeHtml(e.actor||'PM')}</p><h3>${escapeHtml(requirement)}</h3><p><strong>Reason:</strong> ${escapeHtml(reason)}</p>${audit}</article></div>`}).join(''):`<p>${needle?'No approved or rejected requirements match this search.':'No requirements have been approved or rejected yet.'}</p>`;
 }
 
-function downloadReport(kind){
+function downloadReportLegacy(kind){
   if(!state.config||!state.groups.length){alert('Generate a product cycle before exporting a report.');return}
   const all=state.groups.flatMap(group=>group.requirements.map(requirement=>({...requirement,group:group.name}))),approved=all.filter(r=>['approved','approved-conditional'].includes(r.status));
   const market=({US:'United States',GB:'United Kingdom',DE:'Germany',CN:'China'})[state.config.market]||state.config.market;
@@ -396,5 +423,72 @@ function downloadReport(kind){
   }
   const pdf=createReportPdf({title,subtitle,metadata:[{label:'Vehicle',value:state.config.vehicle},{label:'Market',value:market},{label:'Delivery context',value:`${state.config.months} months / ${state.config.people} people`},{label:'Approved',value:`${approved.length} of ${all.length} requirements`}],sections}),blob=new Blob([pdf],{type:'application/pdf'}),url=URL.createObjectURL(blob),anchor=document.createElement('a'),safe=value=>String(value).replace(/[<>:"/\\|?*\u0000-\u001F]/g,'-').replace(/\s+/g,'-');anchor.href=url;anchor.download=`PM-${kind}-${safe(state.config.vehicle)}-${safe(state.config.market)}.pdf`;anchor.click();URL.revokeObjectURL(url);
   addEvent('report-generated',`${kind.toUpperCase()} report generated`,`${approved.length} approved requirements included.`);
+}
+
+async function classifyRequirementsForReports(requirements){
+  const signature=JSON.stringify(requirements.map(requirement=>[requirement.id,requirement.statement,requirement.owner?.name,requirement.status]));
+  if(state.reportRouting?.signature===signature)return state.reportRouting;
+  let assignments=[],model='Deterministic fallback',responseId=null,fallback=true;
+  if(state.openAIConfigured){
+    try{
+      const response=await fetch('/api/classify-report-audiences',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          productContext:state.config,
+          requirements:requirements.map(requirement=>({requirement_id:requirement.id,feature:requirement.feature,group:requirement.group,outcome:requirement.outcome,statement:requirement.statement,responsible_entity:requirement.owner.name}))
+        })
+      });
+      const result=await readApiResponse(response);
+      assignments=result.assignments||[];model=result.model||'OpenAI';responseId=result.responseId||null;fallback=assignments.length!==requirements.length;
+    }catch(error){console.warn('OpenAI report routing failed; using deterministic fallback.',error)}
+  }
+  const routing=mergeReportAudienceAssignments(requirements,assignments);
+  state.reportRouting={signature,routing,model,responseId,fallback};
+  return state.reportRouting;
+}
+
+async function downloadReport(kind,button){
+  if(!state.config||!state.groups.length){alert('Generate a product cycle before exporting a report.');return}
+  const originalLabel=button?.textContent;
+  if(button){button.disabled=true;button.textContent='PREPARING PDF...'}
+  try{
+    const all=state.groups.flatMap(group=>group.requirements.map(requirement=>({...requirement,group:group.name})));
+    const routingResult=await classifyRequirementsForReports(all),audiences=partitionReportRequirements(all,routingResult.routing);
+    const market=({US:'United States',GB:'United Kingdom',DE:'Germany',CN:'China'})[state.config.market]||state.config.market;
+    const humanStatus=status=>status.replaceAll('-',' ').replace(/\b\w/g,letter=>letter.toUpperCase());
+    const sources=requirement=>{const unique=[...new Set(requirement.citations.map(c=>`${c.file} / ${c.sheet}`))],shown=unique.slice(0,4);return `${shown.join('; ')}${unique.length>shown.length?` (+${unique.length-shown.length} more sources)`:''}`};
+    const routingFor=requirement=>routingResult.routing.get(requirement.id);
+    const audienceLabel=requirement=>routingFor(requirement).technical?'Technical':'GTM';
+    const item=(requirement,detailType='pm')=>{
+      const route=routingFor(requirement),details=[`Status: ${humanStatus(requirement.status)}  |  Priority: ${requirement.fitScore}/100  |  Owner: ${requirement.owner.name}`,`Audience: ${audienceLabel(requirement)}. ${route.rationale}`];
+      if(detailType==='technical')details.push(`Evidence basis: ${requirement.evidenceCount} cited records and ${requirement.marketEvidenceCount} market signals.`,`Representative sources: ${sources(requirement)}`);
+      else if(detailType==='gtm')details.push(`Customer evidence: ${requirement.evidenceCount} cited records. Market intelligence: ${requirement.marketEvidenceCount} signals for ${market}.`,`Representative sources: ${sources(requirement)}`);
+      else details.push(`Evidence: ${requirement.evidenceCount} cited records, including ${requirement.marketEvidenceCount} market signals.`);
+      return {kicker:`#${requirement.rank} - ${requirement.group} - ${requirement.outcome}`,title:requirement.statement,details};
+    };
+    let title,subtitle,sections,scopeValue;
+    if(kind==='technical'){
+      title='TECHNICAL REQUIREMENT REPORT';subtitle='Implementation and validation requirements routed to technical teams';scopeValue=`${audiences.technical.length} technical requirements`;
+      sections=state.groups.map(group=>({title:group.name,items:audiences.technical.filter(requirement=>requirement.group===group.name).map(requirement=>item(requirement,'technical'))})).filter(section=>section.items.length);
+      if(!sections.length)sections=[{title:'Technical scope',empty:'No requirements were routed to Technical.',items:[]}];
+    }else if(kind==='gtm'){
+      title='GO-TO-MARKET REQUIREMENT REPORT';subtitle=`Customer proposition and launch requirements routed to GTM for ${market}`;scopeValue=`${audiences.gtm.length} GTM requirements`;
+      sections=state.groups.map(group=>({title:group.name,items:audiences.gtm.filter(requirement=>requirement.group===group.name).map(requirement=>item(requirement,'gtm'))})).filter(section=>section.items.length);
+      if(!sections.length)sections=[{title:'GTM scope',empty:'No requirements were routed to GTM.',items:[]}];
+    }else{
+      title='PM REQUIREMENT REPORT';subtitle='Complete requirement portfolio, primary department routing, and recorded decisions';scopeValue=`${audiences.technical.length} Technical / ${audiences.gtm.length} GTM`;
+      sections=[
+        {title:'Technical',items:audiences.technical.map(requirement=>item(requirement))},
+        {title:'Go-to-market',items:audiences.gtm.map(requirement=>item(requirement))}
+      ].filter(section=>section.items.length);
+      const decisions=[...state.events.filter(isRecordedDecision),...state.historical].sort((a,b)=>new Date(b.at)-new Date(a.at));
+      sections.push({title:'Decision record',items:decisions.map(event=>({kicker:`${event.actor||'PM'} - ${new Date(event.at).toLocaleDateString()}`,title:event.data.statement||event.data.requirement||event.title,details:[`Decision: ${event.type==='requirement-rejected'||/rejected/i.test(event.data?.decisionStatus||'')?'Rejected':'Approved'}`,`Reason: ${decisionReason(event)}`]})),empty:'No requirements have been approved or rejected yet.'});
+    }
+    const routingSource=routingResult.fallback?(routingResult.responseId?`OpenAI + deterministic fallback - ${routingResult.model}`:'Deterministic routing'):`OpenAI routing - ${routingResult.model}`;
+    const pdf=createReportPdf({title,subtitle,metadata:[{label:'Vehicle',value:state.config.vehicle},{label:'Market',value:market},{label:'Delivery context',value:`${state.config.months} months / ${state.config.people} people`},{label:'Report scope',value:scopeValue}],sections:[{title:'Report methodology',items:[{kicker:routingSource,title:`${all.length} ranked requirements evaluated for report distribution`,details:[`PM includes all ${all.length} requirements. Each requirement has one primary audience and appears in exactly one departmental export.`]}]},...sections]}),blob=new Blob([pdf],{type:'application/pdf'}),url=URL.createObjectURL(blob),anchor=document.createElement('a'),safe=value=>String(value).replace(/[<>:"/\\|?*\u0000-\u001F]/g,'-').replace(/\s+/g,'-');
+    anchor.href=url;anchor.download=`PM-${kind}-${safe(state.config.vehicle)}-${safe(state.config.market)}.pdf`;anchor.click();URL.revokeObjectURL(url);
+    addEvent('report-generated',`${kind.toUpperCase()} report generated`,`${kind==='pm'?all.length:kind==='technical'?audiences.technical.length:audiences.gtm.length} routed requirements included.`);
+  }catch(error){alert(`The PDF could not be generated: ${error.message}`)}finally{if(button){button.disabled=false;button.textContent=originalLabel}}
 }
 init().catch(error=>{document.body.innerHTML=`<main class="memory"><h1>Unable to load evidence</h1><p>${escapeHtml(error.message)}</p></main>`});
